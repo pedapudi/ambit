@@ -1,11 +1,11 @@
-# ambitus
+# ambit
 
 Visualize the embeddings of a dataset to understand how much of an embedding
 space it covers — surfacing density hotspots and sparse regions.
 
 ## Overview
 
-`ambitus` projects high-dimensional embeddings down to 2D/3D and renders a
+`ambit` projects high-dimensional embeddings down to 2D/3D and renders a
 density view over the projected points, making it easy to see where a dataset
 concentrates in the space and where it leaves the space empty.
 
