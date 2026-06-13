@@ -9,6 +9,7 @@ Python-object `to_pydict`), which is the dominant ingestion cost at scale.
 
 from __future__ import annotations
 
+import glob
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -26,10 +27,37 @@ class Chunk:
     labels: Optional[np.ndarray] = None
 
 
+def expand(source):
+    """A directory or glob pattern -> a sorted list of shard files; a single path
+    or ndarray -> None (handled directly). Lets a 100k-embedding sharded dump be
+    scanned as one source."""
+    if not isinstance(source, (str, Path)):
+        return None
+    sp = str(source)
+    if any(c in sp for c in "*?["):
+        paths = sorted(glob.glob(sp))
+    elif Path(sp).is_dir():
+        d = Path(sp)
+        paths = (sorted(glob.glob(str(d / "*.parquet"))) or sorted(glob.glob(str(d / "*.pq")))
+                 or sorted(glob.glob(str(d / "*.npz"))) or sorted(glob.glob(str(d / "*.npy")))
+                 or sorted(glob.glob(str(d / "*.jsonl"))))
+    else:
+        return None
+    if not paths:
+        raise FileNotFoundError(f"no parquet/npy/npz/jsonl files match {source!r}")
+    return paths
+
+
 def iter_chunks(source, *, embedding_col=None, id_col=None, label_col=None,
                 batch_rows: int = 50_000) -> Iterator[Chunk]:
     if isinstance(source, np.ndarray):
         yield from _array_chunks(source, None, None, batch_rows)
+        return
+    shards = expand(source)
+    if shards is not None:
+        for fp in shards:                                 # sharded directory / glob
+            yield from iter_chunks(fp, embedding_col=embedding_col, id_col=id_col,
+                                   label_col=label_col, batch_rows=batch_rows)
         return
     p = Path(source)
     if not p.exists():

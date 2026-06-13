@@ -83,6 +83,22 @@ def _source_rows(source) -> Optional[int]:
     report the real corpus size. Returns None when it would require a full read."""
     if isinstance(source, np.ndarray):
         return len(source)
+    from .source import expand
+    try:
+        shards = expand(source)
+    except Exception:
+        shards = None
+    if shards is not None:
+        try:
+            import pyarrow.parquet as pq
+            tot = 0
+            for fp in shards:
+                if not str(fp).endswith((".parquet", ".pq")):
+                    return None
+                tot += pq.ParquetFile(fp).metadata.num_rows
+            return tot
+        except Exception:
+            return None
     p = Path(source)
     suf = p.suffix.lower()
     try:
