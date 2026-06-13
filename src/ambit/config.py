@@ -21,7 +21,9 @@ DEFAULT_FIGURES = {
     "cov_sparsity": True,   # COV 09 · nearest-neighbor sparsity field
     "d3_trip":      True,   # 3D 02 · orthographic XY/XZ/YZ triptych
     "d3_live":      True,   # 3D · live · drag/zoom 3-D point cloud
-    "cos_hist":     True,   # RES 01 · random-pair cosine histogram
+    "d3_mesh_live": True,   # 3D 04 · live · drag/zoom kNN manifold mesh
+    "d3_shell":     True,   # 3D 05 · radial shell occupancy
+    "cos_hist":     True,   # RES 01 · random-pair cosine histogram (study ISO 01)
     "scree":        True,   # RES 02 · covariance eigenvalue scree
     "res_wb":       True,   # RES 05 · within- vs between-cluster cosine
     # hidden (flip to True to show)
@@ -36,8 +38,7 @@ DEFAULT_FIGURES = {
     "cmp_qq":       False,  # CMP 11 · Q-Q occupancy curve
     "d3_scatter":   False,  # 3D 01 · depth-cued 3-D scatter
     "d3_voxel":     False,  # 3D 03 · isometric voxel occupancy
-    "d3_mesh":      False,  # 3D 04 · kNN mesh in 3-space
-    "d3_shell":     False,  # 3D 05 · radial shell occupancy
+    "d3_mesh":      False,  # 3D 04 · kNN mesh in 3-space (static; live version is d3_mesh_live)
     "res_margin":   False,  # RES 04 · nearest-neighbor cosine margin
     "res_iso":      False,  # RES 03 · space-utilization gauge
 }

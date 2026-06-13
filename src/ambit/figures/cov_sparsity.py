@@ -1,174 +1,101 @@
-from ..render import figure, _box, _svg, _local_density
-from .. import metrics
+"""COV 09 — Nearest-neighbor sparsity field. Each reservoir point is a ring sized by
+its 1-NN distance; the most-isolated decile (largest NN distance = most open space =
+GOOD resolution) reads var(--good), the rest neutral. At 100k+ the field is crowded,
+so the points are split into shuffled groups toggled by a #-samples slider.
+"""
+
+from __future__ import annotations
+
 import numpy as np
+
+from ..render import figure, _svg, _box
+
+GROUPS = 40
 
 
 @figure
 def fig_cov_sparsity(ctx):
     W, H = 1180, 760
     pad = 70
-    plot_w = 902  # data panel right edge; legend lives to the right
-
+    plot_w = 902
     P = _box(ctx.xy, plot_w, H, pad=pad)
     m = len(P)
 
     kd = getattr(ctx, "knn_dist", None)
-    if kd is None or kd.ndim < 2 or kd.shape[1] < 1:
-        # degrade: faint cloud + centered note, never crash
-        dots = "".join(
-            f'<circle cx="{P[i,0]:.1f}" cy="{P[i,1]:.1f}" r="1.2" '
-            f'fill="var(--ink-faint)" fill-opacity="0.4"/>'
-            for i in range(m)
-        )
-        note = (f'<text x="{W/2:.1f}" y="{H/2:.1f}" fill="var(--ink-faint)" '
-                f'font-size="13" text-anchor="middle">needs kNN backend</text>')
-        return {
-            "num": "COV 09", "order": 9,
-            "name": "Nearest-neighbor sparsity field", "tech": "nn distance",
-            "why": "Per-point nearest-neighbor distance would size each ring; larger NN distance means more open space and cleaner separation.",
-            "svg": _svg(W, H, "Nearest-neighbor sparsity field (needs kNN backend)", dots + note),
-            "legend": '<span><i class="f"></i> point (no kNN)</span>',
-            "reveal": "<b>Reveals:</b> nothing yet — kNN distances are unavailable.",
-            "cls": "",
-        }
+    if kd is None or getattr(kd, "ndim", 0) < 2 or kd.shape[1] < 1:
+        dots = "".join(f'<circle cx="{P[i,0]:.1f}" cy="{P[i,1]:.1f}" r="1.2" '
+                       f'fill="var(--ink-faint)" fill-opacity="0.4"/>' for i in range(m))
+        note = (f'<text x="{W/2:.1f}" y="{H/2:.1f}" fill="var(--ink-faint)" font-size="13" '
+                f'text-anchor="middle">needs kNN backend</text>')
+        return {"num": "COV 09", "order": 9, "name": "Nearest-neighbor sparsity field", "tech": "nn distance",
+                "why": "Per-point nearest-neighbor distance sizes each ring; larger = more open space, cleaner separation.",
+                "svg": _svg(W, H, "Nearest-neighbor sparsity field (needs kNN backend)", dots + note),
+                "legend": '<span><i class="f"></i> point (no kNN)</span>',
+                "reveal": "<b>Reveals:</b> nothing yet — kNN distances are unavailable.", "cls": ""}
 
-    d0 = np.asarray(kd[:, 0], float)
-    d0 = np.nan_to_num(d0, nan=0.0)
-
+    d0 = np.nan_to_num(np.asarray(kd[:, 0], float), nan=0.0)
     med = float(np.median(d0))
     p90 = float(np.quantile(d0, 0.90))
-    dmax = float(d0.max()) if d0.max() > 0 else 1.0
-
-    # radius scale: map NN distance -> svg pixels. Cap at a generous physical max
-    # so the very widest rings stay legible; median lands near a comfortable size.
-    R_MAX = 26.0
+    dmax = float(d0.max()) or 1.0
+    R_MAX = 22.0
     scale_hi = max(p90 * 1.6, dmax * 0.85, 1e-9)
 
     def r_of(dist):
         return float(np.clip(dist / scale_hi, 0.0, 1.0) * R_MAX)
 
-    isolated = d0 >= p90  # top decile = most space = GOOD resolution
+    isolated = d0 >= p90
 
-    body = []
-    # header captions
-    body.append(
-        f'<text x="{pad}" y="30.0" fill="var(--ink-soft)" font-size="12" '
-        f'text-anchor="start">nearest-neighbor sparsity field · ring radius = '
-        f"each point's 1-NN distance</text>"
-    )
-    body.append(
-        f'<text x="{plot_w-2:.1f}" y="30.0" fill="var(--good)" font-size="12" '
-        f'text-anchor="end">large NN distance = high resolution · good separation</text>'
-    )
-    # panel divider between data field and legend
-    body.append(
-        f'<line x1="{plot_w}" y1="54" x2="{plot_w}" y2="712" stroke="var(--rule-soft)" '
-        f'stroke-width="0.8" vector-effect="non-scaling-stroke"/>'
-    )
+    head = [
+        f'<text x="{pad}" y="30" fill="var(--ink-soft)" font-size="12">nearest-neighbor sparsity field · '
+        f"ring radius = each point's 1-NN distance</text>",
+        f'<text x="{plot_w-2:.1f}" y="30" fill="var(--good)" font-size="12" text-anchor="end">'
+        f'large NN distance = high resolution · good separation</text>',
+        f'<line x1="{plot_w}" y1="54" x2="{plot_w}" y2="712" stroke="var(--rule-soft)" stroke-width="0.8"/>',
+        f'<circle cx="{plot_w*0.5:.1f}" cy="{H*0.5:.1f}" r="{max(r_of(med),3.0):.1f}" fill="none" '
+        f'stroke="var(--ink-faint)" stroke-dasharray="2 5" stroke-width="1" opacity="0.7"/>',
+        f'<text x="{plot_w*0.5:.1f}" y="{H*0.5 + max(r_of(med),3.0) + 13:.1f}" fill="var(--ink-faint)" '
+        f'font-size="9" text-anchor="middle">median spacing</text>',
+    ]
 
-    # median reference circle (dashed, neutral) — "normal spacing"
-    r_med = max(r_of(med), 3.0)
-    cx_ref, cy_ref = plot_w * 0.50, H * 0.50
-    body.append(
-        f'<circle cx="{cx_ref:.1f}" cy="{cy_ref:.1f}" r="{r_med:.1f}" fill="none" '
-        f'stroke="var(--ink-faint)" stroke-dasharray="2 5" stroke-width="1" opacity="0.7"/>'
-    )
-
-    # rings — neutral crowded points first, isolated good rings on top
-    neutral, good = [], []
-    for i in range(m):
+    # rings split into shuffled groups so the slider can thin the field
+    rng = np.random.default_rng(0)
+    order = rng.permutation(m)
+    groups = [[] for _ in range(GROUPS)]
+    for rank, i in enumerate(order):
         x, y = P[i, 0], P[i, 1]
-        r = r_of(d0[i])
-        # tiny center dot anchors each item
-        dot = (f'<circle cx="{x:.1f}" cy="{y:.1f}" r="1.0" '
-               f'fill="var(--ink-faint)" fill-opacity="0.5"/>')
         if isolated[i]:
-            ring = (f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{max(r,2.5):.1f}" fill="none" '
-                    f'stroke="var(--good)" stroke-width="1.2" opacity="0.9"/>')
-            good.append(dot + ring)
+            r = max(r_of(d0[i]), 2.0)
+            groups[rank % GROUPS].append(
+                f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{r:.1f}" fill="none" stroke="var(--good)" stroke-width="1.25"/>')
         else:
-            # crowded / typical: small neutral ring, never bad
-            rr = max(r, 1.2)
-            ring = (f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{rr:.1f}" fill="none" '
-                    f'stroke="var(--ink-soft)" stroke-width="0.9" opacity="0.55"/>')
-            neutral.append(dot + ring)
-    body.append('<g>' + ''.join(neutral) + '</g>')
-    body.append('<g>' + ''.join(good) + '</g>')
+            groups[rank % GROUPS].append(
+                f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{min(r_of(d0[i]),3.0):.1f}" '
+                f'fill="var(--ink-faint)" fill-opacity="0.30"/>')
+    grp_svg = "".join(f'<g class="cov09-grp" data-i="{g}">{"".join(groups[g])}</g>' for g in range(GROUPS))
+    svg = _svg(W, H, "Nearest-neighbor sparsity field; rings on the most-isolated decile read good",
+               "".join(head) + grp_svg)
 
-    # ---- radius scale legend (right rail) ----
-    lx = (plot_w + W) / 2  # legend column center
-    body.append(
-        f'<g><text x="{lx:.1f}" y="80.0" fill="var(--ink-soft)" font-size="11" '
-        f'text-anchor="middle">1-NN RING</text>'
-        f'<text x="{lx:.1f}" y="94.0" fill="var(--ink-faint)" font-size="9.5" '
-        f'text-anchor="middle">radius = NN distance</text>'
-        f'<text x="{lx:.1f}" y="108.0" fill="var(--good)" font-size="9.5" '
-        f'text-anchor="middle">wider = higher resolution</text>'
-    )
+    # default: thin to ~6000 visible points when the field is large
+    vis = max(4, min(GROUPS, int(round(GROUPS * min(1.0, 6000.0 / max(1, m))))))
+    ctrl = ('<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;'
+            'font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--ink-faint)">'
+            f'samples <input id="cov09-range" type="range" min="1" max="{GROUPS}" value="{vis}" '
+            'style="flex:0 0 220px;accent-color:var(--accent)"> '
+            '<span id="cov09-count"></span></div>')
+    script = ("(function(){var T=%d,G=%d;var r=document.getElementById('cov09-range'),"
+              "c=document.getElementById('cov09-count');if(!r)return;"
+              "var gs=document.querySelectorAll('.cov09-grp');"
+              "function ap(){var v=+r.value;for(var i=0;i<gs.length;i++)gs[i].style.display=(i<v)?'':'none';"
+              "if(c)c.textContent=Math.round(T*v/G).toLocaleString()+' of '+T.toLocaleString()+' points';}"
+              "r.addEventListener('input',ap);ap();})();") % (m, GROUPS)
 
-    # quantitative axis: a vertical ruler with evenly spaced ticks in distance units
-    ax_x = lx - 74
-    ax_top, ax_bot = 148.0, 408.0
-    n_tk = 5
-    body.append(
-        '<g font-family="ui-monospace,Menlo,Consolas,monospace" '
-        'font-variant-numeric="tabular-nums">'
-        f'<line x1="{ax_x:.0f}" y1="{ax_top:.0f}" x2="{ax_x:.0f}" y2="{ax_bot:.0f}" '
-        f'stroke="var(--rule-soft)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>'
-    )
-    for t in range(n_tk):
-        frac = t / (n_tk - 1)
-        ty = ax_top + frac * (ax_bot - ax_top)
-        dist_val = frac * scale_hi
-        body.append(
-            f'<line x1="{ax_x-4:.0f}" y1="{ty:.0f}" x2="{ax_x:.0f}" y2="{ty:.0f}" '
-            f'stroke="var(--rule-soft)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>'
-            f'<text x="{ax_x-8:.1f}" y="{ty+3.5:.1f}" fill="var(--ink-faint)" font-size="9" '
-            f'text-anchor="end">{dist_val:.3f}</text>'
-        )
-    body.append('</g>')
-
-    # exemplar rings at core / median / p90, sized by the same scale
-    def exemplar(cy, dist, color, dash, label):
-        rr = max(r_of(dist), 1.6)
-        d = f' stroke-dasharray="{dash}"' if dash else ''
-        return (
-            f'<circle cx="{lx:.0f}" cy="{cy:.0f}" r="{rr:.1f}" fill="none" '
-            f'stroke="{color}" stroke-width="1.2"{d}/>'
-            f'<circle cx="{lx:.0f}" cy="{cy:.0f}" r="1.4" fill="var(--ink-faint)"/>'
-            f'<text x="{lx:.1f}" y="{cy+rr+15:.1f}" fill="{color}" font-size="9.5" '
-            f'text-anchor="middle">{label}</text>'
-        )
-
-    body.append(exemplar(168, 0.0, "var(--ink-soft)", "", f"dense core ≈ {0.0:.3f}"))
-    body.append(exemplar(230, med, "var(--ink-faint)", "3 3", f"median ≈ {med:.3f} (normal)"))
-    body.append(exemplar(330, p90, "var(--good)", "", f"p90 ≈ {p90:.3f} · open space"))
-
-    body.append(
-        f'<text x="{lx:.1f}" y="448.0" fill="var(--ink-faint)" font-size="9" '
-        f'text-anchor="middle" font-family="ui-monospace,Menlo,Consolas,monospace" '
-        f'font-variant-numeric="tabular-nums">core {0.0:.3f} · median {med:.3f} · '
-        f'p90 {p90:.3f}</text></g>'
-    )
-
-    n_iso = int(isolated.sum())
     return {
-        "num": "COV 09", "order": 9,
-        "name": "Nearest-neighbor sparsity field", "tech": "nn distance",
-        "why": (f"Each point wears an open ring whose radius is its distance to its "
-                f"nearest neighbor (1-NN ∈ 1-cos). The {n_iso} top-decile most-isolated "
-                f"items (NN ≥ {p90:.3f}) claim open space and get the good token — large "
-                f"distance is high resolution, not a defect."),
-        "svg": _svg(W, H,
-                    "Nearest-neighbor sparsity field: ring radius equals each point's "
-                    "distance to its nearest neighbor; the most-isolated top-decile points "
-                    "wear good-token rings because larger separation means higher resolution.",
-                    "".join(body)),
-        "legend": ('<span><i class="f"></i> typical point (neutral ring)</span>'
-                   '<span><i class="dash"></i> median NN reference</span>'
-                   '<span><i class="g"></i> top-decile isolated (good)</span>'),
-        "reveal": (f"<b>Reveals:</b> where the corpus leaves breathing room — the widest "
-                   f"rings mark items the embedding resolves cleanly, while tight clusters "
-                   f"of bare dots mark crowded, harder-to-separate regions."),
+        "num": "COV 09", "order": 9, "name": "Nearest-neighbor sparsity field", "tech": "nn distance · slider",
+        "why": "Each point is a ring sized by its 1-NN distance; the most-isolated decile (most open space) reads good. The slider thins the field — useful at 100k where it is crowded.",
+        "svg": ctrl + svg, "script": script,
+        "legend": '<span><i class="g"></i> isolated decile — most distinct (good)</span>'
+                  '<span><i class="f"></i> typical spacing (neutral)</span>'
+                  '<span><i class="dash"></i> median spacing</span>',
+        "reveal": "<b>Reveals:</b> where the space is open vs. packed — the good rings mark the best-separated points; drag the slider to thin a crowded field.",
         "cls": "",
     }
