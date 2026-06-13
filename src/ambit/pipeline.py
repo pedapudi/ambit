@@ -35,8 +35,8 @@ class Ctx:
         return self.scan.sample
 
 
-def build_ctx(sc: Scan, *, projector: str = "pca", pairs: int = 200_000,
-              k: int = 10, clusters="auto", seed: int = 0, device: str = "cpu") -> Ctx:
+def build_ctx(sc: Scan, *, projector: str = "pca", pairs: int = 200_000, k: int = 10,
+              clusters="auto", seed: int = 0, device: str = "cpu", knn_backend: str = "auto") -> Ctx:
     """clusters: "auto"/True -> auto-label when no metadata column; an int -> force
     that many k-means clusters; False/None/0 -> no unsupervised labeling.
     device: "cpu" (numpy) or a torch device ("cuda"/"auto"/"mps"/"torch")."""
@@ -54,7 +54,7 @@ def build_ctx(sc: Scan, *, projector: str = "pca", pairs: int = 200_000,
             xy, xyz = project(es, 2, method=projector), project(es, 3, method=projector)
         cos = accel.torch_random_pair_cosine(es.X, pairs, dev, seed)
         try:
-            knn_idx, knn_dist = accel.torch_knn(es.X, k, dev)
+            knn_idx, knn_dist = accel.torch_knn(es.X, k, dev, backend=knn_backend)
         except Exception:
             knn_idx = knn_dist = None
     else:
@@ -63,7 +63,7 @@ def build_ctx(sc: Scan, *, projector: str = "pca", pairs: int = 200_000,
         xyz = project(es, 3, method=projector, randomized=randomized)
         cos = metrics.random_pair_cosine(es.X, n_pairs=pairs, normalized=True, seed=seed)
         try:
-            knn_idx, knn_dist = knnmod.knn(es, k=k)
+            knn_idx, knn_dist = knnmod.knn(es, k=k, backend=knn_backend)
         except Exception:
             knn_idx = knn_dist = None
 

@@ -20,31 +20,53 @@ def knn(es: EmbeddingSet, k: int = 10, *, backend: str = "auto"):
     m = len(U)
     kk = min(k, m - 1)
 
+    if backend == "faiss":
+        return faiss_knn(U, k)
+    if backend == "brute":
+        return _brute(U, kk, cosine)
+
     if backend in ("auto", "pynndescent"):
         try:
             from pynndescent import NNDescent
-            index = NNDescent(U, metric="cosine" if cosine else "euclidean",
-                              n_neighbors=kk + 1)
-            idx, dist = index.neighbor_graph
+            idx, dist = NNDescent(U, metric="cosine" if cosine else "euclidean",
+                                  n_neighbors=kk + 1).neighbor_graph
             return _drop_self(idx, dist)
         except ImportError:
             if backend == "pynndescent":
                 raise
 
-    try:
-        from sklearn.neighbors import NearestNeighbors
-        nn = NearestNeighbors(n_neighbors=kk + 1, metric="cosine" if cosine else "euclidean")
-        nn.fit(U)
-        dist, idx = nn.kneighbors(U)
-        return _drop_self(idx, dist)
-    except ImportError:
-        pass
+    if backend in ("auto", "sklearn"):
+        try:
+            from sklearn.neighbors import NearestNeighbors
+            nn = NearestNeighbors(n_neighbors=kk + 1, metric="cosine" if cosine else "euclidean").fit(U)
+            dist, idx = nn.kneighbors(U)
+            return _drop_self(idx, dist)
+        except ImportError:
+            if backend == "sklearn":
+                raise
 
     if m > 8000:
         raise RuntimeError(
             f"exact kNN over {m} points needs scikit-learn or an ANN backend "
             "(pip install 'ambit[reduce]' or 'ambit[ann]')")
     return _brute(U, kk, cosine)
+
+
+def faiss_knn(Xn, k: int):
+    """FAISS kNN (GPU if faiss-gpu is present). Xn assumed L2-normalized; cosine via
+    inner product. Returns (idx, dist=1-cos), self excluded."""
+    import faiss
+    X = np.ascontiguousarray(Xn, dtype=np.float32)
+    n, d = X.shape
+    index = faiss.IndexFlatIP(d)
+    if hasattr(faiss, "StandardGpuResources"):
+        try:
+            index = faiss.index_cpu_to_gpu(faiss.StandardGpuResources(), 0, index)
+        except Exception:
+            pass
+    index.add(X)
+    sims, ind = index.search(X, min(k, n - 1) + 1)
+    return ind[:, 1:], (1.0 - sims[:, 1:]).astype(np.float32)
 
 
 def _drop_self(idx, dist):

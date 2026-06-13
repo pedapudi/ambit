@@ -14,13 +14,11 @@ Activated by `device != "cpu"` on `scan()` / `build_ctx()`:
     torch  -> torch on CPU (for testing the tensor path without a GPU)
 
 Install with `pip install 'ambit[gpu]'`. For kNN over a very large reservoir or the
-full corpus, set `AMBIT_FAISS=1` to use FAISS-GPU (`ambit[faiss]`) instead of the
-torch brute-force path.
+full corpus, pass `knn_backend='faiss'` (CLI `--knn-backend faiss`) to use FAISS-GPU
+(`ambit[faiss]`) instead of the torch brute-force path.
 """
 
 from __future__ import annotations
-
-import os
 
 import numpy as np
 
@@ -117,14 +115,12 @@ def torch_random_pair_cosine(Xn, n_pairs: int, device: str, seed: int = 0) -> np
     return cos.cpu().numpy().astype(np.float64)
 
 
-def torch_knn(Xn, k: int, device: str, block: int = 4096):
+def torch_knn(Xn, k: int, device: str, block: int = 4096, backend: str = "auto"):
     """Exact cosine kNN on device, blocked so the (block x n) similarity tile stays
-    bounded. Xn assumed L2-normalized. For n in the millions prefer FAISS-GPU."""
-    if os.environ.get("AMBIT_FAISS") == "1":
-        try:
-            return _faiss_knn(Xn, k)
-        except Exception:
-            pass
+    bounded. Xn assumed L2-normalized. backend='faiss' delegates to FAISS-GPU."""
+    if backend == "faiss":
+        from .knn import faiss_knn
+        return faiss_knn(Xn, k)
     import torch
     dev = torch.device(device)
     T = torch.from_numpy(np.array(Xn, dtype=np.float32)).to(dev)
@@ -141,15 +137,3 @@ def torch_knn(Xn, k: int, device: str, block: int = 4096):
         idx[s:e] = ind.cpu().numpy()
         dist[s:e] = (1.0 - vals).cpu().numpy()
     return idx, dist
-
-
-def _faiss_knn(Xn, k: int):
-    import faiss  # ambit[faiss]; faiss-gpu for the GPU index
-    X = np.array(Xn, dtype=np.float32)
-    n, d = X.shape
-    index = faiss.IndexFlatIP(d)                               # inner product = cosine on unit vectors
-    if hasattr(faiss, "StandardGpuResources"):
-        index = faiss.index_cpu_to_gpu(faiss.StandardGpuResources(), 0, index)
-    index.add(X)
-    sims, ind = index.search(X, min(k, n - 1) + 1)
-    return ind[:, 1:], (1.0 - sims[:, 1:]).astype(np.float32)  # drop self

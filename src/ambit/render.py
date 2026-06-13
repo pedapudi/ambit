@@ -210,13 +210,14 @@ def _facts(ctx):
 
 
 def build_report(ctx, *, out=None, title="ambit — embedding-space occupancy", config=None) -> str:
-    from .config import enabled
+    from .config import Config, DEFAULT_FIGURES, enabled
+    figures = config.figures if isinstance(config, Config) else (config if config is not None else DEFAULT_FIGURES)
     _load_figures()
     style = (ASSETS / "theme.css").read_text(encoding="utf-8")
     picker = (ASSETS / "picker.js").read_text(encoding="utf-8")
     facts = "".join(f'<div class="kv"><span class="k">{k}</span><span class="v">{v}</span></div>'
                     for k, v in _facts(ctx))
-    active = [fn for key, fn in FIGURES.items() if enabled(config, key)]
+    active = [fn for key, fn in FIGURES.items() if enabled(figures, key)]
     metas = sorted((fn(ctx) for fn in active), key=lambda d: d.get("order", 999))
     cards = []
     for f in metas:

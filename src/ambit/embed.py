@@ -12,7 +12,6 @@ without holding it all in memory.
 from __future__ import annotations
 
 import json
-import os
 import time
 import urllib.error
 import urllib.request
@@ -24,11 +23,10 @@ import numpy as np
 
 class EmbeddingClient:
     def __init__(self, model: str, *, base_url: Optional[str] = None, api_key: Optional[str] = None,
-                 batch: int = 128, timeout: float = 60.0, max_retries: int = 5,
-                 env_key: str = "OPENAI_API_KEY", env_base: str = "OPENAI_BASE_URL"):
+                 batch: int = 128, timeout: float = 60.0, max_retries: int = 5):
         self.model = model
-        self.base_url = (base_url or os.environ.get(env_base) or "https://api.openai.com/v1").rstrip("/")
-        self.api_key = api_key or os.environ.get(env_key) or ""
+        self.base_url = (base_url or "https://api.openai.com/v1").rstrip("/")
+        self.api_key = api_key or ""
         self.batch = batch
         self.timeout = timeout
         self.max_retries = max_retries
