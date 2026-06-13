@@ -28,6 +28,7 @@ class Ctx:
     knn_dist: Optional[np.ndarray] = None # (m, k) neighbor distances (1 - cos for cosine)
     labels: Optional[np.ndarray] = None   # (m,) group labels — provided or clustered
     labels_source: Optional[str] = None   # "provided" | "k-means (...)" | "hdbscan (...)" | None
+    hub_skew: Optional[float] = None      # k-occurrence skewness over the reservoir kNN
 
     @property
     def es(self):
@@ -58,4 +59,5 @@ def build_ctx(sc: Scan, *, projector: str = "pca", pairs: int = 200_000,
         except Exception:
             labels = labels_source = None
 
-    return Ctx(sc, xy, xyz, sc.eigs, cos, knn_idx, knn_dist, labels, labels_source)
+    hub_skew = metrics.hubness_skew(knn_idx) if knn_idx is not None else None
+    return Ctx(sc, xy, xyz, sc.eigs, cos, knn_idx, knn_dist, labels, labels_source, hub_skew)

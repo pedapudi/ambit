@@ -60,3 +60,12 @@ def dims_for_variance(eigs: np.ndarray, frac: float = 0.9) -> int:
 def isotropy_ref(dim: int) -> float:
     """Std of random-pair cosine for iid points on the unit d-sphere (~N(0, 1/d))."""
     return 1.0 / np.sqrt(dim)
+
+
+def hubness_skew(knn_idx: np.ndarray) -> float:
+    """Skewness of the k-occurrence distribution — how often each point is *somebody's*
+    neighbor. High positive skew = a few hubs dominate retrieval (Radovanović et al.)."""
+    occ = np.bincount(knn_idx.reshape(-1), minlength=len(knn_idx)).astype(np.float64)
+    m = occ.mean()
+    sd = occ.std() or 1.0
+    return float(((occ - m) ** 3).mean() / sd ** 3)

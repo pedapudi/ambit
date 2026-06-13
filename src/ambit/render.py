@@ -91,41 +91,61 @@ def fig_cloud(ctx):
 
 @figure
 def fig_cos_hist(ctx):
-    w, h, pad = 760, 320, 44
+    w, h, pad = 760, 340, 50
     cos = ctx.cos
     ref = metrics.isotropy_ref(ctx.scan.dim)
-    lo, hi, bins = -0.3, 0.9, 48
+    # data-driven range snapped to 0.05, always including the isotropic ref at 0
+    lo = float(min(0.0, np.floor((float(cos.min()) - 0.03) / 0.05) * 0.05))
+    hi = float(np.ceil((float(cos.max()) + 0.03) / 0.05) * 0.05)
+    lo, hi = max(-1.0, lo), min(1.0, hi)
+    span = (hi - lo) or 1.0
+    bins = max(48, int(round(span / 0.0125)))            # ~0.0125-wide bins -> finer resolution
     cnt, edges = np.histogram(cos, bins=bins, range=(lo, hi))
     top = int(cnt.max()) or 1
     base = h - pad
     bw = (w - 2 * pad) / bins
 
     def x_of(v):
-        return pad + (v - lo) / (hi - lo) * (w - 2 * pad)
+        return pad + (v - lo) / span * (w - 2 * pad)
 
     body = [f'<line x1="{pad}" y1="{base}" x2="{w-pad}" y2="{base}" stroke="var(--rule)" stroke-width="1"/>']
+    # bars coloured by cosine: isotropic (cos~0) = good/distinct, crowded (high cos) = bad
     for k in range(bins):
-        bh = (cnt[k] / top) * (h - 2 * pad)
-        body.append(f'<rect x="{pad+k*bw:.1f}" y="{base-bh:.1f}" width="{bw*0.86:.1f}" '
-                    f'height="{bh:.1f}" fill="var(--ink-faint)" fill-opacity="0.75"/>')
-    body.append(f'<line x1="{x_of(0):.1f}" y1="{pad}" x2="{x_of(0):.1f}" y2="{base}" '
-                f'stroke="var(--ink-faint)" stroke-dasharray="3 3"/>')
-    body.append(f'<line x1="{x_of(cos.mean()):.1f}" y1="{pad-2}" x2="{x_of(cos.mean()):.1f}" '
-                f'y2="{base}" stroke="var(--accent)" stroke-width="2"/>')
-    for t in np.round(np.arange(-0.2, 0.81, 0.1), 1):
-        body.append(f'<line x1="{x_of(t):.1f}" y1="{base}" x2="{x_of(t):.1f}" y2="{base+4}" stroke="var(--rule-soft)"/>')
-        body.append(f'<text x="{x_of(t):.1f}" y="{base+15}" font-size="9.5" fill="var(--ink-faint)" '
-                    f'text-anchor="middle">{t:+.1f}</text>')
-    body.append(f'<text x="{x_of(cos.mean()):.1f}" y="{pad-5}" font-size="10" fill="var(--accent)" '
+        if cnt[k] == 0:
+            continue
+        c0 = 0.5 * (edges[k] + edges[k + 1])
+        pct = int(round(max(0.0, min(1.0, c0)) * 100))
+        bh = cnt[k] / top * (h - 2 * pad)
+        body.append(f'<rect x="{pad+k*bw:.2f}" y="{base-bh:.1f}" width="{bw*0.92:.2f}" height="{bh:.1f}" '
+                    f'fill="color-mix(in srgb, var(--bad) {pct}%, var(--good))" fill-opacity="0.85"/>')
+    if lo <= 0 <= hi:
+        body.append(f'<line x1="{x_of(0):.1f}" y1="{pad}" x2="{x_of(0):.1f}" y2="{base}" '
+                    f'stroke="var(--ink-faint)" stroke-dasharray="3 3"/>')
+        body.append(f'<text x="{x_of(0):.1f}" y="{pad-6}" font-size="9" fill="var(--ink-faint)" '
+                    f'text-anchor="middle">isotropic 0</text>')
+    mx = x_of(float(cos.mean()))
+    body.append(f'<line x1="{mx:.1f}" y1="{pad-2}" x2="{mx:.1f}" y2="{base}" stroke="var(--accent)" stroke-width="2"/>')
+    body.append(f'<text x="{mx:.1f}" y="{pad-18}" font-size="10" fill="var(--accent)" '
                 f'text-anchor="middle">mean {cos.mean():+.3f}</text>')
+    # fine axis: minor ticks every 0.025, majors labelled every 0.1
+    for s in range(int(np.ceil(lo / 0.025)), int(np.floor(hi / 0.025)) + 1):
+        v = s * 0.025
+        major = (s % 4 == 0)
+        body.append(f'<line x1="{x_of(v):.1f}" y1="{base}" x2="{x_of(v):.1f}" y2="{base + (6 if major else 3)}" '
+                    f'stroke="var(--rule-soft)"/>')
+        if major:
+            body.append(f'<text x="{x_of(v):.1f}" y="{base+17}" font-size="9.5" fill="var(--ink-faint)" '
+                        f'text-anchor="middle">{v:.1f}</text>')
     return {
         "num": "RES 01", "order": 90, "name": "Random-pair cosine distribution", "tech": "anisotropy fingerprint",
-        "why": f"Cosine of {len(cos):,} random pairs against the isotropic reference (0 ± {ref:.3f}). Mass near 0 is isotropic; a shifted lobe is a crowded cone.",
-        "svg": _svg(w, h, "Random-pair cosine similarity histogram", "".join(body)),
-        "legend": '<span><i class="f"></i> pair counts</span>'
-                  '<span><i class="dash"></i> isotropic ref (cos 0)</span>'
+        "why": f"Cosine of {len(cos):,} random pairs (isotropic ref 0 ± {ref:.3f}). Bar colour runs from good "
+               f"(isotropic, cos≈0 — distinct) to bad (high cos — crowded), so the cone reads as a red-leaning lobe.",
+        "svg": _svg(w, h, "Random-pair cosine histogram coloured from isotropic (good) to crowded (bad)", "".join(body)),
+        "legend": '<span><i class="g"></i> isotropic / distinct (cos≈0)</span>'
+                  '<span><i class="r"></i> crowded / low resolution (high cos)</span>'
+                  '<span><i class="dash"></i> isotropic ref (0)</span>'
                   '<span><i class="a"></i> dataset mean</span>',
-        "reveal": "<b>Reveals:</b> the anisotropy of the space — lower mean magnitude means higher resolution between items.",
+        "reveal": "<b>Reveals:</b> not just <i>that</i> the space is anisotropic but <i>where</i> the pair mass sits on the distinct→crowded axis — a red lobe at high cosine is the low-resolution cone.",
         "cls": "fig-mid",
     }
 
@@ -181,6 +201,8 @@ def _facts(ctx):
     if ctx.labels is not None:
         ng = len(set(map(str, ctx.labels.tolist())))
         f.append(("groups", f"{ng} · {ctx.labels_source or 'labeled'}"))
+    if getattr(ctx, "hub_skew", None) is not None:
+        f.append(("hub skew", f"{ctx.hub_skew:.1f}"))
     return f
 
 
