@@ -46,11 +46,11 @@ def fig_cov_sparsity(ctx):
     isolated = d0 >= p90
 
     head = [
-        f'<text x="{pad}" y="30" fill="var(--ink-soft)" font-size="12">nearest-neighbor sparsity field · '
+        f'<text x="{pad}" y="24" fill="var(--ink-soft)" font-size="12">nearest-neighbor sparsity field · '
         f"ring radius = each point's 1-NN distance</text>",
-        f'<text x="{plot_w-2:.1f}" y="30" fill="var(--good)" font-size="12" text-anchor="end">'
+        f'<text x="{pad}" y="42" fill="var(--good)" font-size="12">'
         f'large NN distance = high resolution · good separation</text>',
-        f'<line x1="{plot_w}" y1="54" x2="{plot_w}" y2="712" stroke="var(--rule-soft)" stroke-width="0.8"/>',
+        f'<line x1="{plot_w}" y1="60" x2="{plot_w}" y2="712" stroke="var(--rule-soft)" stroke-width="0.8"/>',
         f'<circle cx="{plot_w*0.5:.1f}" cy="{H*0.5:.1f}" r="{max(r_of(med),3.0):.1f}" fill="none" '
         f'stroke="var(--ink-faint)" stroke-dasharray="2 5" stroke-width="1" opacity="0.7"/>',
         f'<text x="{plot_w*0.5:.1f}" y="{H*0.5 + max(r_of(med),3.0) + 13:.1f}" fill="var(--ink-faint)" '

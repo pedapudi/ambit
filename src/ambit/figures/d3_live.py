@@ -1,8 +1,9 @@
 """Live 3-D point cloud — the real projected reservoir (ctx.xyz) baked into a
 drag-to-rotate / scroll-to-zoom canvas. Vanilla JS, no deps; reads CSS tokens so
 it re-skins on theme swap. Ports the full study live-view feature set: depth-sorted
-restrained palette, an outlier-tail fade, and the rotating x/y/z origin gnomon at
-lower-left. Returns a `script` field (collected by build_report)."""
+points coloured by genre cluster, a #-points slider to thin the field, and the
+rotating x/y/z origin gnomon at lower-left. Returns a `script` field (collected by
+build_report)."""
 
 from __future__ import annotations
 
@@ -17,8 +18,12 @@ if(ctx){cv.dataset.init="1";
 var DEG=Math.PI/180,yaw=35*DEG,pitch=22*DEG,zoom=1,ZMIN=0.5,ZMAX=5;
 var rm=(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 var auto=!rm,SPIN=7*DEG,lastIdle=0,RESUME=2600,tok={};
+var PAL_TOK=["--accent","--good","--bad","--caution","--ink-soft"],pal=[];
+var rng=document.getElementById("d3live-range"),cnt=document.getElementById("d3live-count");
+var VIS=rng?(+rng.value):PTS.length;
 function readTok(){var cs=getComputedStyle(document.documentElement);var fb=(getComputedStyle(cv).color||"").trim();
- tok.faint=cs.getPropertyValue("--ink-faint").trim()||fb;tok.accent=cs.getPropertyValue("--accent").trim()||tok.faint;}
+ tok.faint=cs.getPropertyValue("--ink-faint").trim()||fb;tok.accent=cs.getPropertyValue("--accent").trim()||tok.faint;
+ pal=[];for(var k=0;k<NCL;k++){var c=cs.getPropertyValue(PAL_TOK[k%PAL_TOK.length]).trim();pal.push(c||tok.accent);}}
 var cssW=600,cssH=420,dpr=1,AS=0.66;
 function resize(){var w=cv.clientWidth||(cv.parentNode&&cv.parentNode.clientWidth)||600;cssW=Math.max(240,w);
  cssH=Math.round(cssW*AS);dpr=window.devicePixelRatio||1;cv.style.height=cssH+"px";
@@ -34,17 +39,18 @@ function gnomon(cx,cy,cyw,syw,cp,sp){
  ctx.globalAlpha=1;ctx.textAlign="start";ctx.textBaseline="alphabetic";}
 function draw(){ctx.clearRect(0,0,cssW,cssH);
  var cx=cssW/2,cy=cssH/2,sc=Math.min(cssW,cssH)*0.40*zoom,zf=Math.pow(zoom,0.35);
- var cyw=Math.cos(yaw),syw=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch),pr=[],i,n=PTS.length;
+ var cyw=Math.cos(yaw),syw=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch),pr=[],i;
+ var n=Math.max(1,Math.min(PTS.length,VIS|0));
  for(i=0;i<n;i++){var p=PTS[i];var x1=p[0]*cyw+p[2]*syw,z1=-p[0]*syw+p[2]*cyw,y1=p[1]*cp-z1*sp,z2=p[1]*sp+z1*cp;
   pr.push([cx+x1*sc,cy-y1*sc,z2,p[3]]);}
  pr.sort(function(a,b){return a[2]-b[2];});
  var zmin=Infinity,zmax=-Infinity;for(i=0;i<pr.length;i++){if(pr[i][2]<zmin)zmin=pr[i][2];if(pr[i][2]>zmax)zmax=pr[i][2];}
  var zr=(zmax-zmin)||1;
  for(i=0;i<pr.length;i++){var q=pr[i],nd=(q[2]-zmin)/zr,r,al,col;
-  if(q[3]===1){col=tok.accent;r=1.4+nd*1.2;al=0.55+nd*0.4;}
-  else if(q[3]===2){col=tok.faint;r=0.6+nd*0.7;al=0.10+nd*0.18;}
-  else{col=tok.faint;r=0.8+nd*1.0;al=0.14+nd*0.34;}
-  r*=zf;ctx.globalAlpha=al;ctx.fillStyle=col;ctx.beginPath();ctx.arc(q[0],q[1],r,0,6.2831853);ctx.fill();}
+  col=pal[q[3]]||tok.accent;          /* cluster colour */
+  r=(0.8+nd*1.4)*zf;                   /* near larger, far smaller */
+  al=0.22+nd*0.55;                     /* near brighter, far dimmer */
+  ctx.globalAlpha=al;ctx.fillStyle=col;ctx.beginPath();ctx.arc(q[0],q[1],r,0,6.2831853);ctx.fill();}
  ctx.globalAlpha=1;gnomon(cx,cy,cyw,syw,cp,sp);}
 var drag=false,lx=0,ly=0,pin=false,pd=0,pz=1;
 function pt(e){var r=cv.getBoundingClientRect(),t=(e.touches&&e.touches[0])||e;return [t.clientX-r.left,t.clientY-r.top];}
@@ -64,53 +70,75 @@ window.addEventListener("touchend",up);cv.addEventListener("wheel",whl,{passive:
 var prev=0;function frame(t){var dt=(t-prev)/1000;prev=t;
  if(auto&&!drag&&!pin){yaw+=SPIN*dt;draw();}
  else if(!rm&&!drag&&!pin&&!auto&&lastIdle&&(t-lastIdle)>RESUME){auto=true;}requestAnimationFrame(frame);}
+function showCount(){if(cnt)cnt.textContent=(VIS|0).toLocaleString()+" of "+PTS.length.toLocaleString()+" points";}
+if(rng){rng.addEventListener("input",function(){VIS=+rng.value;showCount();draw();});}
 new MutationObserver(function(){readTok();draw();}).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 if(window.ResizeObserver){new ResizeObserver(function(){resize();}).observe(cv.parentNode||cv);}
 window.addEventListener("resize",resize);
-readTok();resize();requestAnimationFrame(function(t){prev=t;frame(t);});
+readTok();showCount();resize();requestAnimationFrame(function(t){prev=t;frame(t);});
 }}
 """
+
+
+_PAL_TOK = ["--accent", "--good", "--bad", "--caution", "--ink-soft"]
 
 
 @figure
 def fig_d3_live(ctx):
     P = np.asarray(ctx.xyz, dtype=float)
     m = len(P)
-    if m > 5000:  # the live cloud never needs more than a few thousand points
-        idx = np.linspace(0, m - 1, 5000).astype(int)
+    labels = np.asarray(ctx.labels)
+    if m > 8000:  # the live cloud never needs more than a few thousand points
+        idx = np.linspace(0, m - 1, 8000).astype(int)
         P = P[idx]
-        kd = None if ctx.knn_dist is None else ctx.knn_dist[idx]
-    else:
-        kd = ctx.knn_dist
+        labels = labels[idx]
     c = P - P.mean(0)
     s = float(np.abs(c).max()) or 1.0
     C = c / s
-    if kd is not None:
-        dens = -kd.mean(1)                       # smaller mean kNN distance = denser
-        acc = dens >= np.quantile(dens, 0.90)    # the dense core carries the accent
-    else:
-        acc = np.zeros(len(C), dtype=bool)
-    rad = np.linalg.norm(C, axis=1)
-    outlier = (rad >= np.quantile(rad, 0.98)) & ~acc   # the sparse tail, drawn extra-faint
-    kind = np.where(acc, 1, np.where(outlier, 2, 0)).astype(int)
-    pts = "[" + ",".join("[%.3f,%.3f,%.3f,%d]" % (C[i, 0], C[i, 1], C[i, 2], int(kind[i]))
+
+    # map the distinct genres to indices 0..NCL-1 (stable, sorted)
+    genres = sorted({str(g) for g in labels.tolist()})
+    gidx = {g: i for i, g in enumerate(genres)}
+    cluster = np.array([gidx[str(g)] for g in labels], dtype=int)
+    NCL = len(genres)
+
+    # shuffle ONCE so the slider thins an unbiased, genre-mixed prefix
+    rng = np.random.default_rng(0)
+    order = rng.permutation(len(C))
+    C = C[order]
+    cluster = cluster[order]
+
+    pts = "[" + ",".join("[%.3f,%.3f,%.3f,%d]" % (C[i, 0], C[i, 1], C[i, 2], int(cluster[i]))
                          for i in range(len(C))) + "]"
-    script = "(function(){var PTS=" + pts + ";" + _JS + "})();"
+
+    total = len(C)
+    vis = max(1, min(total, 6000))   # default ~6000 visible
+    script = ("(function(){var PTS=%s;var NCL=%d;%s})();" % (pts, NCL, _JS))
+
+    ctrl = ('<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;'
+            'font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--ink-faint)">'
+            f'samples <input id="d3live-range" type="range" min="1" max="{total}" value="{vis}" '
+            'style="flex:0 0 220px;accent-color:var(--accent)"> '
+            '<span id="d3live-count"></span></div>')
     canvas = (
+        ctrl +
         '<canvas id="ambit-live-canvas" role="img" '
-        'aria-label="Interactive 3-D point cloud of the projected reservoir; drag to rotate, scroll or pinch to zoom; an x/y/z origin gnomon at lower-left shows orientation" '
+        'aria-label="Interactive 3-D point cloud of the projected reservoir coloured by genre cluster; drag to rotate, scroll or pinch to zoom; an x/y/z origin gnomon at lower-left shows orientation" '
         'style="display:block;width:100%;height:auto;touch-action:none;cursor:grab;background:transparent">'
         'Your browser does not support the canvas element; the static 3-D triptych shows the same cloud.</canvas>'
         '<div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:.06em;'
         'color:var(--ink-faint);margin-top:6px;text-align:center">drag to rotate · scroll / pinch to zoom · auto-spins when idle</div>')
+
+    legend = "".join(
+        '<span><i style="background:var(%s)"></i> %s</span>'
+        % (_PAL_TOK[i % len(_PAL_TOK)], genres[i]) for i in range(NCL)
+    ) + '<span><i class="dash"></i> x/y/z origin gnomon</span>'
+
     return {
-        "num": "3D · live", "order": 19, "name": "Live 3-D cloud (drag · zoom)", "tech": "canvas · drag/zoom",
-        "why": "The projected reservoir as a turnable solid — the same xyz the triptych shows, live; the lower-left x/y/z gnomon tracks orientation as you rotate.",
+        "num": "3D · live", "order": 19, "name": "Live 3-D cloud (drag · zoom)", "tech": "canvas · drag/zoom · clusters",
+        "why": "The projected reservoir as a turnable solid — the same xyz the triptych shows, live, with each point coloured by its genre cluster; the lower-left x/y/z gnomon tracks orientation as you rotate.",
         "svg": canvas, "script": script,
-        "legend": '<span><i class="a"></i> dense core (accent)</span>'
-                  '<span><i class="f"></i> cloud (faint)</span>'
-                  '<span><i class="f"></i> sparse tail (fainter)</span>'
-                  '<span><i class="dash"></i> x/y/z origin gnomon</span>',
-        "reveal": "<b>Reveals:</b> the occupied volume from any angle — rotate and zoom; the gnomon keeps you oriented as the cloud turns.",
+        "legend": legend,
+        "reveal": "<b>Reveals:</b> how the genre clusters sit in the occupied volume — rotate and zoom from any angle, depth grades each cluster's colour (near brighter, far dimmer), and the samples slider thins the field; the gnomon keeps you oriented as the cloud turns.",
         "cls": "fig-mid",
     }
