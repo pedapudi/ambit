@@ -69,7 +69,8 @@ def cmd_report(a) -> int:
         cfg = json.load(open(a.config))
     sc = run_scan(a.embeddings, sample=a.sample, embedding_col=a.embedding_col,
                   id_col=a.id_col, label_col=a.label_col, metric=a.metric, batch_rows=a.batch_rows)
-    ctx = pipeline.build_ctx(sc, projector=a.projector, pairs=a.pairs)
+    clusters = False if a.no_cluster else (a.clusters if a.clusters else "auto")
+    ctx = pipeline.build_ctx(sc, projector=a.projector, pairs=a.pairs, clusters=clusters)
     render.build_report(ctx, out=a.out, title=a.title, config=cfg)
     from .config import enabled as _en
     shown = sum(1 for k in render.FIGURES if _en(cfg, k))
@@ -114,6 +115,8 @@ def main(argv=None) -> int:
     pr.add_argument("--projector", default="pca", choices=["pca", "umap"])
     pr.add_argument("--title", default="ambit — embedding-space occupancy")
     pr.add_argument("--config", default=None, help="JSON {figure_key: bool} overriding which figures render")
+    pr.add_argument("--clusters", type=int, default=None, help="force k clusters for auto-labeling (default: auto-pick)")
+    pr.add_argument("--no-cluster", action="store_true", help="disable unsupervised labeling when no --label-col")
     pr.set_defaults(func=cmd_report)
 
     args = ap.parse_args(argv)
