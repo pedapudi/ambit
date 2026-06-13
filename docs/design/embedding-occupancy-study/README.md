@@ -76,6 +76,74 @@ where it over- vs under-occupies the space.
 | VIZ 10 | Differential log-ratio density | surplus/deficit | **where the dataset over- vs under-occupies** the base space — signed log-ratio cells, hot where it crowds beyond the reference, cold where it abandons it | this dataset's KDE + the base-space KDE on a shared grid → `log(p_data/p_ref)` |
 | VIZ 11 | Q-Q occupancy curve | q-q curve | whether the dataset is **more concentrated or more even** than the base — its density quantiles plotted against the reference's, bowing off the identity diagonal | sorted density quantiles of the dataset vs the base space |
 
+## Three dimensions
+
+The eleven 2-D views all flatten the cloud to a plane. A companion section
+(`3D 01`–`3D 05` plus one live figure) restores the third coordinate and asks the
+same occupancy questions of a **3-D embedding volume**: how much of the reachable
+volume the dataset fills, whether its apparent footprint hides anisotropy (broad in
+X–Y, thin in Z), and whether an interior hole is a true 3-D **cavity** or a 2-D
+coincidence.
+
+### The 3-D canonical specimen — `AMBIT-12K-3D`
+
+Every 3-D figure depicts the **same** baked specimen at the **same** fixed
+isometric camera (azimuth 35°, elevation 22°): one dense tilted **megacluster**
+core, two detached **satellites**, a thin **bridge** filament spanning depth, a
+diffuse low-density **halo** thinning into the page, a large hollow **donut cavity**
+flattened in Z, and a sparse **outlier tail**. Depth is read by painter’s
+occlusion (back-to-front draw) + nearer = larger / full ink, farther = smaller /
+faint — **no bounding 3-D box, no floor grid, no wireframe room**.
+
+| # | name | technique | occupancy property it reveals | data it needs |
+| --- | --- | --- | --- | --- |
+| 3D 01 | Depth-cued projected 3D scatter | projected scatter | the cloud’s true 3-D **occupancy mass** once depth is restored — a dense megacluster core in front of two detached satellites, the halo thinning into the page, broad in X–Y but visibly thin in Z | baked 3-D point coordinates → fixed-camera projection + depth shading |
+| 3D 02 | Orthographic XY / XZ / YZ occupancy triptych | ortho triptych | occupancy **anisotropy** — broad in X–Y, thin in Z; the big donut is a genuine 3-D **cavity** (a hole in two planes, a pancake in the third), not a coincidental 2-D gap | the same 3-D points → three axis-aligned orthographic drops (XY / XZ / YZ) |
+| 3D 03 | Isometric voxel-occupancy lattice | iso voxels | the 3-D **occupancy histogram** — occupied voxels fill only **~22%** of the hull volume; the hottest cell is the megacluster core; the donut void is a hollow run punched clean through the lattice | 3-D points binned onto a coarse cubic lattice → occupied-voxel counts |
+| 3D 04 | kNN manifold graph in projected 3-space | knn mesh | the manifold’s 3-D **wiring** — dense core knots mesh tightly, the single-strand halo thins out, and the few load-bearing **bridge edges** are the chokepoints whose cut would disconnect the knot | 3-D points → k-nearest-neighbour edges drawn in projected 3-space |
+| 3D 05 | Radial shell occupancy profile | shell profile | whether the cloud is a filled ball or a **hollow rind** — occupancy peaks over the core, dips below the uniform expectation at the donut shell, recovers on the rind, then thins into the outlier tail | 3-D points → counts in concentric spherical shells from the centroid |
+
+### The live showcase
+
+| # | name | technique | what it adds | implementation |
+| --- | --- | --- | --- | --- |
+| 3D · live | Live depth-graded 3D point cloud (drag to rotate) | canvas · drag to rotate | occupancy as a **turnable solid** — orbit the *same* baked points and watch structure-from-motion resolve which clusters are detached in depth and that the donut is a genuine hollow cavity from every angle | dependency-free vanilla `<canvas>` + JS (no npm / no CDN / no external library); reads theme tokens via `getComputedStyle`, so it recolours with the picker like every static figure |
+
+The five static 3-D figures are **fixed-camera SVG projections** (baked coordinates,
+one canonical pose) in the same Tufte token-only style as the 2-D views; the live
+figure is the one exception that animates, and it stays **fully self-contained** —
+no build step, no external dependency.
+
+## Resolution / isotropy
+
+Crowding is **low resolution**: when items pile so close that cosine can no longer
+separate them, the space has run out of room to tell them apart. A final section of
+five diagnostics reads that crowding directly — see
+[anisotropy & resolution](../../concepts/anisotropy-and-resolution.md) for the idea.
+Unlike every view above, these are computed on the **original high-dimensional
+embeddings** (not the 2-D projection), each scored against an **ideal-isotropic
+reference**.
+
+The diagnostic specimen is a deliberately anisotropic 768-d cloud — its summary
+stats sit far from the isotropic ideal:
+
+| diagnostic | dataset | isotropic reference |
+| --- | --- | --- |
+| items × dim | 12,000 × 768-d | — |
+| mean random-pair cosine | 0.34 | ≈ 0 |
+| effective rank | 47 / 768 | 768 |
+| IsoScore | 0.27 | 1.0 |
+| nearest-neighbor cosine margin | 0.041 | wide |
+| hubness (top-1 k-occurrence) | 184 | ≈ uniform |
+
+| # | name | what it measures |
+| --- | --- | --- |
+| ISO 01 | Random-pair cosine-similarity histogram | the **cone effect** — how far the random-pair cosine mass has shifted off 0 toward +1, the single most legible crowding signature |
+| ISO 02 | Covariance eigenvalue scree & effective rank | whether variance spreads across many axes (isotropic, full rank) or collapses onto a few dominant directions — the structural cause of the cosine crowding |
+| ISO 03 | IsoScore space-utilization gauge | the fraction of available dimensions the cloud actually exercises — a single 0–1 read of how much of the space is spent vs wasted |
+| ISO 04 | Nearest-neighbor cosine margin distribution | how thin the gap is between a point's nearest and next-nearest neighbour — a narrow margin means neighbours are unresolvable |
+| ISO 05 | Within- vs between-cluster cosine separation | whether genuine cluster structure survives the crowding — alignment within a cluster against uniformity between clusters |
+
 ## Design language
 
 Built in the **zicato** design language (see
@@ -93,6 +161,6 @@ pan/zoom.
 
 | file | what it is |
 | --- | --- |
-| `index.html` | the study — eleven views of one canonical projection, self-contained, default theme `monokai` |
+| `index.html` | the study — eleven 2-D views of one canonical projection plus a six-figure 3-D section (five static + one live cloud), self-contained, default theme `monokai` |
 | `_embed.js` | shared iframe-embed shim (`?bare=1` → figure-only) |
 | `README.md` | this file |
