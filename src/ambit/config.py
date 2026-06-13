@@ -20,9 +20,8 @@ DEFAULT_FIGURES = {
     "den_prom":     True,   # DEN 04 · density-peak prominence
     "cov_sparsity": True,   # COV 09 · nearest-neighbor sparsity field
     "d3_trip":      True,   # 3D 02 · orthographic XY/XZ/YZ triptych
-    "d3_live":      True,   # 3D · live · drag/zoom 3-D point cloud
-    "d3_mesh_live": True,   # 3D 04 · live · drag/zoom kNN manifold mesh
-    "d3_shell":     True,   # 3D 05 · radial shell occupancy
+    "d3_live":      True,   # 3D · live · drag/zoom cloud + optional kNN-edge overlay
+    "d3_shell":     True,   # 3D 05 · radial shell occupancy (3-D isometric)
     "cos_hist":     True,   # RES 01 · random-pair cosine histogram (study ISO 01)
     "scree":        True,   # RES 02 · covariance eigenvalue scree
     "res_wb":       True,   # RES 05 · within- vs between-cluster cosine
