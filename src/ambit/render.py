@@ -1,9 +1,11 @@
 """Render a `Ctx` into a self-contained, theme-adaptive HTML report in the zicato
 design language. Figures are token-colored static SVG (so a theme swap re-skins
 with no re-render); the 16-theme CSS and the colour picker are vendored from the
-study under `assets/`. New figures register with `@figure(...)` and return a dict
-the report assembles into a `.opt` card — this is the extension point the
-figure-fan-out workflow targets.
+study under `assets/`.
+
+New figures are dropped into the `figures/` package as one module each, decorated
+with `@figure`; `build_report` auto-loads them (fault-isolated) and orders cards
+by their `order` field. This is the extension point the figure-fan-out targets.
 """
 
 from __future__ import annotations
@@ -16,12 +18,25 @@ from . import metrics
 
 ASSETS = Path(__file__).parent / "assets"
 
-FIGURES = []  # list of callables: Ctx -> dict(num,name,tech,why,svg,legend,reveal,cls)
+FIGURES = {}  # name -> callable(Ctx) -> dict(num,order,name,tech,why,svg,legend,reveal,cls)
 
 
 def figure(fn):
-    FIGURES.append(fn)
+    key = fn.__name__[4:] if fn.__name__.startswith("fig_") else fn.__name__
+    FIGURES[key] = fn
     return fn
+
+
+def _load_figures():
+    import importlib
+    import pkgutil
+    import sys
+    from . import figures as figpkg
+    for mod in pkgutil.iter_modules(figpkg.__path__):
+        try:
+            importlib.import_module(f"{figpkg.__name__}.{mod.name}")
+        except Exception as e:  # one bad figure must not break the whole report
+            print(f"ambit: skipping figure {mod.name}: {e}", file=sys.stderr)
 
 
 # ---------------------------------------------------------------- svg helpers
@@ -48,7 +63,7 @@ def _local_density(P, w, h, gx=48, gy=32):
     return grid[bx, by]
 
 
-# ---------------------------------------------------------------- figures
+# ---------------------------------------------------------------- builtin figures
 @figure
 def fig_cloud(ctx):
     w, h = 760, 470
@@ -64,7 +79,7 @@ def fig_cloud(ctx):
             dots.append(f'<circle cx="{P[i,0]:.1f}" cy="{P[i,1]:.1f}" r="1.2" '
                         f'fill="var(--ink-faint)" fill-opacity="0.4"/>')
     return {
-        "num": "MAP 01", "name": "Projected density cloud", "tech": "pca · accumulation",
+        "num": "MAP 01", "order": 1, "name": "Projected density cloud", "tech": "pca · accumulation",
         "why": "The reservoir projected to 2-D; faint ink dots so density reads by accumulation, the densest cells carry the single accent.",
         "svg": _svg(w, h, "Projected embedding cloud; density reads by accumulation", "".join(dots)),
         "legend": '<span><i class="f"></i> point (accumulates)</span>'
@@ -93,12 +108,10 @@ def fig_cos_hist(ctx):
         bh = (cnt[k] / top) * (h - 2 * pad)
         body.append(f'<rect x="{pad+k*bw:.1f}" y="{base-bh:.1f}" width="{bw*0.86:.1f}" '
                     f'height="{bh:.1f}" fill="var(--ink-faint)" fill-opacity="0.75"/>')
-    # isotropic reference at 0 (dashed) and the dataset mean (accent)
     body.append(f'<line x1="{x_of(0):.1f}" y1="{pad}" x2="{x_of(0):.1f}" y2="{base}" '
                 f'stroke="var(--ink-faint)" stroke-dasharray="3 3"/>')
     body.append(f'<line x1="{x_of(cos.mean()):.1f}" y1="{pad-2}" x2="{x_of(cos.mean()):.1f}" '
                 f'y2="{base}" stroke="var(--accent)" stroke-width="2"/>')
-    # granular axis (R3)
     for t in np.round(np.arange(-0.2, 0.81, 0.1), 1):
         body.append(f'<line x1="{x_of(t):.1f}" y1="{base}" x2="{x_of(t):.1f}" y2="{base+4}" stroke="var(--rule-soft)"/>')
         body.append(f'<text x="{x_of(t):.1f}" y="{base+15}" font-size="9.5" fill="var(--ink-faint)" '
@@ -106,7 +119,7 @@ def fig_cos_hist(ctx):
     body.append(f'<text x="{x_of(cos.mean()):.1f}" y="{pad-5}" font-size="10" fill="var(--accent)" '
                 f'text-anchor="middle">mean {cos.mean():+.3f}</text>')
     return {
-        "num": "RES 01", "name": "Random-pair cosine distribution", "tech": "anisotropy fingerprint",
+        "num": "RES 01", "order": 90, "name": "Random-pair cosine distribution", "tech": "anisotropy fingerprint",
         "why": f"Cosine of {len(cos):,} random pairs against the isotropic reference (0 ± {ref:.3f}). Mass near 0 is isotropic; a shifted lobe is a crowded cone.",
         "svg": _svg(w, h, "Random-pair cosine similarity histogram", "".join(body)),
         "legend": '<span><i class="f"></i> pair counts</span>'
@@ -130,17 +143,15 @@ def fig_scree(ctx):
     def x_of(i):
         return pad + (i / max(1, k - 1)) * (w - 2 * pad)
 
-    def y_of(v):  # log scale
+    def y_of(v):
         lv = np.log10(max(v, 1e-6))
         return base - (lv - (-6)) / (0 - (-6)) * (base - top)
 
     pts = " ".join(f"{x_of(i):.1f},{y_of(e[i]):.1f}" for i in range(k))
     body = [f'<polyline points="{pts}" fill="none" stroke="var(--ink)" stroke-width="1.3" vector-effect="non-scaling-stroke"/>']
-    # effective-rank marker (the one accent)
     xr = x_of(erank)
     body.append(f'<line x1="{xr:.1f}" y1="{top}" x2="{xr:.1f}" y2="{base}" stroke="var(--accent)" stroke-width="2"/>')
     body.append(f'<text x="{xr+4:.1f}" y="{top+12}" font-size="10" fill="var(--accent)">effective rank {erank:.1f}</text>')
-    # granular axes
     for i in range(0, k + 1, 10):
         body.append(f'<line x1="{x_of(i):.1f}" y1="{base}" x2="{x_of(i):.1f}" y2="{base+4}" stroke="var(--rule-soft)"/>')
         body.append(f'<text x="{x_of(i):.1f}" y="{base+15}" font-size="9.5" fill="var(--ink-faint)" text-anchor="middle">{i}</text>')
@@ -149,7 +160,7 @@ def fig_scree(ctx):
         body.append(f'<line x1="{pad}" y1="{yy:.1f}" x2="{w-pad}" y2="{yy:.1f}" stroke="var(--rule-soft)" stroke-width="0.6"/>')
         body.append(f'<text x="{pad-6}" y="{yy+3:.1f}" font-size="9" fill="var(--ink-faint)" text-anchor="end">1e{p}</text>')
     return {
-        "num": "RES 02", "name": "Covariance eigenvalue scree", "tech": "effective rank",
+        "num": "RES 02", "order": 91, "name": "Covariance eigenvalue scree", "tech": "effective rank",
         "why": f"Normalized eigenvalues (log) over all {ctx.scan.n:,} items. A steep drop means variance is collapsed onto a few axes — low effective dimensionality.",
         "svg": _svg(w, h, "Covariance eigenvalue scree with effective rank", "".join(body)),
         "legend": '<span><i class="f"></i> eigenvalue (log)</span><span><i class="a"></i> effective rank</span>',
@@ -169,14 +180,17 @@ def _facts(ctx):
     ]
 
 
-def build_report(ctx, *, out=None, title="ambit — embedding-space occupancy") -> str:
+def build_report(ctx, *, out=None, title="ambit — embedding-space occupancy", config=None) -> str:
+    from .config import enabled
+    _load_figures()
     style = (ASSETS / "theme.css").read_text(encoding="utf-8")
     picker = (ASSETS / "picker.js").read_text(encoding="utf-8")
     facts = "".join(f'<div class="kv"><span class="k">{k}</span><span class="v">{v}</span></div>'
                     for k, v in _facts(ctx))
+    active = [fn for key, fn in FIGURES.items() if enabled(config, key)]
+    metas = sorted((fn(ctx) for fn in active), key=lambda d: d.get("order", 999))
     cards = []
-    for fn in FIGURES:
-        f = fn(ctx)
+    for f in metas:
         cards.append(
             f'<section class="opt"><div class="opt-head">'
             f'<span class="num">{f["num"]}</span><span class="name">{f["name"]}</span>'
