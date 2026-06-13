@@ -30,17 +30,23 @@ def cluster(X, *, method: str = "auto", k=None, k_range=(3, 12), seed: int = 0):
             if method == "hdbscan":
                 raise
 
-    from sklearn.cluster import KMeans
+    # MiniBatchKMeans scales to a large reservoir far better than full k-means.
+    from sklearn.cluster import MiniBatchKMeans
+    bs = max(1024, min(8192, len(X) // 8))
+
+    def km(kk):
+        return MiniBatchKMeans(n_clusters=kk, n_init=3, batch_size=bs,
+                               random_state=seed).fit_predict(X)
+
     if k is not None:
-        lab = KMeans(n_clusters=int(k), n_init=4, random_state=seed).fit_predict(X)
-        return lab, f"k-means (k={int(k)})"
+        return km(int(k)), f"k-means (k={int(k)})"
 
     from sklearn.metrics import silhouette_score
     lo, hi = k_range
     hi = min(hi, len(X) - 1)
     best = None
     for kk in range(max(2, lo), max(3, hi) + 1):
-        lab = KMeans(n_clusters=kk, n_init=4, random_state=seed).fit_predict(X)
+        lab = km(kk)
         try:
             s = silhouette_score(X, lab, sample_size=min(2000, len(X)), random_state=seed)
         except Exception:

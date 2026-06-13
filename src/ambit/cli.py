@@ -27,7 +27,8 @@ def _ascii_hist(vals, lo, hi, bins: int = 30, width: int = 46) -> str:
 
 def cmd_info(a) -> int:
     sc = run_scan(a.embeddings, sample=a.sample, embedding_col=a.embedding_col,
-                  id_col=a.id_col, label_col=a.label_col, metric=a.metric, batch_rows=a.batch_rows)
+                  id_col=a.id_col, label_col=a.label_col, metric=a.metric,
+                  batch_rows=a.batch_rows, device=a.device, approx=a.approx)
     eigs = sc.eigs
     cos = metrics.random_pair_cosine(sc.sample.X, n_pairs=a.pairs)
     erank = metrics.effective_rank(eigs)
@@ -36,7 +37,8 @@ def cmd_info(a) -> int:
     ref = metrics.isotropy_ref(sc.dim)
     m = float(cos.mean())
     print(f"source                 {sc.source}")
-    print(f"items x dims           {sc.n:,} x {sc.dim}  (full corpus, streamed)")
+    tag = f"  (~{sc.scanned:,} sampled, approx)" if sc.approximate else "  (full corpus, streamed)"
+    print(f"items x dims           {sc.n:,} x {sc.dim}{tag}")
     print(f"mean L2 norm           {sc.norm_mean:.4f}  +/- {sc.norm_std:.4f}")
     print()
     print("--- resolution / isotropy ---")
@@ -68,9 +70,10 @@ def cmd_report(a) -> int:
         import json
         cfg = json.load(open(a.config))
     sc = run_scan(a.embeddings, sample=a.sample, embedding_col=a.embedding_col,
-                  id_col=a.id_col, label_col=a.label_col, metric=a.metric, batch_rows=a.batch_rows)
+                  id_col=a.id_col, label_col=a.label_col, metric=a.metric,
+                  batch_rows=a.batch_rows, device=a.device, approx=a.approx)
     clusters = False if a.no_cluster else (a.clusters if a.clusters else "auto")
-    ctx = pipeline.build_ctx(sc, projector=a.projector, pairs=a.pairs, clusters=clusters)
+    ctx = pipeline.build_ctx(sc, projector=a.projector, pairs=a.pairs, clusters=clusters, device=a.device)
     render.build_report(ctx, out=a.out, title=a.title, config=cfg)
     from .config import enabled as _en
     shown = sum(1 for k in render.FIGURES if _en(cfg, k))
@@ -87,6 +90,9 @@ def _scan_args(p):
     p.add_argument("--pairs", type=int, default=200_000)
     p.add_argument("--sample", type=int, default=20_000)
     p.add_argument("--batch-rows", type=int, default=50_000)
+    p.add_argument("--device", default="cpu", help="cpu (numpy) | auto | cuda | mps | torch")
+    p.add_argument("--approx", type=int, default=None,
+                   help="cap the covariance/diagnostics to ~N rows (approximate, much faster on 1M+)")
 
 
 def main(argv=None) -> int:

@@ -191,8 +191,11 @@ def fig_scree(ctx):
 
 # ---------------------------------------------------------------- report
 def _facts(ctx):
+    items = f"{ctx.scan.n:,} × {ctx.scan.dim}"
+    if getattr(ctx.scan, "approximate", False):
+        items += f" (≈{ctx.scan.scanned:,} sampled)"
     f = [
-        ("items × dims", f"{ctx.scan.n:,} × {ctx.scan.dim}"),
+        ("items × dims", items),
         ("mean L2 norm", f"{ctx.scan.norm_mean:.3f}"),
         ("mean pair cosine", f"{ctx.cos.mean():+.3f}"),
         ("effective rank", f"{metrics.effective_rank(ctx.eigs):.1f} / {ctx.scan.dim}"),

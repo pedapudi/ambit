@@ -2,6 +2,9 @@
 fully resident. Every ingestion path (a parquet file, a jsonl export, a numpy
 memmap, or a model embedding raw items) is just an iterator of `Chunk`s, which the
 one-pass `scan` consumes.
+
+Parquet vectors are pulled via Arrow's zero-copy `flatten().to_numpy()` (not the
+Python-object `to_pydict`), which is the dominant ingestion cost at scale.
 """
 
 from __future__ import annotations
@@ -56,6 +59,22 @@ def _array_chunks(X, ids, labels, batch):
                     None if labels is None else np.asarray(labels[s:e]))
 
 
+def _arrow_vectors(col) -> np.ndarray:
+    """A list<float> / fixed_size_list<float> Arrow column -> (m, d) float32, via the
+    flattened child buffer (near zero-copy) instead of per-element Python objects."""
+    import pyarrow as pa
+    if isinstance(col, pa.ChunkedArray):
+        col = col.combine_chunks()
+    m = len(col)
+    flat = col.flatten().to_numpy(zero_copy_only=False)
+    flat = np.asarray(flat, dtype=np.float32)
+    if pa.types.is_fixed_size_list(col.type):
+        d = col.type.list_size
+    else:
+        d = (len(flat) // m) if m else 0
+    return np.ascontiguousarray(flat.reshape(m, d))
+
+
 def _parquet_chunks(p, embedding_col, id_col, label_col, batch):
     try:
         import pyarrow.parquet as pq
@@ -66,11 +85,12 @@ def _parquet_chunks(p, embedding_col, id_col, label_col, batch):
     if ec is None:
         raise ValueError(f"{p}: no embedding column found; pass embedding_col=")
     cols = [c for c in (ec, id_col, label_col) if c]
-    for b in pf.iter_batches(batch_size=batch, columns=cols or None):
-        d = b.to_pydict()
-        yield Chunk(np.asarray(d[ec], dtype=np.float32),
-                    np.asarray(d[id_col]) if id_col else None,
-                    np.asarray(d[label_col]) if label_col else None)
+    for b in pf.iter_batches(batch_size=batch, columns=cols or None, use_threads=True):
+        yield Chunk(
+            _arrow_vectors(b.column(ec)),
+            b.column(id_col).to_numpy(zero_copy_only=False) if id_col else None,
+            b.column(label_col).to_numpy(zero_copy_only=False) if label_col else None,
+        )
 
 
 def _jsonl_chunks(p, embedding_col, id_col, label_col, batch):

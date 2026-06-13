@@ -36,17 +36,36 @@ class Ctx:
 
 
 def build_ctx(sc: Scan, *, projector: str = "pca", pairs: int = 200_000,
-              k: int = 10, clusters="auto", seed: int = 0) -> Ctx:
+              k: int = 10, clusters="auto", seed: int = 0, device: str = "cpu") -> Ctx:
     """clusters: "auto"/True -> auto-label when no metadata column; an int -> force
-    that many k-means clusters; False/None/0 -> no unsupervised labeling."""
+    that many k-means clusters; False/None/0 -> no unsupervised labeling.
+    device: "cpu" (numpy) or a torch device ("cuda"/"auto"/"mps"/"torch")."""
     es = sc.sample.normalize()
-    xy = project(es, 2, method=projector)
-    xyz = project(es, 3, method=projector)
-    cos = metrics.random_pair_cosine(es.X, n_pairs=pairs, normalized=True, seed=seed)
-    try:
-        knn_idx, knn_dist = knnmod.knn(es, k=k)
-    except Exception:
-        knn_idx = knn_dist = None
+    dev = None
+    if device and device != "cpu":
+        from . import accel
+        dev = accel.resolve_device(device)
+
+    if dev:
+        from . import accel
+        if projector == "pca":
+            xy, xyz = accel.torch_pca(es.X, 2, dev), accel.torch_pca(es.X, 3, dev)
+        else:
+            xy, xyz = project(es, 2, method=projector), project(es, 3, method=projector)
+        cos = accel.torch_random_pair_cosine(es.X, pairs, dev, seed)
+        try:
+            knn_idx, knn_dist = accel.torch_knn(es.X, k, dev)
+        except Exception:
+            knn_idx = knn_dist = None
+    else:
+        randomized = es.n > 30_000            # randomized SVD pays off on a large reservoir
+        xy = project(es, 2, method=projector, randomized=randomized)
+        xyz = project(es, 3, method=projector, randomized=randomized)
+        cos = metrics.random_pair_cosine(es.X, n_pairs=pairs, normalized=True, seed=seed)
+        try:
+            knn_idx, knn_dist = knnmod.knn(es, k=k)
+        except Exception:
+            knn_idx = knn_dist = None
 
     labels = sc.sample.labels
     labels_source = "provided" if labels is not None else None
