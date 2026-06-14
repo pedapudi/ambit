@@ -1,10 +1,10 @@
 # ambit skills
 
-A set of agent skills that
-teach an agent (or a new contributor) how to **use** and **develop** ambit. Each
-subdirectory is one skill: a `SKILL.md` with `name` / `description` frontmatter and
-a focused body. Drop this `skills/` directory where your agent loads project skills
-(or point a plugin at it).
+A set of focused, **agent-agnostic** skills that teach an agent — or a new human
+contributor — how to **use** and **develop** ambit. Each subdirectory is one skill:
+a `SKILL.md` with a short `name` / `description` and a self-contained body. They are
+plain Markdown — load them into whatever coding agent you use, or just read them.
+See [`AGENTS.md`](../AGENTS.md) for the project's top-level agent guide.
 
 | skill | read it when you want to… |
 |---|---|
