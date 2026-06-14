@@ -7,6 +7,8 @@ docs/concepts/anisotropy-and-resolution.md for what each one means.
 
 from __future__ import annotations
 
+from typing import Optional
+
 import numpy as np
 
 
@@ -91,6 +93,36 @@ def isoscore_parts(eigs: np.ndarray):
 def isoscore(eigs: np.ndarray) -> float:
     """IsoScore in [0,1]: how uniformly variance fills the space (1 = isotropic)."""
     return isoscore_parts(eigs)[0]
+
+
+def isoscore_star(eigs: np.ndarray, n_samples: int, zeta: Optional[float] = None) -> float:
+    """Small-sample (n<d) IsoScore in the spirit of IsoScore* (Rudman & Eickhoff,
+    2024). A cloud of n points spans at most n-1 dimensions, so plain IsoScore counts
+    the d-(n-1) forced-zero directions as anisotropy and flags every small group as a
+    cone. The paper's fix is RDA *shrinkage* of the covariance toward an isotropic
+    reference, with the ambient dimension d held fixed (not truncated):
+
+        Σ_ζ = (1-ζ)·Σ_X + ζ·(tr Σ_X / d)·I        (ζ ∈ [0,1); ζ=0 ⇒ plain IsoScore)
+
+    The target is a scaled identity, so it shares eigenvectors with Σ_X and the blend
+    is exact in eigenvalue space: λ_ζ = (1-ζ)·λ + ζ·mean(λ). Filling the forced-zero
+    floor lets a genuinely round small cloud read high, while a pocket that has truly
+    collapsed onto a low-dim subspace keeps its dominant axes and still reads low. ζ
+    defaults to the rank-deficiency fraction 1-(n-1)/d — zero once n-1 ≥ d (the regime
+    where IsoScore is already reliable), growing as the sample starves the dimensions.
+    Below n ≈ d the value is a coarse round/collapsed indicator, not an exact isotropy.
+    """
+    lam = np.clip(np.asarray(eigs, float), 0.0, None)
+    d = int(lam.size)
+    total = float(lam.sum())
+    if d <= 1 or total <= 0.0:
+        return 1.0
+    if zeta is None:
+        zeta = float(np.clip(1.0 - min(max(n_samples - 1, 0), d) / d, 0.0, 0.95))
+    if zeta <= 0.0:
+        return isoscore(lam)
+    lam_z = (1.0 - zeta) * lam + zeta * (total / d)
+    return isoscore(lam_z)
 
 
 def hubness_skew(knn_idx: np.ndarray) -> float:

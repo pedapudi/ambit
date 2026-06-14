@@ -27,6 +27,8 @@ DEFAULT_FIGURES = {
     "res_cumvar":   True,   # RES 02b · cumulative variance & dimensional concentration (carries the IsoScore)
     "res_margin":   True,   # RES 04 · nearest-neighbor cosine margin (study ISO 04 · local distinctness)
     "res_wb":       True,   # RES 05 · within- vs between-cluster cosine
+    "res_field":    True,   # RES 06 · local concentration field (localized anisotropy · distribution)
+    "res_cmap":     True,   # RES 07 · local crowding map (projection recolored by the field z)
     # hidden (flip to True to show)
     "cloud":        False,  # MAP 01 · projected density cloud
     "den_contour":  False,  # DEN 02 · isodensity contour relief

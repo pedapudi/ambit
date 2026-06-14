@@ -194,8 +194,8 @@
 
   .reveal {
     margin-top: 14px; font-size: 11.5px; color: var(--ink-soft);
-    border-left: 3px solid var(--accent); padding: 7px 12px;
-    background: var(--panel-2); border-radius: 0 6px 6px 0;
+    border: 1px solid var(--rule); padding: 7px 12px;
+    background: var(--panel-2); border-radius: 6px;
   }
   .reveal b { color: var(--ink); }
 
