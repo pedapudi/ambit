@@ -66,6 +66,12 @@ structure. Cai, Huang, Bian & Church ([2021](https://openreview.net/forum?id=xYG
 show the contextual space is approximately isotropic *within* clusters and along
 low-dimensional manifolds even when it is globally a cone — so "crowded globally"
 and "useful locally" can coexist, and good diagnostics must look at both scales.
+ambit's companion note **[cluster-sensitive anisotropy](./cluster-sensitive-anisotropy.html)**
+takes this nuance as its starting point: it shows why a single global scalar is
+*non-collapsible* over clusters (a Simpson's paradox of isotropy — a globally
+isotropic "dandelion" can be a union of locally collapsed cones), and develops the
+unsupervised, multiscale, distribution-valued **local concentration field** ambit
+uses to localize crowded pockets rather than score the whole space at once.
 
 ### Alignment & uniformity (the contrastive-learning framing)
 

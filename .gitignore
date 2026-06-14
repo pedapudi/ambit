@@ -17,6 +17,7 @@ env/
 *.npy
 *.npz
 *.parquet
+*.tar.gz
 data/
 embeddings/
 outputs/
