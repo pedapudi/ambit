@@ -95,8 +95,11 @@ def fig_res_margin(ctx):
     if xmax <= 0:
         xmax = step
 
-    # ---- histogram with fine bins, clip overflow into last bin
-    nb = 40
+    # ---- histogram at a fixed 0.001-wide margin bin (snap xmax to the bin grid),
+    #      clipping overflow into the last bin
+    BIN = 0.001
+    nb = max(1, int(round(xmax / BIN)))
+    xmax = nb * BIN
     edges = np.linspace(0.0, xmax, nb + 1)
     mc = np.clip(margin, 0.0, xmax - 1e-12)
     counts, _ = np.histogram(mc, bins=edges)
@@ -108,20 +111,23 @@ def fig_res_margin(ctx):
     def Y(c):
         return B - (c / cmax) * (B - T)
 
-    # near-tie (bad) vs decisive (good) split at the median margin
+    # near-tie (bad) vs decisive (good) split at the median margin. At 0.001 bins the
+    # bars are thin, so use only a hairline gap (none when bins get very narrow).
     split = med
+    pbw = (R - L) / nb                          # pixel width of one 0.001 bin
+    gap = 0.3 if pbw > 2.2 else 0.0
     bars = []
     for i in range(nb):
         c = int(counts[i])
         if c == 0:
             continue
-        x0 = X(edges[i]); x1 = X(edges[i + 1])
+        x0 = X(edges[i])
         y = Y(c)
         center = 0.5 * (edges[i] + edges[i + 1])
         tok = "--bad" if center <= split else "--good"
         bars.append(
-            f'<rect x="{x0 + 0.6:.1f}" y="{y:.1f}" '
-            f'width="{(x1 - x0) - 1.2:.1f}" height="{B - y:.1f}" '
+            f'<rect x="{x0 + gap / 2:.2f}" y="{y:.1f}" '
+            f'width="{max(pbw - gap, 0.4):.2f}" height="{B - y:.1f}" '
             f'fill="color-mix(in srgb, var({tok}) 55%, var(--panel))"/>'
         )
     bars_svg = "<g>" + "".join(bars) + "</g>"
@@ -168,17 +174,22 @@ def fig_res_margin(ctx):
     baseline = (f'<line x1="{L}" y1="{B}" x2="{R}" y2="{B}" '
                 f'stroke="var(--rule)" stroke-width="1"/>')
 
-    # ---- markers: isotropic reference median (dashed) + dataset median (accent)
+    # ---- markers: isotropic reference median (dashed) + dataset median (accent).
+    # The two rules can collapse onto the left edge when the corpus is heavily
+    # floored (median margin tiny), so each label gets its own fixed row above
+    # the plot — the row, not the x-position, is what guarantees no overlap.
     ref_x = X(min(ref_margin, xmax))
     med_x = X(min(med, xmax))
     ref_in = ref_margin <= xmax
     ref_marker = ""
     if ref_in:
+        ref_anchor = "start" if ref_x < R - 170 else "end"
+        ref_dx = 6 if ref_anchor == "start" else -6
         ref_marker = (
             f'<line x1="{ref_x:.1f}" y1="{T}" x2="{ref_x:.1f}" y2="{B}" '
             f'stroke="var(--ink-faint)" stroke-width="1" stroke-dasharray="3 3"/>'
-            f'<text x="{ref_x + 5:.1f}" y="{T - 8}" font-size="9.5" '
-            f'fill="var(--ink-faint)" text-anchor="start">'
+            f'<text x="{ref_x + ref_dx:.1f}" y="69" font-size="9.5" '
+            f'fill="var(--ink-faint)" text-anchor="{ref_anchor}">'
             f'isotropic ref median = {_fmt(ref_margin)}</text>'
         )
     # keep the accent median label inside the box
@@ -188,7 +199,7 @@ def fig_res_margin(ctx):
         f'<line x1="{med_x:.1f}" y1="{T}" x2="{med_x:.1f}" y2="{B}" '
         f'stroke="var(--accent)" stroke-width="2.2"/>'
         f'<circle cx="{med_x:.1f}" cy="{T}" r="3" fill="var(--accent)"/>'
-        f'<text x="{med_x + med_dx:.1f}" y="{T - 8}" font-size="10.5" '
+        f'<text x="{med_x + med_dx:.1f}" y="54" font-size="10.5" '
         f'font-weight="700" fill="var(--accent)" text-anchor="{med_anchor}">'
         f'median margin = {_fmt(med)}</text>'
     )
@@ -204,17 +215,21 @@ def fig_res_margin(ctx):
         f'more decisively resolved</text>'
     )
 
-    floor_note = (f'<text x="{L}" y="{B + 8}" font-size="8.5" fill="var(--bad)" '
+    # floor note sits on the bottom caption line (left), opposite the x-title,
+    # so it clears the tick marks/labels it used to crash into.
+    floor_note = (f'<text x="{L}" y="{B + 33}" font-size="8.5" fill="var(--bad)" '
                   f'text-anchor="start">resolution floor (margin→0, near-tie)</text>')
-    xtitle = (f'<text x="{R}" y="{B + 34}" font-size="9" fill="var(--ink-faint)" '
+    xtitle = (f'<text x="{R}" y="{B + 33}" font-size="9" fill="var(--ink-faint)" '
               f'text-anchor="end">margin  =  cos(top-1) − cos(top-2)</text>')
-    ytitle = (f'<text x="70" y="{(T + B) / 2:.1f}" font-size="8.5" '
+    # y-title pushed to the far-left gutter, clear of the count tick labels.
+    ytitle = (f'<text x="22" y="{(T + B) / 2:.1f}" font-size="8.5" '
               f'fill="var(--ink-faint)" text-anchor="middle" '
-              f'transform="rotate(-90 70 {(T + B) / 2:.1f})">'
+              f'transform="rotate(-90 22 {(T + B) / 2:.1f})">'
               f'items per {_fmt(xmax / nb)} margin bin</text>')
 
-    bad_anno = (f'<text x="{X(split * 0.5):.1f}" y="{T - 12}" font-size="9.5" '
-                f'fill="var(--bad)" text-anchor="middle">near-tie crowding</text>')
+    # near-tie label on its own row above the floored (left) region
+    bad_anno = (f'<text x="{L}" y="84" font-size="9.5" '
+                f'fill="var(--bad)" text-anchor="start">near-tie crowding</text>')
     good_cx = X(min(xmax * 0.78, max(split * 2.5, xmax * 0.6)))
     good_anno = (
         f'<text x="{good_cx:.1f}" y="{T + 70}" font-size="9.5" '

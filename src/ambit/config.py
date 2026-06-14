@@ -22,8 +22,10 @@ DEFAULT_FIGURES = {
     "d3_trip":      True,   # 3D 02 · orthographic XY/XZ/YZ triptych
     "d3_live":      True,   # 3D · live · drag/zoom cloud + optional kNN-edge overlay
     "d3_shell":     True,   # 3D 05 · radial shell occupancy (3-D isometric)
-    "cos_hist":     True,   # RES 01 · random-pair cosine histogram (study ISO 01)
+    "cos_hist":     True,   # RES 01 · random-pair cosine histogram (study ISO 01 · global anisotropy)
     "scree":        True,   # RES 02 · covariance eigenvalue scree
+    "res_cumvar":   True,   # RES 02b · cumulative variance & dimensional concentration (carries the IsoScore)
+    "res_margin":   True,   # RES 04 · nearest-neighbor cosine margin (study ISO 04 · local distinctness)
     "res_wb":       True,   # RES 05 · within- vs between-cluster cosine
     # hidden (flip to True to show)
     "cloud":        False,  # MAP 01 · projected density cloud
@@ -38,8 +40,6 @@ DEFAULT_FIGURES = {
     "d3_scatter":   False,  # 3D 01 · depth-cued 3-D scatter
     "d3_voxel":     False,  # 3D 03 · isometric voxel occupancy
     "d3_mesh":      False,  # 3D 04 · kNN mesh in 3-space (static; live version is d3_mesh_live)
-    "res_margin":   False,  # RES 04 · nearest-neighbor cosine margin
-    "res_iso":      False,  # RES 03 · space-utilization gauge
 }
 
 # kept as a module alias so `ambit.config.FIGURES` still resolves to the defaults

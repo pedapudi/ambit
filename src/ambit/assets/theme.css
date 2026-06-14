@@ -207,6 +207,36 @@
   .leg i.a { background: var(--accent); } .leg i.f { background: var(--ink-faint); }
   .leg i.dash { background: transparent; border: 1px dashed var(--ink-faint); }
   .leg i.cache { background: transparent; border: 1px solid var(--caution); }
+  .leg i.c { background: transparent; border: 1px dashed var(--caution); }
+
+  /* ---- isoscore hovercard: a theme-aware, keyboard-reachable explainer popover ---- */
+  .hc-fig { position: relative; }
+  .hc { position: absolute; z-index: 4; font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+        font-size: 12px; font-weight: 600; color: var(--accent); cursor: help;
+        border-bottom: 1px dotted var(--accent); white-space: nowrap; }
+  .hc.hc-big { font-size: 19px; font-weight: 700; border-bottom-width: 0; }
+  .hc:focus { outline: none; }
+  .hc:focus-visible { outline: 1px dashed var(--accent); outline-offset: 3px; }
+  .hc .hc-i { display: inline-block; width: 13px; height: 13px; line-height: 12px; text-align: center;
+              border: 1px solid var(--accent); border-radius: 50%; font-size: 9px; font-style: normal;
+              font-weight: 700; vertical-align: 2px; margin-left: 5px; }
+  .hc-card { position: absolute; top: calc(100% + 8px); right: 0; width: 366px; max-width: 78vw;
+             background: var(--panel); color: var(--ink); border: 1px solid var(--rule); border-radius: 4px;
+             box-shadow: 0 8px 26px rgba(0,0,0,.30); padding: 13px 15px; font-size: 11px; font-weight: 400;
+             white-space: normal; text-align: left; z-index: 30;
+             visibility: hidden; opacity: 0; transform: translateY(-3px); transition: opacity .12s, transform .12s; }
+  .hc--up .hc-card { top: auto; bottom: calc(100% + 8px); transform: translateY(3px); }
+  .hc:hover .hc-card, .hc:focus-within .hc-card { visibility: visible; opacity: 1; transform: translateY(0); }
+  .hc-card .hc-h { color: var(--accent); font-weight: 700; font-size: 13px; }
+  .hc-card .hc-sub { color: var(--ink-faint); font-size: 9.5px; margin: 2px 0 9px; }
+  .hc-card p { margin: 0 0 9px; line-height: 1.5; color: var(--ink-soft); }
+  .hc-card .hc-math { border-top: 1px solid var(--rule-soft); padding-top: 9px; font-size: 10.5px; line-height: 1.85; }
+  .hc-card .hc-intro { color: var(--ink-faint); font-size: 9.5px; margin-bottom: 5px; }
+  .hc-card .hc-eq { color: var(--ink); }
+  .hc-card .hc-eq .hc-note { color: var(--ink-faint); }
+  .hc-card .hc-foot { margin-top: 10px; color: var(--accent); font-size: 10px;
+                      border-top: 1px solid var(--rule-soft); padding-top: 8px; }
+  @media (prefers-reduced-motion: reduce) { .hc-card { transition: none; } }
 
   svg text { font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; }
 

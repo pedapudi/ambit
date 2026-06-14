@@ -62,6 +62,37 @@ def isotropy_ref(dim: int) -> float:
     return 1.0 / np.sqrt(dim)
 
 
+def isoscore_parts(eigs: np.ndarray):
+    """IsoScore (Rudman, Gillman, Rush & Eickhoff, 2022) from the covariance
+    eigenvalues λ — i.e. the variance along each principal axis. Returns
+    (score, defect δ, n_iso, dim) so callers can show the intermediate terms.
+
+      v        = √d · λ / ‖λ‖₂            (normalize: isotropic ⇒ v = all-ones)
+      δ        = ‖v − 1‖₂ / √(2(d − √d))   (isotropy defect, 0=isotropic … 1=one axis)
+      n_iso    = d − δ²(d − √d)            (dimensions isotropically used, √d … d)
+      IsoScore = (n_iso² − d) / (d² − d)   (0 = degenerate line … 1 = perfect sphere)
+    """
+    lam = np.clip(np.asarray(eigs, float), 0.0, None)
+    d = int(lam.size)
+    if d <= 1:
+        return float(d), 0.0, float(d), d
+    nrm = float(np.linalg.norm(lam))
+    if nrm == 0.0:
+        return 0.0, 1.0, float(np.sqrt(d)), d
+    sd = np.sqrt(d)
+    v = sd * lam / nrm                                   # ‖v‖₂ = √d; isotropic ⇒ all-ones
+    defect = float(np.linalg.norm(v - 1.0) / np.sqrt(2.0 * (d - sd)))
+    defect = min(max(defect, 0.0), 1.0)
+    n_iso = d - defect ** 2 * (d - sd)
+    score = float((n_iso ** 2 - d) / (d ** 2 - d))
+    return min(max(score, 0.0), 1.0), defect, float(n_iso), d
+
+
+def isoscore(eigs: np.ndarray) -> float:
+    """IsoScore in [0,1]: how uniformly variance fills the space (1 = isotropic)."""
+    return isoscore_parts(eigs)[0]
+
+
 def hubness_skew(knn_idx: np.ndarray) -> float:
     """Skewness of the k-occurrence distribution — how often each point is *somebody's*
     neighbor. High positive skew = a few hubs dominate retrieval (Radovanović et al.)."""

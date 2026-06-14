@@ -63,6 +63,47 @@ def _local_density(P, w, h, gx=48, gy=32):
     return grid[bx, by]
 
 
+_ISO_CARD = (
+    '<span class="hc-card" role="tooltip">'
+    '<span class="hc-h">IsoScore = {score:.3f}</span>'
+    '<span class="hc-sub">uniformity of embedding-space use · Rudman et&nbsp;al. 2022</span>'
+    '<p><b>0</b> = all variance on a single axis (a degenerate line); '
+    '<b>1</b> = variance spread equally over every dimension (a perfect sphere). '
+    'Real text embeddings sit low.</p>'
+    '<div class="hc-math">'
+    '<div class="hc-intro">from the d covariance eigenvalues λ (variance along each principal axis):</div>'
+    '<div class="hc-eq">v = √d · λ / ‖λ‖₂ &nbsp;<span class="hc-note">— normalize: isotropic ⇒ v = (1,…,1)</span></div>'
+    '<div class="hc-eq">δ = ‖v − 1‖₂ / √(2(d − √d)) &nbsp;<span class="hc-note">— isotropy defect, 0…1</span></div>'
+    '<div class="hc-eq">n = d − δ²·(d − √d) &nbsp;<span class="hc-note">— dims isotropically used</span></div>'
+    '<div class="hc-eq">IsoScore = (n² − d) / (d² − d)</div>'
+    '</div>'
+    '<div class="hc-foot">this dataset · d = {d} · δ = {defect:.2f} · n = {n_iso:.0f}</div>'
+    '</span>'
+)
+
+_ISO_POS = {
+    "br":  ("hc--up", "right:5%;top:57%;"),                       # in-chart lower-right, opens up
+    "top": ("", "left:50%;top:4%;transform:translateX(-50%);"),  # gauge header, opens down
+}
+
+
+def _isoscore_hc(eigs, *, pos="br", big=False):
+    """Isoscore readout + a design-language hovercard explaining the metric and its
+    exact formula. Returns one HTML <span> to drop into a `.hc-fig` wrapper."""
+    score, defect, n_iso, d = metrics.isoscore_parts(eigs)
+    up, style = _ISO_POS[pos]
+    card = _ISO_CARD.format(score=score, defect=defect, n_iso=n_iso, d=d)
+    cls = ("hc-big " if big else "") + up
+    return (f'<span class="hc {cls}" tabindex="0" role="button" '
+            f'aria-label="IsoScore {score:.3f} — uniformity of embedding-space use; activate for the formula." '
+            f'style="{style}">isoscore = {score:.2f}<i class="hc-i" aria-hidden="true">i</i>{card}</span>')
+
+
+def _hc_fig(svg, hc):
+    """Wrap an SVG with an absolutely-positioned hovercard overlay."""
+    return f'<div class="hc-fig">{svg}{hc}</div>'
+
+
 # ---------------------------------------------------------------- builtin figures
 @figure
 def fig_cloud(ctx):
@@ -91,61 +132,165 @@ def fig_cloud(ctx):
 
 @figure
 def fig_cos_hist(ctx):
-    w, h, pad = 760, 340, 50
-    cos = ctx.cos
-    ref = metrics.isotropy_ref(ctx.scan.dim)
-    # data-driven range snapped to 0.05, always including the isotropic ref at 0
-    lo = float(min(0.0, np.floor((float(cos.min()) - 0.03) / 0.05) * 0.05))
-    hi = float(np.ceil((float(cos.max()) + 0.03) / 0.05) * 0.05)
-    lo, hi = max(-1.0, lo), min(1.0, hi)
-    span = (hi - lo) or 1.0
-    bins = max(48, int(round(span / 0.0125)))            # ~0.0125-wide bins -> finer resolution
-    cnt, edges = np.histogram(cos, bins=bins, range=(lo, hi))
-    top = int(cnt.max()) or 1
-    base = h - pad
-    bw = (w - 2 * pad) / bins
+    # Mirrors the study's ISO 01: a smooth random-pair cosine *density* over the
+    # full [-1, +1] axis (0 dead-centre = isotropic), with the analytic isotropic
+    # d-sphere reference drawn as a razor spike at 0, the anisotropy-gap wedge
+    # between 0 and the dataset mean, and an accent mean tick. An isotropic space
+    # sits symmetric on 0; a crowded cone shifts its whole mass toward +1.
+    w, h = 760, 470
+    L, R, T, B = 70, 720, 80, 392
+    XLO, XHI = -1.0, 1.0
 
-    def x_of(v):
-        return pad + (v - lo) / span * (w - 2 * pad)
+    cos = np.asarray(ctx.cos, float)
+    n = int(cos.size)
+    mean = float(cos.mean())
+    sd = float(cos.std())
+    tail = float(np.quantile(cos, 0.99))
+    dim = int(getattr(ctx.scan, "dim", 0) or 0)
+    sd_ref = float(metrics.isotropy_ref(dim)) if dim else 0.02
 
-    body = [f'<line x1="{pad}" y1="{base}" x2="{w-pad}" y2="{base}" stroke="var(--rule)" stroke-width="1"/>']
-    # bars coloured by cosine: isotropic (cos~0) = good/distinct, crowded (high cos) = bad
-    for k in range(bins):
-        if cnt[k] == 0:
-            continue
-        c0 = 0.5 * (edges[k] + edges[k + 1])
-        pct = int(round(max(0.0, min(1.0, c0)) * 100))
-        bh = cnt[k] / top * (h - 2 * pad)
-        body.append(f'<rect x="{pad+k*bw:.2f}" y="{base-bh:.1f}" width="{bw*0.92:.2f}" height="{bh:.1f}" '
-                    f'fill="color-mix(in srgb, var(--bad) {pct}%, var(--good))" fill-opacity="0.85"/>')
-    if lo <= 0 <= hi:
-        body.append(f'<line x1="{x_of(0):.1f}" y1="{pad}" x2="{x_of(0):.1f}" y2="{base}" '
-                    f'stroke="var(--ink-faint)" stroke-dasharray="3 3"/>')
-        body.append(f'<text x="{x_of(0):.1f}" y="{pad-6}" font-size="9" fill="var(--ink-faint)" '
-                    f'text-anchor="middle">isotropic 0</text>')
-    mx = x_of(float(cos.mean()))
-    body.append(f'<line x1="{mx:.1f}" y1="{pad-2}" x2="{mx:.1f}" y2="{base}" stroke="var(--accent)" stroke-width="2"/>')
-    body.append(f'<text x="{mx:.1f}" y="{pad-18}" font-size="10" fill="var(--accent)" '
-                f'text-anchor="middle">mean {cos.mean():+.3f}</text>')
-    # fine axis: minor ticks every 0.025, majors labelled every 0.1
-    for s in range(int(np.ceil(lo / 0.025)), int(np.floor(hi / 0.025)) + 1):
-        v = s * 0.025
-        major = (s % 4 == 0)
-        body.append(f'<line x1="{x_of(v):.1f}" y1="{base}" x2="{x_of(v):.1f}" y2="{base + (6 if major else 3)}" '
-                    f'stroke="var(--rule-soft)"/>')
-        if major:
-            body.append(f'<text x="{x_of(v):.1f}" y="{base+17}" font-size="9.5" fill="var(--ink-faint)" '
-                        f'text-anchor="middle">{v:.1f}</text>')
+    def X(v):
+        return L + (v - XLO) / (XHI - XLO) * (R - L)
+
+    # ---- numpy-only KDE: fine histogram smoothed by a Gaussian kernel ----
+    nb = 400
+    edges = np.linspace(XLO, XHI, nb + 1)
+    centers = 0.5 * (edges[:-1] + edges[1:])
+    counts, _ = np.histogram(cos, bins=edges, density=True)
+    dx = centers[1] - centers[0]
+    bw = max(sd * n ** (-0.2), 2.5 * dx)                 # Scott's rule, floored to stay smooth
+    ksig = bw / dx
+    half = int(np.ceil(ksig * 4))
+    kx = np.arange(-half, half + 1)
+    kern = np.exp(-0.5 * (kx / ksig) ** 2)
+    kern = kern / kern.sum()
+    dens = np.convolve(counts, kern, mode="same")
+    dmax = float(dens.max()) or 1.0
+
+    DATA_TOP = B - 0.80 * (B - T)                        # dataset peak reaches 80% height
+    REF_TOP = B - 0.98 * (B - T)                         # reference spike a touch taller
+
+    def Yd(d):
+        return B - (d / dmax) * (B - DATA_TOP)
+
+    def Yr(r):
+        return B - r * (B - REF_TOP)
+
+    # density y at the mean (for the accent tick + circle)
+    dens_mean = float(np.interp(mean, centers, dens))
+    mx = X(mean)
+    my = Yd(dens_mean)
+
+    body = []
+
+    # vertical gridlines every 0.2
+    for g in np.arange(-1.0, 1.0001, 0.2):
+        body.append(f'<line x1="{X(g):.1f}" y1="{T}" x2="{X(g):.1f}" y2="{B}" '
+                    f'stroke="var(--rule-soft)" stroke-width="0.7"/>')
+
+    # light crowding fill under the whole dataset curve (tinted toward +1)
+    curve = [(X(centers[i]), Yd(dens[i])) for i in range(nb)]
+    fill_d = (f"M {X(XLO):.1f} {B:.1f} "
+              + " ".join(f"L {x:.2f} {y:.2f}" for x, y in curve)
+              + f" L {X(XHI):.1f} {B:.1f} Z")
+    body.append(f'<path d="{fill_d}" fill="color-mix(in srgb, var(--bad) 11%, transparent)" stroke="none"/>')
+
+    # anisotropy-gap wedge: area under the curve between cos=0 and the mean
+    a, b = (0.0, mean) if mean >= 0 else (mean, 0.0)
+    idx = np.where((centers >= a) & (centers <= b))[0]
+    if idx.size >= 2:
+        wc = [(X(centers[i]), Yd(dens[i])) for i in idx]
+        wedge = (f"M {wc[0][0]:.1f} {B:.1f} "
+                 + " ".join(f"L {x:.2f} {y:.2f}" for x, y in wc)
+                 + f" L {wc[-1][0]:.1f} {B:.1f} Z")
+        body.append(f'<path d="{wedge}" fill="color-mix(in srgb, var(--bad) 24%, transparent)" stroke="none"/>')
+
+    # isotropic d-sphere reference: analytic N(0, 1/√dim) razor spike at 0
+    gref = np.linspace(-0.28, 0.28, 225)
+    rref = np.exp(-0.5 * (gref / sd_ref) ** 2)
+    ref_pts = " ".join(f"{X(gref[i]):.2f} {Yr(rref[i]):.2f}" for i in range(gref.size))
+    body.append(f'<polyline points="{ref_pts}" fill="none" stroke="var(--ink-faint)" '
+                f'stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>')
+
+    # cos = 0 axis (faint dashed rule up the spike)
+    body.append(f'<line x1="{X(0):.1f}" y1="{Yr(1.0):.1f}" x2="{X(0):.1f}" y2="{B}" '
+                f'stroke="var(--ink-faint)" stroke-width="0.9" stroke-dasharray="3 3"/>')
+
+    # dataset density curve (the one accent)
+    line_d = " ".join(f"{x:.2f} {y:.2f}" for x, y in curve)
+    body.append(f'<polyline points="{line_d}" fill="none" stroke="var(--accent)" '
+                f'stroke-width="1.4" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>')
+
+    # baseline
+    body.append(f'<line x1="{L}" y1="{B}" x2="{R}" y2="{B}" stroke="var(--rule)" stroke-width="1"/>')
+
+    # mean tick + circle on the curve, with annotation to the right
+    body.append(f'<line x1="{mx:.1f}" y1="{B}" x2="{mx:.1f}" y2="{my:.1f}" '
+                f'stroke="var(--accent)" stroke-width="2.2"/>')
+    body.append(f'<circle cx="{mx:.1f}" cy="{my:.1f}" r="2.8" fill="var(--accent)"/>')
+    lab_anchor = "start" if mx < R - 170 else "end"
+    lab_dx = 8 if lab_anchor == "start" else -8
+    body.append(f'<text x="{mx + lab_dx:.1f}" y="{my - 6:.1f}" fill="var(--accent)" font-size="11" '
+                f'font-weight="700" text-anchor="{lab_anchor}" '
+                f'style="font-variant-numeric:tabular-nums">mean cos = {mean:+.2f}</text>')
+    body.append(f'<text x="{mx + lab_dx:.1f}" y="{my + 8:.1f}" fill="var(--ink-faint)" font-size="9" '
+                f'text-anchor="{lab_anchor}" style="font-variant-numeric:tabular-nums">'
+                f'sd ≈ {sd:.2f} · right tail → {tail:.2f}</text>')
+
+    # isotropic reference label (left gutter is empty for a positive cone) + leader
+    body.append('<text x="300" y="100" fill="var(--ink-faint)" font-size="10" '
+                'text-anchor="end">isotropic d-sphere reference</text>')
+    body.append(f'<text x="300" y="113" fill="var(--ink-faint)" font-size="9" text-anchor="end" '
+                f'style="font-variant-numeric:tabular-nums">N(0, 1/√{dim}) · sd ≈ {sd_ref:.3f}</text>')
+    body.append(f'<line x1="308" y1="103" x2="{X(0)-3:.1f}" y2="{Yr(1.0)+2:.1f}" '
+                f'stroke="var(--ink-faint)" stroke-width="0.7" stroke-dasharray="2 2"/>')
+
+    # x-axis ticks (-1.0 … +1.0) + minor ticks + label
+    for g in np.arange(-1.0, 1.0001, 0.2):
+        body.append(f'<line x1="{X(g):.1f}" y1="{B}" x2="{X(g):.1f}" y2="{B+7}" '
+                    f'stroke="var(--rule)" stroke-width="1"/>')
+        body.append(f'<text x="{X(g):.1f}" y="{B+20}" fill="var(--ink-faint)" font-size="10.5" '
+                    f'text-anchor="middle" style="font-variant-numeric:tabular-nums">'
+                    f'{("%+.1f" % g) if abs(g) > 1e-9 else "0"}</text>')
+    for g in np.arange(-0.9, 1.0, 0.2):
+        body.append(f'<line x1="{X(g):.1f}" y1="{B}" x2="{X(g):.1f}" y2="{B+4}" '
+                    f'stroke="var(--rule-soft)" stroke-width="0.8"/>')
+    body.append(f'<text x="{(L+R)/2:.1f}" y="{B+38}" fill="var(--ink-faint)" font-size="9.5" '
+                f'text-anchor="middle">cosine similarity</text>')
+
+    # title row + verdict (accent = the dataset's own signal)
+    if mean <= 3 * sd_ref:
+        verdict = f"near-isotropic · mean cos = {mean:+.2f}"
+    elif mean <= 0.15:
+        verdict = f"mild anisotropy · mean cos = {mean:+.2f}"
+    else:
+        verdict = f"anisotropic cone · mean cos = {mean:+.2f}"
+    body.insert(0, f'<text x="{L}" y="26" fill="var(--ink-soft)" font-size="11" text-anchor="start" '
+                   f'style="font-variant-numeric:tabular-nums">random-pair cosine density · '
+                   f'{dim}-d · ~{n//1000}k pairs</text>')
+    body.insert(1, f'<text x="{R}" y="26" fill="var(--accent)" font-size="11" font-weight="700" '
+                   f'text-anchor="end" style="font-variant-numeric:tabular-nums">{verdict}</text>')
+
+    aria = (f"Random-pair cosine-similarity density over {n:,} pairs of the "
+            f"{dim}-dimensional embeddings, on a full -1 to +1 cosine axis. The dataset "
+            f"density is an accent hump centred at cosine {mean:+.2f} (sd {sd:.2f}, right "
+            f"tail to {tail:.2f}); a tall dashed isotropic d-sphere reference spike sits at "
+            f"cosine 0 with sd {sd_ref:.3f}. The shaded wedge between cosine 0 and the accent "
+            f"mean tick is the anisotropy gap — the further right the mass, the more crowded "
+            f"and less resolvable random items are.")
     return {
-        "num": "RES 01", "order": 90, "name": "Random-pair cosine distribution", "tech": "anisotropy fingerprint",
-        "why": f"Cosine of {len(cos):,} random pairs (isotropic ref 0 ± {ref:.3f}). Bar colour runs from good "
-               f"(isotropic, cos≈0 — distinct) to bad (high cos — crowded), so the cone reads as a red-leaning lobe.",
-        "svg": _svg(w, h, "Random-pair cosine histogram coloured from isotropic (good) to crowded (bad)", "".join(body)),
-        "legend": '<span><i class="g"></i> isotropic / distinct (cos≈0)</span>'
-                  '<span><i class="r"></i> crowded / low resolution (high cos)</span>'
-                  '<span><i class="dash"></i> isotropic ref (0)</span>'
-                  '<span><i class="a"></i> dataset mean</span>',
-        "reveal": "<b>Reveals:</b> not just <i>that</i> the space is anisotropic but <i>where</i> the pair mass sits on the distinct→crowded axis — a red lobe at high cosine is the low-resolution cone.",
+        "num": "RES 01", "order": 90, "name": "Random-pair cosine distribution", "tech": "cosine density",
+        "why": f"Cosine of {n:,} random pairs as a smooth density on the full -1…+1 axis. An "
+               f"isotropic space sits symmetric on 0 (analytic ref N(0, 1/√{dim}), sd ≈ {sd_ref:.3f}); "
+               f"this dataset's mass sits at mean cos {mean:+.2f} — the shaded wedge is the anisotropy gap.",
+        "svg": _svg(w, h, aria, "".join(body)),
+        "legend": '<span><i class="a"></i> dataset random-pair cosine density</span>'
+                  '<span><i class="dash"></i> isotropic d-sphere reference — N(0, 1/√d)</span>'
+                  '<span><i class="dash"></i> cos = 0 axis</span>'
+                  '<span><i class="a"></i> accent tick — dataset mean cosine</span>',
+        "reveal": "<b>Reveals:</b> <b>anisotropy</b> / the cone effect — how far the dataset's "
+                  "random-pair mass sits to the right of the isotropic reference at 0. The wider that "
+                  "gap, the more every random pair looks alike and the less items are resolvable.",
         "cls": "fig-mid",
     }
 
@@ -198,6 +343,7 @@ def _facts(ctx):
         ("items × dims", items),
         ("mean L2 norm", f"{ctx.scan.norm_mean:.3f}"),
         ("mean pair cosine", f"{ctx.cos.mean():+.3f}"),
+        ("isoscore", f"{metrics.isoscore(ctx.eigs):.3f}"),
         ("effective rank", f"{metrics.effective_rank(ctx.eigs):.1f} / {ctx.scan.dim}"),
         ("dims for 90% var", f"{metrics.dims_for_variance(ctx.eigs, 0.9)} / {ctx.scan.dim}"),
     ]
