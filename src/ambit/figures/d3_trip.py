@@ -171,11 +171,14 @@ def fig_d3_trip(ctx):
     return {
         "num": "3D 02", "order": 21, "name": "Orthographic triptych",
         "tech": "xy · xz · yz",
-        "why": (f"The same 3-D reservoir under three undistorted axis-aligned "
-                f"projections at one shared scale (0.2 majors, 0.1 minors). σ is "
-                f"{sdx:.2f}/{sdy:.2f}/{sdz:.2f} along x/y/z — the cloud is ~{ratio:.1f}× "
-                f"broader on its widest axis than its thinnest, and that flattening "
-                f"is legible as a shorter caliper in the panels that include z."),
+        "why": (f"Three orthographic views of the embedding cloud — looking straight "
+                f"down the x, y, and z axes at one shared scale — so its true "
+                f"proportions read without the distortion a single oblique angle adds. "
+                f"Spread is σ {sdx:.2f}/{sdy:.2f}/{sdz:.2f} along x/y/z, so the cloud is "
+                f"~{ratio:.1f}× broader on its widest axis than its thinnest; that "
+                f"flattening shows as a shorter caliper in the panels that include z. "
+                f"Round in all three panels is isotropic occupancy; flat is measurable "
+                f"anisotropy."),
         "svg": _svg(W, H, aria, "".join(body)),
         "legend": '<span><i class="a"></i> megacluster core (shared accent across panels)</span>'
                   '<span><i class="f"></i> cloud point — density by accumulation</span>'

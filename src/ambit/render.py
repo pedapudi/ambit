@@ -104,6 +104,128 @@ def _hc_fig(svg, hc):
     return f'<div class="hc-fig">{svg}{hc}</div>'
 
 
+# Explicit display order, by figure registry key. Listed figures render in this
+# sequence; any enabled figure not listed sorts after, by its own `order`.
+_DISPLAY_ORDER = [
+    "res_cmap",    # RES 07 · local crowding cloud
+    "d3_trip",     # 3D 02 · orthographic triptych
+    "res_field",   # RES 06 · local concentration field
+    "res_margin",  # RES 04 · nearest-neighbor cosine margin
+    "res_wb",      # RES 05 · within- vs between-cluster cosine
+    "cos_hist",    # RES 01 · random-pair cosine distribution
+    "res_cumvar",  # RES 02b · cumulative variance
+    "scree",       # RES 02 · covariance eigenvalue scree
+    "d3_shell",    # 3D 05 · radial shell occupancy
+    "den_prom",    # DEN 04 · density-peak prominence
+    "cov_sparsity",# COV 09 · nearest-neighbor sparsity field
+]
+
+
+# ---- "how to read" interpretation hovercards, keyed by figure registry key ----
+# One per figure, in the same popover language as the IsoScore explainer. Centralized
+# here (not in each figure module) so the guidance reads as one consistent voice; any
+# figure without an entry falls back to its own why/reveal text.
+_INTERP = {
+    "cos_hist": ("Random-pair cosine", "global anisotropy fingerprint",
+        "<p>Cosine between random pairs of items. In a healthy space unrelated pairs are near-orthogonal, "
+        "so the mass sits in a narrow spike at <b>0</b>.</p>"
+        "<p>Mass shifted right (toward +1) means even unrelated items look alike — the space is anisotropic, "
+        "or crowded. Compare the peak to the dashed isotropic reference (centered at 0, width ≈ 1/&#8730;d).</p>"
+        '<div class="hc-foot">A small positive mean is normal for real text embeddings; what matters is how '
+        "far right of the reference it sits.</div>"),
+    "scree": ("Eigenvalue scree", "dimensional collapse",
+        "<p>Covariance eigenvalues, largest first, on a log axis — the variance carried by each principal "
+        "direction.</p>"
+        '<p>A <span class="hc-good">gentle slope</span> means variance is spread over many axes (high '
+        'effective rank, healthy). A <span class="hc-bad">steep cliff</span> in the first few means variance '
+        "has collapsed onto a handful of directions.</p>"
+        '<div class="hc-foot">Effective rank (annotated) is the continuous count of dimensions actually in '
+        "use.</div>"),
+    "res_cumvar": ("Cumulative variance", "how evenly the space is used · carries the IsoScore",
+        "<p>Running fraction of total variance against the number of dimensions included.</p>"
+        '<p>A curve that hugs the <span class="hc-good">diagonal</span> means variance is spread evenly '
+        '(isotropic). A curve that <span class="hc-bad">shoots up early</span> means a few dimensions carry '
+        "almost everything. The &ldquo;dims for 90%&rdquo; marker and the IsoScore badge quantify it — hover "
+        "the IsoScore itself for its formula.</p>"),
+    "res_margin": ("Nearest-neighbor margin", "retrieval decisiveness",
+        "<p>Per item, the cosine gap between its #1 and #2 nearest neighbor.</p>"
+        '<p>Mass piled at the <span class="hc-bad">floor (margin &#8594; 0)</span> means near-ties, where the '
+        "index can barely separate the best match from the runner-up — brittle retrieval. A "
+        '<span class="hc-good">fat right tail</span> means many items have a decisively separated best '
+        "neighbor.</p>"
+        '<div class="hc-foot">Compare the accent median rule to the dashed isotropic-reference median.</div>'),
+    "res_wb": ("Within vs between cosine", "are the groups geometrically separable?",
+        "<p>Two distributions: cosine of pairs <em>within</em> the same group vs <em>between</em> groups.</p>"
+        '<p><span class="hc-good">Clean separation</span> (within shifted right of between, little overlap) '
+        'means groups occupy distinct directions. <span class="hc-bad">Heavy overlap</span> means the labels '
+        "are not separable by geometry alone.</p>"),
+    "res_field": ("Local concentration field", "localized crowding, as a distribution",
+        "<p>For each item, the mean cosine to its k nearest neighbors — how tightly its local neighborhood "
+        "collapses — drawn against a synthetic isotropic reference (the faint ghost).</p>"
+        '<p><span class="hc-look">Read the shape:</span> one mode at the floor near the reference = roomy; the '
+        "whole mode shifted far right = globally crowded (a union of cones); a separated high mode across a "
+        "valley = a crowded pocket (one bump each).</p>"
+        '<div class="hc-foot">The gap from the isotropic reference to the dataset bulk is the global '
+        "crowding.</div>"),
+    "res_cmap": ("Local crowding cloud", "read color and shape, not position",
+        '<p>The reservoir projected to 3-D, recolored and reshaped by native crowding: '
+        '<span class="hc-good">flat green dots</span> are the least-crowded items, '
+        '<span class="hc-bad">red pyramids</span> the most (taller = more crowded).</p>'
+        '<p><span class="hc-look">Position does not show crowding.</span> It is a PCA projection of the top-3 '
+        "variance directions; about 98% of each item's true 768-d neighbors do not survive it, so crowded and "
+        "open points look equally clumped. Read crowding from <b>color and shape only</b>.</p>"
+        "<p>What the layout <em>does</em> show: whether the pyramids cluster in one region (a localized "
+        "pocket) or spread evenly (global crowding). Toggle <b>kNN edges</b> to wire each point to its true "
+        "neighbors — they fan across the projection rather than staying local, which is the same projection "
+        "limit made visible.</p>"
+        '<div class="hc-foot">Color is relative rank — in a globally crowded space the green dots are still '
+        "cramped, just less than the median. RES 06 shows the absolute level.</div>"),
+    "den_prom": ("Density-peak prominence", "where the data piles up",
+        "<p>Hotspots in the projected cloud, scored by how far they rise above their surroundings.</p>"
+        "<p>Tall, isolated peaks are genuine concentrations; a flat field is evenly spread. Prominence "
+        "separates a real peak from a gentle rise.</p>"),
+    "cov_sparsity": ("Nearest-neighbor sparsity", "open space vs packing",
+        "<p>Each point is a ring sized by the distance to its nearest neighbor.</p>"
+        '<p><span class="hc-good">Large rings</span> (the isolated decile, highlighted) mark open space and '
+        "cleanly separated points; tiny rings mark tight packing. Drag the slider to thin a crowded field.</p>"),
+    "d3_live": ("Live 3-D cloud", "the occupied volume, by cluster",
+        "<p>The projected reservoir as a turnable solid, each point colored by its cluster. Drag to rotate, "
+        "scroll or pinch to zoom; it auto-spins when idle.</p>"
+        '<p>Look at how clusters sit in the volume and whether the cloud is <span class="hc-bad">thin in one '
+        "axis</span> (anisotropy you can see). Toggle kNN edges to overlay the neighbor graph; the lower-left "
+        "gnomon tracks orientation.</p>"
+        '<div class="hc-foot">A global-variance projection — like RES 07, position shows the gross shape, not '
+        "fine local structure.</div>"),
+    "d3_trip": ("Orthographic triptych", "the cloud from three axes",
+        "<p>The same 3-D cloud viewed straight down the X, Y, and Z axes.</p>"
+        '<p>Compare the three silhouettes: a cloud that is <span class="hc-bad">flat in one panel</span> '
+        "occupies fewer effective dimensions there. Round in all three is more isotropic occupancy.</p>"),
+    "d3_shell": ("Radial shell occupancy", "how the cloud fills outward",
+        "<p>Concentric shells from the centroid, shaded by how many points fall in each.</p>"
+        "<p>Most embedding clouds are a thin spherical shell (norms cluster at one radius) — even shading all "
+        "the way around. Lopsided shells indicate directional structure.</p>"),
+}
+
+
+def _interpret_hc(key, meta):
+    """A header 'how to read' hovercard for one figure — same popover as the IsoScore
+    explainer, opened from an info icon in the card header. Falls back to the figure's
+    own why/reveal when no curated entry exists."""
+    num = meta.get("num", "")
+    spec = _INTERP.get(key)
+    if spec:
+        h, sub, body = spec
+    else:
+        h, sub = meta.get("name", "How to read"), meta.get("tech", "")
+        rev = meta.get("reveal", "")
+        body = f'<p>{meta.get("why", "")}</p>' + (f"<p>{rev}</p>" if rev else "")
+    return (f'<span class="hc hc-head" tabindex="0" role="button" '
+            f'aria-label="How to read {num} — activate for guidance on interpreting this figure">'
+            f'how to read<i class="hc-i" aria-hidden="true">i</i>'
+            f'<span class="hc-card" role="tooltip">'
+            f'<span class="hc-h">{h}</span><span class="hc-sub">{sub}</span>{body}</span></span>')
+
+
 # ---------------------------------------------------------------- builtin figures
 @figure
 def fig_cloud(ctx):
@@ -326,7 +448,7 @@ def fig_scree(ctx):
         body.append(f'<text x="{pad-6}" y="{yy+3:.1f}" font-size="9" fill="var(--ink-faint)" text-anchor="end">1e{p}</text>')
     return {
         "num": "RES 02", "order": 91, "name": "Covariance eigenvalue scree", "tech": "effective rank",
-        "why": f"Normalized eigenvalues (log) over all {ctx.scan.n:,} items. A steep drop means variance is collapsed onto a few axes — low effective dimensionality.",
+        "why": f"Each principal axis's share of the variance, largest first, on a log scale, over all {ctx.scan.n:,} items. The shape is the read: a gentle, gradual slope means variance is spread across many axes (the space is fully used); a steep cliff in the first few means it has collapsed onto a handful of directions — high nominal dimensionality but low effective rank, the geometry behind crowding.",
         "svg": _svg(w, h, "Covariance eigenvalue scree with effective rank", "".join(body)),
         "legend": '<span><i class="f"></i> eigenvalue (log)</span><span><i class="a"></i> effective rank</span>',
         "reveal": f"<b>Reveals:</b> dimensional collapse — here {ctx.scan.dim} nominal dims carry only ≈{erank:.0f} effective.",
@@ -363,13 +485,16 @@ def build_report(ctx, *, out=None, title="ambit — embedding-space occupancy", 
     picker = (ASSETS / "picker.js").read_text(encoding="utf-8")
     facts = "".join(f'<div class="kv"><span class="k">{k}</span><span class="v">{v}</span></div>'
                     for k, v in _facts(ctx))
-    active = [fn for key, fn in FIGURES.items() if enabled(figures, key)]
-    metas = sorted((fn(ctx) for fn in active), key=lambda d: d.get("order", 999))
+    active = [(key, fn) for key, fn in FIGURES.items() if enabled(figures, key)]
+    _rank = {k: i for i, k in enumerate(_DISPLAY_ORDER)}
+    metas = sorted((dict(fn(ctx), _key=key) for key, fn in active),
+                   key=lambda d: _rank.get(d.get("_key"), 10_000 + d.get("order", 999)))
     cards = []
     for f in metas:
+        hc = _interpret_hc(f.get("_key", ""), f)
         cards.append(
             f'<section class="opt"><div class="opt-head">'
-            f'<span class="num">{f["num"]}</span><span class="name">{f["name"]}</span>'
+            f'<span class="num">{f["num"]}</span><span class="name">{f["name"]}</span>{hc}'
             f'<span class="tech">{f["tech"]}</span><span class="why">{f["why"]}</span></div>'
             f'<div class="opt-body"><figure class="{f.get("cls","")}">{f["svg"]}</figure>'
             f'<div class="leg">{f["legend"]}</div><div class="reveal">{f["reveal"]}</div></div></section>')

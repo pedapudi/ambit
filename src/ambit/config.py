@@ -20,7 +20,6 @@ DEFAULT_FIGURES = {
     "den_prom":     True,   # DEN 04 · density-peak prominence
     "cov_sparsity": True,   # COV 09 · nearest-neighbor sparsity field
     "d3_trip":      True,   # 3D 02 · orthographic XY/XZ/YZ triptych
-    "d3_live":      True,   # 3D · live · drag/zoom cloud + optional kNN-edge overlay
     "d3_shell":     True,   # 3D 05 · radial shell occupancy (3-D isometric)
     "cos_hist":     True,   # RES 01 · random-pair cosine histogram (study ISO 01 · global anisotropy)
     "scree":        True,   # RES 02 · covariance eigenvalue scree
@@ -30,6 +29,7 @@ DEFAULT_FIGURES = {
     "res_field":    True,   # RES 06 · local concentration field (localized anisotropy · distribution)
     "res_cmap":     True,   # RES 07 · local crowding map (projection recolored by the field z)
     # hidden (flip to True to show)
+    "d3_live":      False,  # 3D · live · drag/zoom cloud by cluster — superseded by RES 07 (crowding cloud + kNN edges)
     "cloud":        False,  # MAP 01 · projected density cloud
     "den_contour":  False,  # DEN 02 · isodensity contour relief
     "den_hexbin":   False,  # DEN 03 · hexbin occupancy

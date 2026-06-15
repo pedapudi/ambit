@@ -238,6 +238,16 @@
                       border-top: 1px solid var(--rule-soft); padding-top: 8px; }
   @media (prefers-reduced-motion: reduce) { .hc-card { transition: none; } }
 
+  /* ---- "how to read" hovercard: the same explainer popover, anchored in a card header ---- */
+  .opt-head .hc-head { position: relative; display: inline-flex; align-items: center;
+    font-size: 10px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600;
+    color: var(--ink-faint); border-bottom: none; white-space: nowrap; cursor: help; }
+  .opt-head .hc-head:hover, .opt-head .hc-head:focus-within { color: var(--accent); }
+  .opt-head .hc-head .hc-card { top: calc(100% + 8px); left: 0; right: auto;
+    text-transform: none; letter-spacing: normal; font-weight: 400; }
+  .hc-card .hc-look { color: var(--ink); }
+  .hc-card .hc-bad { color: var(--bad); } .hc-card .hc-good { color: var(--good); }
+
   svg text { font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; }
 
   footer { max-width: 1180px; margin: 40px auto 0; padding: 18px 24px; color: var(--ink-faint); font-size: 11px; border-top: 1px solid var(--rule); }
