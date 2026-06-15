@@ -243,6 +243,9 @@
     font-size: 10px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600;
     color: var(--ink-faint); border-bottom: none; white-space: nowrap; cursor: help; }
   .opt-head .hc-head:hover, .opt-head .hc-head:focus-within { color: var(--accent); }
+  .opt-head .hc-head .hc-i { margin-left: 0; width: 14px; height: 14px; line-height: 13px; cursor: help; }
+  .opt-head .hc-head:hover .hc-i, .opt-head .hc-head:focus-within .hc-i {
+    background: var(--accent); color: var(--paper); }
   .opt-head .hc-head .hc-card { top: calc(100% + 8px); left: 0; right: auto;
     text-transform: none; letter-spacing: normal; font-weight: 400; }
   .hc-card .hc-look { color: var(--ink); }

@@ -342,34 +342,40 @@ def fig_d3_shell(ctx):
     xs = np.array([x_of(rv) for rv in rc_s])
     ys = np.array([y_of(rt) for rt in ratio_s])
 
-    # surplus area (above uniform) -> good-soft
-    sur, started = [], False
-    for i in range(len(xs)):
-        above = ys[i] <= y_unit
-        if above and not started:
-            sur.append(f'M {xs[i]:.1f},{y_unit:.1f}'); started = True
-        if started:
-            sur.append(f'L {xs[i]:.1f},{min(ys[i], y_unit):.1f}')
-        if (not above) and started:
-            sur.append(f'L {xs[i]:.1f},{y_unit:.1f} Z'); started = False
-    if started:
-        sur.append(f'L {xs[-1]:.1f},{y_unit:.1f} Z')
+    # fills between the curve and the uniform line, with each boundary interpolated
+    # to the TRUE 1x crossing between shells (not clipped at the shell centers), so
+    # the shaded area meets the curve exactly on the reference line — no vertical
+    # walls and no missed/over-filled slivers on the flanks.
+    def _xcross(i):
+        y0, y1 = ys[i - 1], ys[i]
+        if y1 == y0:
+            return xs[i]
+        t = (y_unit - y0) / (y1 - y0)
+        return xs[i - 1] + t * (xs[i] - xs[i - 1])
+
+    def _band(above):
+        inside = (lambda y: y <= y_unit) if above else (lambda y: y > y_unit)
+        segs, cur = [], None
+        for i in range(len(xs)):
+            if inside(ys[i]):
+                if cur is None:
+                    xc = _xcross(i) if i > 0 else xs[i]
+                    cur = [f'M {xc:.1f},{y_unit:.1f}', f'L {xs[i]:.1f},{ys[i]:.1f}']
+                else:
+                    cur.append(f'L {xs[i]:.1f},{ys[i]:.1f}')
+            elif cur is not None:
+                cur.append(f'L {_xcross(i):.1f},{y_unit:.1f} Z')
+                segs.append(" ".join(cur)); cur = None
+        if cur is not None:
+            cur.append(f'L {xs[-1]:.1f},{y_unit:.1f} Z')
+            segs.append(" ".join(cur))
+        return segs
+
+    sur = _band(True)                                  # surplus (above uniform) -> good-soft
     if sur:
         body.append(f'<path d="{" ".join(sur)}" fill="var(--good-soft)" '
                     f'fill-opacity="0.45" stroke="none"/>')
-
-    # deficit area (below uniform) -> neutral faint trough
-    defc, started = [], False
-    for i in range(len(xs)):
-        below = ys[i] > y_unit
-        if below and not started:
-            defc.append(f'M {xs[i]:.1f},{y_unit:.1f}'); started = True
-        if started:
-            defc.append(f'L {xs[i]:.1f},{max(ys[i], y_unit):.1f}')
-        if (not below) and started:
-            defc.append(f'L {xs[i]:.1f},{y_unit:.1f} Z'); started = False
-    if started:
-        defc.append(f'L {xs[-1]:.1f},{y_unit:.1f} Z')
+    defc = _band(False)                                # deficit (below uniform) -> neutral trough
     if defc:
         body.append(f'<path d="{" ".join(defc)}" fill="var(--ink-faint)" '
                     f'fill-opacity="0.10" stroke="none"/>')

@@ -221,7 +221,7 @@ def _interpret_hc(key, meta):
         body = f'<p>{meta.get("why", "")}</p>' + (f"<p>{rev}</p>" if rev else "")
     return (f'<span class="hc hc-head" tabindex="0" role="button" '
             f'aria-label="How to read {num} — activate for guidance on interpreting this figure">'
-            f'how to read<i class="hc-i" aria-hidden="true">i</i>'
+            f'<i class="hc-i" aria-hidden="true">i</i>'
             f'<span class="hc-card" role="tooltip">'
             f'<span class="hc-h">{h}</span><span class="hc-sub">{sub}</span>{body}</span></span>')
 
@@ -495,7 +495,7 @@ def build_report(ctx, *, out=None, title="ambit — embedding-space occupancy", 
         cards.append(
             f'<section class="opt"><div class="opt-head">'
             f'<span class="num">{f["num"]}</span><span class="name">{f["name"]}</span>{hc}'
-            f'<span class="tech">{f["tech"]}</span><span class="why">{f["why"]}</span></div>'
+            f'<span class="tech">{f["tech"]}</span></div>'
             f'<div class="opt-body"><figure class="{f.get("cls","")}">{f["svg"]}</figure>'
             f'<div class="leg">{f["legend"]}</div><div class="reveal">{f["reveal"]}</div></div></section>')
     figscripts = "".join(f.get("script", "") for f in metas)
