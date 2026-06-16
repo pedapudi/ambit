@@ -159,26 +159,30 @@ _INTERP = {
         '<p><span class="hc-good">Clean separation</span> (within shifted right of between, little overlap) '
         'means groups occupy distinct directions. <span class="hc-bad">Heavy overlap</span> means the labels '
         "are not separable by geometry alone.</p>"),
-    "res_field": ("Local concentration field", "localized crowding, as a distribution",
-        "<p>For each item, the mean cosine to its k nearest neighbors — how tightly its local neighborhood "
-        "collapses — drawn against a synthetic isotropic reference (the faint ghost).</p>"
-        '<p><span class="hc-look">Read the shape:</span> one mode at the floor near the reference = roomy; the '
-        "whole mode shifted far right = globally crowded (a union of cones); a separated high mode across a "
-        "valley = a crowded pocket (one bump each).</p>"
-        '<div class="hc-foot">The gap from the isotropic reference to the dataset bulk is the global '
-        "crowding.</div>"),
-    "res_cmap": ("Local crowding cloud", "read color and shape, not position",
-        '<p>The reservoir projected to 3-D, recolored and reshaped by native crowding: '
-        '<span class="hc-good">flat green dots</span> are the least-crowded items, '
-        '<span class="hc-bad">red pyramids</span> the most (taller = more crowded).</p>'
-        '<p><span class="hc-look">Position does not show crowding.</span> It is a PCA projection of the top-3 '
-        "variance directions; about 98% of each item's true 768-d neighbors do not survive it, so crowded and "
-        "open points look equally clumped. Read crowding from <b>color and shape only</b>.</p>"
+    "res_field": ("Local density field", "k-NN density, as a distribution",
+        "<p>For each item, the mean cosine to its k nearest neighbors — a k-NN density estimate of how "
+        "concentrated its neighborhood is — drawn against a density-matched uniform reference, the faint "
+        "ghost (the null).</p>"
+        '<p><span class="hc-look">Read the shape:</span> one mode near the reference = roomy; the whole mode '
+        "shifted far right = globally denser than uniform; a separated high mode = a dense pocket. Pockets are "
+        "flagged where the field passes the reference's <em>own</em> tail — so the cutoff comes from the "
+        "reference, not from a fraction of the dataset's own bulk peak (an earlier bulk-peak threshold swamped "
+        "small but cleanly separated pockets).</p>"
+        '<div class="hc-foot">The magnitude is a rank, not a calibrated density (the cosine-to-density map is '
+        "nonlinear in high d). The gap to the uniform reference is how far the typical neighborhood sits above "
+        "uniform.</div>"),
+    "res_cmap": ("Local density cloud", "read color and shape, not position",
+        '<p>The reservoir projected to 3-D, recolored and reshaped by native local density: '
+        '<span class="hc-good">flat green dots</span> are the least-dense items, '
+        '<span class="hc-bad">red pyramids</span> the densest (taller = denser).</p>'
+        '<p><span class="hc-look">Position does not show density.</span> It is a PCA projection of the top-3 '
+        "variance directions; about 98% of each item's true 768-d neighbors do not survive it, so dense and "
+        "open points look equally clumped. Read density from <b>color and shape only</b>.</p>"
         "<p>What the layout <em>does</em> show: whether the pyramids cluster in one region (a localized "
-        "pocket) or spread evenly (global crowding). Toggle <b>kNN edges</b> to wire each point to its true "
+        "pocket) or spread evenly (global density). Toggle <b>kNN edges</b> to wire each point to its true "
         "neighbors — they fan across the projection rather than staying local, which is the same projection "
         "limit made visible.</p>"
-        '<div class="hc-foot">Color is relative rank — in a globally crowded space the green dots are still '
+        '<div class="hc-foot">Color is relative rank — in a globally dense space the green dots are still '
         "cramped, just less than the median. RES 06 shows the absolute level.</div>"),
     "den_prom": ("Density-peak prominence", "where the data piles up",
         "<p>Hotspots in the projected cloud, scored by how far they rise above their surroundings.</p>"

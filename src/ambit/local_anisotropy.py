@@ -1,20 +1,31 @@
-"""Localized anisotropy — the unsupervised, multiscale local-concentration field.
+"""Localized density — the unsupervised, multiscale local-concentration field.
 
-Crowding is *local*: a dataset can be globally isotropic while a sub-population is
-crammed into a cone, and a global scalar is non-collapsible over clusters, so it
-hides or misreads the pocket. (See docs/concepts/cluster-sensitive-anisotropy.html.)
+What this measures is *local density*: per item, how concentrated its k-nearest-
+neighbor neighborhood is (the mean cosine to its k nearest ≈ a k-NN density estimate
+in cosine units). It is monotone in density, so it ranks neighborhoods reliably; the
+magnitudes are cosine, not calibrated densities (the cosine→density map is strongly
+nonlinear in high d). Crowding is *local*: a dataset can be globally diffuse while a
+sub-population is crammed together, and a global scalar is non-collapsible over
+clusters, so it hides or misreads the pocket. (See the concept note for the geometry.)
 
-We measure, per item, how concentrated its k-nearest-neighbor neighborhood is — at
-several scales k — and read the DISTRIBUTION of that field:
+We read the DISTRIBUTION of that field at several scales:
 
-  - unimodal at the bulk            -> roomy / uniform
-  - the bulk shifted far up          -> globally crowded (the "dandelion")
-  - a separated high mode            -> a crowded pocket
+  - one mode near the reference       -> roomy / uniform
+  - the whole mode shifted far up      -> globally crowded (the "dandelion")
+  - a separated high mode               -> a crowded pocket
 
-Fully unsupervised. Calibrated internally for *local* pockets (the field vs its own
-median/MAD) and against a synthetic *isotropic reference* for *global* crowding.
-Labels are never required; when present they add a neighborhood-relevance overlay
-(handled by the caller, not here).
+Detection is calibrated against a synthetic *isotropic reference* (a density-matched
+uniform cloud): per scale, a point is crowded when its robust z exceeds the
+reference's own upper-tail threshold, unioned across scales, with the angular
+clustering + minimum pocket size rejecting scattered false positives. The threshold
+comes from the reference, not from a fraction of the dataset's own bulk peak, so a
+small but cleanly separated pocket is not swamped by a tall bulk. The reference also
+gives the *global* crowding (bulk vs the uniform baseline).
+
+Caveats it does not yet correct for: k-NN density estimation in ~768-d suffers
+distance concentration (compressed dynamic range), hubness, and fixed-k boundary
+bias; magnitudes should be read as ranks, not absolute densities. Fully unsupervised;
+labels, when present, add a neighborhood-relevance overlay (handled by the caller).
 """
 
 from __future__ import annotations
@@ -42,19 +53,19 @@ class Pocket:
 
 @dataclass
 class LocalAnisotropy:
-    field: np.ndarray           # (m,) per-item concentration at the headline scale
-    score: np.ndarray           # (m,) signed multiscale crowding z (robust)
+    field: np.ndarray           # (m,) per-item local density (mean cos to k-NN) at scale_star
+    score: np.ndarray           # (m,) signed robust z at scale_star (single scale; for map color)
     scale_star: int             # headline scale (most separated field)
     scales: tuple
-    per_scale: dict             # k -> (m,) concentration
-    iso_ref: dict               # k -> (n_ref,) isotropic-reference concentration
+    per_scale: dict             # k -> (m,) local density per scale
+    iso_ref: dict               # k -> (n_ref,) isotropic-reference density (the null)
     bulk: float                 # dataset field median at scale_star
     iso_bulk: float             # isotropic-reference median at scale_star
-    global_crowding: float      # (bulk - iso_bulk)/iso_mad : whole-space crowding
-    multimodal: bool            # a high mode separated from the bulk?
-    valley: Optional[float]     # field value of the bulk/pocket split (if multimodal)
-    crowded_fraction: float     # fraction of items flagged crowded
-    pockets: list               # list[Pocket], crowded -> roomy order
+    global_crowding: float      # (bulk - iso_bulk)/iso_mad : how far the bulk sits above uniform
+    multimodal: bool            # a separated dense pocket survived detection + clustering?
+    valley: Optional[float]     # field value splitting bulk from the crowded set (figure)
+    crowded_fraction: float     # fraction of items past the reference-calibrated threshold
+    pockets: list               # list[Pocket], densest -> least order
 
 
 def for_ctx(ctx, **kw):
@@ -131,29 +142,6 @@ def _angular_components(X, dist_thr):
     return lab
 
 
-def _multimodal(field, frac_min: float = 0.004):
-    """A high mode separated from the bulk by a near-empty valley? Returns
-    (is_multimodal, valley_value)."""
-    lo, hi = float(field.min()), float(field.max())
-    if hi - lo < 1e-6:
-        return False, None
-    nb = 60
-    counts, edges = np.histogram(field, bins=nb, range=(lo, hi))
-    centers = 0.5 * (edges[:-1] + edges[1:])
-    med = float(np.median(field))
-    bb = max(0, min(nb - 1, int((med - lo) / (hi - lo) * nb)))
-    thr = max(1.0, counts.max() * 0.02)
-    i = bb
-    while i < nb and counts[i] > thr:                              # walk off the bulk
-        i += 1
-    vstart = i
-    while i < nb and counts[i] <= thr:                             # cross the valley
-        i += 1
-    if vstart < i < nb and counts[i:].sum() >= field.size * frac_min:
-        return True, float(centers[(vstart + i) // 2])
-    return False, None
-
-
 def localized_anisotropy(X, *, labels: Optional[np.ndarray] = None,
                          scales=DEFAULT_SCALES, threshold: float = 3.0,
                          n_ref: int = 4000, seed: int = 0) -> LocalAnisotropy:
@@ -177,15 +165,13 @@ def localized_anisotropy(X, *, labels: Optional[np.ndarray] = None,
     rsims, _ = _topk_sims(R, max(kref.values()))
     iso_ref = {k: rsims[:, :kref[k]].mean(1) for k in scales}
 
-    # internal robust z per scale, multiscale score = most extreme |z| (signed)
-    zs = {}
+    # per-scale robust z for the dataset, and for the isotropic reference (the null)
+    zs, zref = {}, {}
     for k in scales:
         med, mad = _mad(per_scale[k])
         zs[k] = (per_scale[k] - med) / (mad or 1e-9)
-    Z = np.stack([zs[k] for k in scales], 1)
-    ai = np.argmax(np.abs(Z), 1)
-    score = Z[np.arange(m), ai]
-    best_k = np.array(scales)[ai]
+        rmed, rmad = _mad(iso_ref[k])
+        zref[k] = (iso_ref[k] - rmed) / (rmad or 1e-9)
 
     # headline scale = the one whose field has the most extended upper tail (MAD units)
     def sep(k):
@@ -193,21 +179,43 @@ def localized_anisotropy(X, *, labels: Optional[np.ndarray] = None,
         return (np.quantile(per_scale[k], 0.99) - med) / (mad or 1e-9)
     scale_star = max(scales, key=sep)
     field = per_scale[scale_star]
-    bulk = float(np.median(field))
+    med_s, mad_s = _mad(field)
+    bulk = float(med_s)
     iso_med, iso_mad = _mad(iso_ref[scale_star])
     global_crowding = float((bulk - iso_med) / (iso_mad or 1e-9))
 
-    multimodal, valley = _multimodal(field)
+    # map coloring: signed robust z at the headline scale. A single scale (not the
+    # max over several correlated scales) keeps the null honest — uniform data stays
+    # near zero instead of being inflated by a maximum-of-correlated-z's tail.
+    score = zs[scale_star]
+    best_k = np.array(scales)[np.argmax(np.stack([zs[k] for k in scales], 1), 1)]
 
-    # crowded items = the separated high mode (above the valley). Tying pocket
-    # membership to the distribution avoids the per-item tail over-flagging that a
-    # z-threshold suffers at large m across several scales; uniform data (no valley)
-    # yields no pockets. `score` (multiscale z) is still returned for map coloring.
-    if multimodal and valley is not None:
-        crowded = field > valley
-    else:
-        crowded = np.zeros(m, bool)
-    crowded_fraction = float(crowded.mean())
+    # ---- reference-calibrated, multiscale detection of crowded points ----
+    # For each scale the isotropic reference supplies the null distribution of the
+    # field with no local structure; a point is crowded at scale k if its robust z
+    # exceeds the reference's own upper-tail threshold there. We union across scales
+    # (splitting a small expected-false budget between them) and rely on the angular
+    # clustering + minimum pocket size below to reject the scattered, near-orthogonal
+    # false positives that any tail threshold lets through.
+    #
+    # This replaces a histogram valley whose threshold was 2% of the *bulk peak
+    # height*. At a fixed reservoir of m points that bar is ~2% of the tallest bin, so
+    # a small pocket — tens of items spread over a few bins — sits below it however
+    # cleanly it is separated, and the valley-walk swallows it. On the m=20000 legal
+    # reservoir the bar is ~24 items/bin while the real pockets peak at ~8 items/bin,
+    # so they read as "0 pockets". (It is not that the reservoir changes size; the bar
+    # was simply anchored to the wrong quantity.) The reference null is a fixed,
+    # density-matched yardstick keyed to whether a point is denser than the reference
+    # ever gets — not to the bulk's height — so small separated pockets surface, and a
+    # uniformly-crowded "dandelion" yields none because its z-tail matches the reference's.
+    alpha = 0.01
+    per = alpha / max(len(scales), 1)
+    crowded = np.zeros(m, bool)
+    zstar = {}
+    for k in scales:
+        zstar[k] = float(np.quantile(zref[k], 1.0 - per))
+        crowded |= zs[k] > zstar[k]
+    valley = float(med_s + zstar[scale_star] * mad_s)     # field split, for the figure
 
     pockets = []
     cr = np.where(crowded)[0]
@@ -222,7 +230,7 @@ def localized_anisotropy(X, *, labels: Optional[np.ndarray] = None,
                 continue
             cov = np.cov(X[mem].T) if mem.size > 1 else np.eye(d)
             iss = metrics.isoscore_star(metrics.eigs_from_cov(cov), int(mem.size))
-            sub = mem[np.argmax(np.abs(score[mem]))]
+            sub = mem[np.argmax(score[mem])]
             pockets.append(Pocket(
                 members=mem, size=int(mem.size),
                 concentration=float(field[mem].mean()),
@@ -230,6 +238,11 @@ def localized_anisotropy(X, *, labels: Optional[np.ndarray] = None,
                 isoscore_star=float(iss), scale=int(best_k[sub]),
                 z=float(score[mem].max())))
         pockets.sort(key=lambda p: -p.z)
+
+    # a separated dense pocket survived detection + clustering; report the fraction
+    # of items that landed in a pocket (the scattered, unclustered tail is dropped)
+    multimodal = len(pockets) > 0
+    crowded_fraction = float(sum(int(p.size) for p in pockets) / m)
 
     return LocalAnisotropy(field=field, score=score, scale_star=int(scale_star),
                            scales=scales, per_scale=per_scale, iso_ref=iso_ref,

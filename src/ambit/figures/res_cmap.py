@@ -1,4 +1,4 @@
-"""RES 07 — Local crowding cloud. The projected reservoir (ctx.xyz) as an
+"""RES 07 — Local density cloud. The projected reservoir (ctx.xyz) as an
 interactive, drag-to-rotate / scroll-to-zoom canvas, recolored by each item's local
 crowding score (the signed, multiscale robust z of its neighborhood concentration vs
 the dataset's own field). The color runs open -> elevated -> crowded along
@@ -212,10 +212,10 @@ def fig_res_cmap(ctx):
 
     return {
         "num": "RES 07", "order": 95.5,
-        "name": "Local crowding cloud", "tech": "canvas · drag/zoom · crowding shape · kNN edges",
+        "name": "Local density cloud", "tech": "canvas · drag/zoom · crowding shape · kNN edges",
         "why": "The projected reservoir as a turnable solid, recolored and reshaped by each item's local "
-               "crowding score (signed multiscale z of its neighborhood concentration vs the dataset's own "
-               "field). Open items stay flat dots; crowded items rise into pyramids — taller, brighter, redder "
+               "density score (signed robust z, at the headline scale, of its k-NN density vs the dataset's own "
+               "field). Open items stay flat dots; dense items rise into pyramids — taller, brighter, redder "
                "the more crowded. Read crowding from the color and shape: the position is a PCA projection of "
                "the global variance and cannot show 768-d local crowding (only a few percent of each item's "
                "true neighbors survive the projection). Toggle the kNN-edge overlay to wire each point to its "
