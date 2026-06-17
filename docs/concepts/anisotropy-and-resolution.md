@@ -21,6 +21,19 @@ clustering, dedup, a RAG retriever — inherits the ambiguity. The space has hig
 nominal **capacity** (say 768 or 1536 dimensions) but low **effective
 resolution** in practice.
 
+Crucially, "distinct things" is not only *unrelated* things. Unrelated items
+crowded together is the obvious harm — impostors crowd the top of a search and
+cannot be ranked out. But a set of genuinely *related* items packed too tightly is
+a harm too: you lose the **resolution within the group** — the ability to tell
+*which* of several relevant items is the best match, to separate near-duplicates
+from distinct-but-related neighbors, to rank a cluster's own members. Many tasks
+(fine-grained retrieval, de-duplication, re-ranking, recommendation diversity) live
+or die on exactly that within-set resolution. So ambit measures crowding as **local
+density**, which is *relatedness-agnostic*: it is unsupervised, counting whatever
+sits in each item's neighborhood, so a tight neighborhood reads as lost resolution
+whether the neighbors are impostors or genuine relatives — and the per-item **NN
+margin** (cos top-1 − cos top-2) is precisely that within-neighborhood resolution.
+
 The tell is simple and measurable. Take many random pairs of items and look at
 their cosine similarity. In a healthy space, unrelated pairs average ≈ 0 (nearly
 orthogonal) and a genuinely *related* pair stands out sharply. In a crowded space,
@@ -253,6 +266,15 @@ Low resolution silently caps the ceiling of everything built on the embeddings:
 - **Model selection** — effective rank is a *label-free* predictor of downstream
   quality (RankMe, Garrido et al., 2023), so resolution metrics can rank candidate
   encoders before you have task labels.
+
+Several of these failures live *within* a related set, not just across unrelated
+ones: re-ranking the best of many relevant documents, de-duplicating near-identical
+items, and diversifying recommendations all require resolving items that are
+*supposed* to be close. Crowding that is tolerable for coarse retrieval can still
+wreck these finer tasks — which is why ambit reports the **local density field** and
+the **NN margin** per item (the within-neighborhood resolution) rather than only a
+global average. A neighborhood can be made of perfectly on-topic items and still be
+*too* crowded to rank.
 
 ---
 

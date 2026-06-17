@@ -37,20 +37,24 @@ short label like `RES 01` or `3D 05`; the prefix is its family:
 | **DEN** | where it concentrates | density peaks, contours, hotspots |
 | **COV** | how much space it uses | coverage, sparsity, reach, voids |
 | **3D** | how much volume / its shape | the 3-D occupied volume and its anisotropy |
-| **RES** | how distinct items are | native-space resolution / isotropy diagnostics |
+| **RES** | how distinct items are | native-space resolution / isotropy diagnostics, **global *and* localized** (the local-density field, RES 06/07) |
 
 > A given report only renders the figures that are **enabled** in its run
 > configuration. Enabling and disabling figures is done through the `Config`
 > object (a figure-toggle map) or the equivalent CLI flags — never through
 > environment variables. This guide documents the **default-enabled** set: the
-> ten figures plus the header facts row. A report with a custom configuration may
+> eleven figures plus the header facts row. A report with a custom configuration may
 > show fewer or more; figures not covered here are hidden by default.
 
-The figures appear in a fixed reading order set by each figure's internal `order`
-field, not the order in this guide's table. The default report reads top to
-bottom as: **DEN 04 → 3D · live → 3D 02 → 3D 05 → RES 01 → RES 02 → RES 02b →
-RES 04 → RES 05**. This guide documents them grouped by family for teaching, but
-notes each figure's position.
+The figures appear in a fixed reading order. It is set by the explicit
+`render._DISPLAY_ORDER` list (any enabled figure not named there sorts after, by
+its own `order` field), not by the order in this guide's table. The default report
+reads top to bottom as: **RES 07 → 3D 02 → RES 06 → RES 04 → RES 05 → RES 01 →
+RES 02b → RES 02 → 3D 05 → DEN 04 → COV 09**. So the interactive **local crowding
+cloud (RES 07)** opens the report, the **orthographic triptych (3D 02)** follows,
+and the **local density field (RES 06)** sits mid-stack with the rest of the RES
+block. This guide documents the figures grouped by family for teaching, but notes
+each figure's actual position.
 
 ---
 
@@ -112,14 +116,16 @@ Each figure card is structured the same way:
 
 ### Interactive figures
 
-Static figures are SVG and respond to theme swaps only. Three figures are
+Static figures are SVG and respond to theme swaps only. Three things are
 interactive:
 
 - **COV 09** (sparsity field) has a **#-samples slider** that thins a crowded
   field of rings down to a legible subset.
-- **3D · live** is a full interactive canvas: **drag to rotate**, **scroll or pinch
-  to zoom**, a **#-points slider**, and a **kNN-edges checkbox** that overlays the
-  neighbor graph. It auto-spins when idle.
+- **RES 07** (local crowding cloud) is a full interactive canvas: **drag to
+  rotate**, **scroll or pinch to zoom**, a **#-samples slider**, and a
+  **kNN-edges checkbox** that overlays the neighbor graph. It auto-spins when idle.
+  This is the report's one rotatable 3-D view — it superseded the old `3D · live`
+  cloud (now hidden by default), adding the local-density recoloring and reshaping.
 - The **IsoScore readout** (inside RES 02b, and shown as a header fact) is a
   **dotted-underline hovercard**. Hover it with the mouse, or focus it with the
   keyboard and activate, and a card unfolds showing the exact formula, the
@@ -257,9 +263,9 @@ tag distinguishes labels you **supplied** from labels ambit **derived** by
 clustering (`ctx.labels_source`).
 
 **How read:** This is the partition that RES 05 (within- vs between-cluster cosine)
-and the cluster coloring in 3D · live use. If the source is `clustered`, the groups
-are ambit's own guess at structure, not ground truth — interpret separability
-accordingly.
+uses (and the cluster coloring in the hidden-by-default `3D · live` cloud, if it is
+enabled). If the source is `clustered`, the groups are ambit's own guess at
+structure, not ground truth — interpret separability accordingly.
 
 ### hub skew
 
@@ -305,7 +311,8 @@ which is exactly why ambit shows the spectrum several ways.
 
 ### RES 01 — Random-pair cosine distribution
 
-*Order: appears in the RES block. Source: `fig_cos_hist` in `render.py`.*
+*Order: sixth card (after RES 05, before RES 02b). Source: `fig_cos_hist` in
+`render.py`.*
 
 #### What it answers
 
@@ -396,7 +403,8 @@ wedge would nearly disappear.
 
 ### RES 02 — Covariance eigenvalue scree
 
-*Order: appears after RES 01. Source: `fig_scree` in `render.py`.*
+*Order: eighth card — it renders **after** RES 02b in `_DISPLAY_ORDER` (the
+cumulative curve leads, the scree follows). Source: `fig_scree` in `render.py`.*
 
 #### What it answers
 
@@ -456,7 +464,8 @@ would sit near the left edge at **≈ 20**.
 
 ### RES 02b — Cumulative variance & dimensional concentration (carries the IsoScore)
 
-*Order: appears right after RES 02. Source: `figures/res_cumvar.py`.*
+*Order: seventh card — it renders **before** RES 02 (the cumulative curve leads, the
+scree follows). Source: `figures/res_cumvar.py`.*
 
 #### What it answers
 
@@ -552,7 +561,7 @@ IsoScore ≈ **0.00**.
 
 ### RES 04 — Nearest-neighbor cosine margin
 
-*Order: appears after RES 02b. Source: `figures/res_margin.py`.*
+*Order: fourth card (after RES 06, before RES 05). Source: `figures/res_margin.py`.*
 
 #### What it answers
 
@@ -598,15 +607,30 @@ high resolution."
   median *below* the isotropic reference is worse than no-structure geometry would
   give.
 
+The margin is, precisely, **within-neighborhood resolution**: how well the geometry
+separates the items that are *already nearest* — whether or not they are related.
+That distinction matters. The obvious failure mode is unrelated impostors crowding
+the top of a search: a small margin there means you can't rank them out and
+precision collapses. But a small margin among *genuinely related* neighbors is a
+failure too — a relevant cluster packed too tightly loses its *internal* resolution,
+so you can no longer tell which of several relevant items is the best match,
+separate near-duplicates from distinct-but-related neighbors, or rank a cluster's
+own members. Many tasks need exactly that within-set resolution (fine-grained
+retrieval, dedup, re-ranking, recommendation diversity). The margin reads both the
+same way, because crowding costs resolution either way.
+
 #### What to look for
 
 - **Healthy reading:** mass spread out into the right tail; the accent median sits
   comfortably away from the left edge and at or above the isotropic reference;
-  retrieval is decisive.
+  retrieval is decisive — nearest neighbors are decisively separated, so both the
+  best-vs-impostor and the best-vs-runner-up-relative judgments are well resolved.
 - **Crowded reading:** a tall spike piled against the left edge (margin ≈ 0), a thin
   right tail, the accent median pinned near 0 — top matches are near-ties and
   retrieval is brittle. The two reference rules may even collapse onto the left edge
-  together when the corpus is heavily floored.
+  together when the corpus is heavily floored. A floor like this hurts equally
+  whether the near-ties are impostors (precision gone) or members of one tight
+  relevant cluster (within-cluster ranking gone).
 
 #### Worked example
 
@@ -635,7 +659,7 @@ hub-skew fact) tends to bite.
 
 ### RES 05 — Within- vs between-cluster cosine
 
-*Order: last of the RES block. Source: `figures/res_wb.py`.*
+*Order: fifth card (after RES 04, before RES 01). Source: `figures/res_wb.py`.*
 
 #### What it answers
 
@@ -710,9 +734,186 @@ resolves the partition only partially. If the separation came out near zero, the
 
 ---
 
+### RES 06 — Local density field
+
+*Order: renders mid-stack, after RES 04/RES 05 (third card in the default report).
+Source: `figures/res_field.py`, reading `local_anisotropy.py`.*
+
+#### What it answers
+
+Is the crowding **global** (the whole space is dense) or **localized** (a few dense
+*pockets* in an otherwise roomy space)? RES 01 measured global anisotropy with a
+single mean; this figure refuses to collapse the local picture to one number. It
+shows the **distribution** of every item's local density, so you read the verdict
+off the *shape* — and that shape is the localized-anisotropy reading of the corpus.
+
+#### How it's computed
+
+All the numbers come from `local_anisotropy.localized_anisotropy` (memoized on the
+Ctx via `for_ctx`, shared with RES 07); this figure only draws them.
+
+For each reservoir item, take the **mean cosine to its k nearest neighbors** — a
+k-NN density estimate of how concentrated its neighborhood is — computed at several
+**scales** (k = 10, 50, 200 by default). The **headline scale** `k*` is the one
+whose field has the most extended upper tail (in MAD units): the scale that
+separates pockets most cleanly. The figure histograms the field at `k*`.
+
+Drawn against it is a **density-matched uniform reference** (the *null*): a synthetic
+isotropic cloud of unit vectors sampled at the same effective density, with k scaled
+to hold k/N fixed. It is rendered as a faint dashed ghost, peak-scaled to its own
+height. Two medians are marked — the **dataset bulk** (accent rule) and the
+**uniform-reference median** (dashed faint rule) — and a bracket between them
+labels the **global-crowding gap** as a multiple of the reference's own spread
+(`(bulk − iso_median)/iso_MAD`). Any **reference-calibrated pockets** get dashed
+`bad`-toned flags above their bumps, labeled with their size.
+
+Detection is **reference-tail-calibrated**, not bulk-relative: per scale, an item is
+flagged crowded when its robust z exceeds the *reference's own* upper-tail threshold
+(a small per-scale false-positive budget, unioned across scales), then angular
+clustering plus a minimum pocket size reject scattered false positives. The cutoff
+comes from "denser than the uniform reference ever gets," **not** from a fraction of
+the dataset's own bulk-peak height — so a small but cleanly separated pocket is not
+swamped by a tall bulk, and a uniformly crowded "dandelion" yields *no* pockets
+because its z-tail matches the reference's.
+
+#### How to read it
+
+- **x-axis:** local density = mean cosine to the `k*` nearest, low (roomy) on the
+  left to high (dense) on the right.
+- **y-axis:** items per bin.
+- **The accent rule** is the dataset bulk; **the dashed ghost** is the uniform null.
+- **DIRECTION:** the *shape* is the verdict, not a single direction —
+  - **one mode sitting near the reference** → **roomy / uniform**;
+  - **the whole mode shifted far right of the reference** → **globally denser than
+    uniform** (the gap bracket is wide);
+  - **a separated high mode** above the bulk → a **dense pocket** (flagged).
+- **The gap bracket** between the two medians is the global-crowding story: how far
+  the *typical* neighborhood sits above uniform.
+
+#### What to look for
+
+- **Roomy reading:** a single mode hugging the uniform ghost; a small gap bracket;
+  no pocket flags. Neighborhoods are about as concentrated as a uniform cloud's.
+- **Globally dense reading:** the whole histogram bodily shifted right of the ghost,
+  a wide gap bracket, but still *one* mode and no separated pockets — every
+  neighborhood is crowded, evenly. This is the local-field echo of RES 01's cone.
+- **Pocketed reading:** a main bulk near or modestly above the reference *plus* one
+  or more separated high modes, each flagged as a pocket — a roomy space with a few
+  crammed sub-populations the global mean would hide.
+
+#### Worked example
+
+For the legal cone, the bulk sits well to the right of the uniform ghost — a wide
+gap bracket and a `globally denser than uniform` tag — consistent with the global
+anisotropy RES 01 reads. If a sub-population (say one document family) were crammed
+far tighter than the rest, you'd instead see the bulk near the ghost with a separated
+high mode flagged `pocket · n=…`, and the report would say the crowding is *local*,
+not global. The distinction is invisible to a single mean-cosine scalar; it is the
+whole reason this figure draws the distribution.
+
+#### Caveats
+
+- **Magnitude is a RANK, not a calibrated density.** The cosine→density map is
+  strongly nonlinear in high d, and k-NN density estimation in ~768-d suffers
+  distance concentration, hubness, and fixed-k boundary bias. Read the field as an
+  ordering of neighborhoods, never as an absolute density. The honest signals are
+  the *shape* and the *gap to the reference*, both of which are reference-relative.
+- Pocket detection is **unsupervised** — it counts whatever sits in each
+  neighborhood (see the relatedness note in §5 and RES 04); a flagged pocket is a
+  geometrically dense sub-population, related or not.
+- Computed over the reservoir, so exact pocket counts reflect the sample; the
+  shape is robust.
+
+---
+
+### RES 07 — Local crowding cloud
+
+*Order: renders **first** in the default report. Source: `figures/res_cmap.py`,
+reading `local_anisotropy.py`. Interactive (drag · zoom · #-samples slider · kNN
+edges).*
+
+#### What it answers
+
+**Where** does the local density sit — is the crowding spatially coherent (one
+region of dense pockets) or an even wash across the cloud? This is the *spatial
+companion* to RES 06: RES 06 says how much and what kind of crowding; RES 07 says
+where it lives. It is the figure that **superseded the old `3D · live`** cloud — the
+report's one rotatable 3-D view, now carrying the local-density signal.
+
+#### How it's computed
+
+The projected reservoir (`ctx.xyz`, the top-3 PCA axes) is baked into a vanilla-JS
+canvas (no dependencies; reads CSS tokens so it re-skins on theme swap). Up to ~8,000
+points are kept, centered and scaled into a unit box, depth-sorted (painter's order)
+and depth-cued. Each point is **recolored and reshaped** by its local-density score
+(the signed robust z of its neighborhood concentration at the headline scale, from
+the same `local_anisotropy.for_ctx` result RES 06 reads):
+
+- **color** runs **green → amber → red** on a crowding rank (so adjacent levels stay
+  distinct under any theme): the *least*-dense items are flat green dots, the
+  *most*-dense are red;
+- **shape** reinforces it: open/typical items are **flat dots**; crowded items rise
+  into little **pyramids**, taller and brighter the more crowded — readable from any
+  angle. Items in a detected pocket get a ringed pyramid.
+
+An optional **kNN-edge overlay** (precomputed over a ~1,500-point prefix, k≈6 by
+cosine) wires each visible point to its native nearest neighbors when toggled on:
+edges between two crowded points are tinted, the rest neutral. A **#-samples
+slider** thins the field and a lower-left **x/y/z gnomon** tracks orientation.
+
+#### How to read it
+
+- **Drag to rotate, scroll/pinch to zoom.** It auto-spins when idle.
+- **Read crowding from COLOR and SHAPE, never from screen position.** This is the
+  load-bearing instruction: the position is a PCA projection of the *global*
+  variance, and only a few percent of each item's true 768-d neighbors survive it —
+  so dense and open points look equally clumped on screen. Color and pyramid height
+  carry the local density; the layout does not.
+- **What the layout *does* show:** whether the red pyramids **cluster in one region**
+  (a localized pocket) or **spread evenly** (global density). That coarse
+  arrangement is trustworthy; fine position is not.
+- **kNN-edges toggle:** the edges link true 768-d neighbors, so they **fan across**
+  the projection rather than staying local — that scatter is the projection limit
+  made visible. Tinted edges mark crowded-to-crowded links.
+- **#-samples slider:** thin the field when it's too dense to read.
+
+#### What to look for
+
+- **Roomy reading:** mostly flat green dots, few or no pyramids — little local
+  crowding structure.
+- **Pocketed reading:** a knot of tall red (ringed) pyramids concentrated in one
+  region of the cloud — a spatially coherent dense pocket, the same pocket RES 06
+  flagged, now located.
+- **Globally crowded reading:** pyramids spread evenly across the whole cloud rather
+  than bunched — the crowding is global, the RES 06 "dandelion" seen in space.
+
+#### Worked example
+
+Spin the legal cone and you'll see crowding spread broadly rather than knotted in one
+place — pyramids scattered across the cloud, matching RES 06's `globally denser than
+uniform` read. If instead one document family were crammed, you'd find a localized
+cluster of tall red pyramids; toggling kNN edges, the tinted crowded-to-crowded links
+would concentrate there. Either way, resist reading density off how tightly the dots
+*appear* to sit — the green dots are the least-crowded items **relative to this
+dataset**, not necessarily roomy in absolute terms; RES 06 carries the absolute
+level.
+
+#### Caveats
+
+- **Position is a PCA shadow and does not encode crowding** — the single most
+  important caveat, repeated on the card itself. The top-3 axes capture global
+  variance, not local 768-d structure; read color and shape.
+- Color is **relative rank**: in a globally dense space the green dots are still
+  cramped, just less than the median. Pair it with RES 06 for the absolute level.
+- Capped to ~8,000 points for the cloud and ~1,500 for the edge graph — a
+  representative sketch, not the whole corpus. The depth cue is perceptual, not
+  metric.
+
+---
+
 ### DEN 04 — Density-peak prominence
 
-*Order: first figure in the report. Source: `figures/den_prom.py`.*
+*Order: tenth card (after 3D 05, before COV 09). Source: `figures/den_prom.py`.*
 
 #### What it answers
 
@@ -790,7 +991,7 @@ with a little genuine secondary structure.
 
 ### COV 09 — Nearest-neighbor sparsity field
 
-*Order: in the coverage block. Source: `figures/cov_sparsity.py`. Interactive
+*Order: eleventh and **last** card. Source: `figures/cov_sparsity.py`. Interactive
 (#-samples slider).*
 
 #### What it answers
@@ -861,7 +1062,7 @@ crowd.
 
 ### 3D 02 — Orthographic triptych
 
-*Order: in the 3-D block. Source: `figures/d3_trip.py`.*
+*Order: second card — it renders right after RES 07. Source: `figures/d3_trip.py`.*
 
 #### What it answers
 
@@ -925,16 +1126,22 @@ alone) would hide this; the matched-scale triptych makes it measurable.
 
 ---
 
-### 3D · live — Live 3-D cloud (drag · zoom · kNN edges)
+### 3D · live — Live 3-D cloud (drag · zoom · kNN edges) *(hidden by default; superseded by RES 07)*
 
-*Order: appears early in the report, before the static 3-D figures. Source:
-`figures/d3_live.py`. Interactive.*
+*Status: **disabled by default** (`d3_live: False`). It is **superseded by RES 07**,
+the local crowding cloud, which is also a turnable canvas (drag-rotate, kNN-edge
+overlay, #-samples slider) but recolors and reshapes the cloud by local density
+rather than by cluster. This section is kept for runs that explicitly re-enable
+`d3_live`; it is **not** part of the default report. Source: `figures/d3_live.py`.
+Interactive.*
 
 #### What it answers
 
 How do the **clusters sit in the occupied volume**, seen from any angle, and where
 does the neighbor graph cohere or bridge across clusters? The same `ctx.xyz` cloud
-the triptych shows, but turnable.
+the triptych shows, but turnable and colored by cluster. (RES 07 turns the same cloud
+but colors it by local density instead — enable `d3_live` only when the
+cluster-coloring view is what you specifically want.)
 
 #### How it's computed
 
@@ -1000,7 +1207,7 @@ threads stay tightly inside each color, the clusters cohere despite the global c
 
 ### 3D 05 — Radial shell occupancy
 
-*Order: in the 3-D block. Source: `figures/d3_shell.py`.*
+*Order: ninth card (after RES 02, before DEN 04). Source: `figures/d3_shell.py`.*
 
 #### What it answers
 
@@ -1098,15 +1305,38 @@ seeing the same fact told several ways.
 - **Local retrieval margin (RES 04)** — whether, *down at the level of individual
   neighborhoods*, the geometry still resolves a best match from a runner-up. A global
   cone can still have decisive local margins (locally isotropic), or not.
+- **Localized density (RES 06 → RES 07)** — whether the crowding is *global* (the
+  whole field shifted above the uniform reference) or *localized into pockets* (a
+  separated dense mode in RES 06; a coherent knot of red pyramids in RES 07). This is
+  the local counterpart to RES 01's global mean: a single mean cannot distinguish "the
+  whole space is dense" from "a few sub-populations are crammed and the rest is roomy."
 - **Categorical separability (RES 05)** — whether the crowding *erases your
   categories*: do same-cluster pairs still out-score different-cluster pairs?
 
-These four are one phenomenon at four zoom levels. The instructive cases are when
+These are one phenomenon at several zoom levels. The instructive cases are when
 they *disagree*: a globally anisotropic space (RES 01 hot) that nonetheless has good
 local margins (RES 04 healthy) and clean cluster separation (RES 05 separable) is
 "crowded globally, useful locally" — common and often fine. The dangerous case is
-all four pointing the same way: high mean cosine, collapsed spectrum, near-tie
+the readings pointing the same way: high mean cosine, collapsed spectrum, near-tie
 margins, entangled clusters — resolution is genuinely gone.
+
+**Crowding costs resolution whether or not the crowded items are related.** This is
+worth holding onto when reading RES 04, RES 06, and RES 07 together. Unrelated items
+squeezed together is the obvious failure — impostors crowd the top of a search and
+can't be ranked out, so precision collapses. But a genuinely related cluster packed
+*too* tightly is a failure too: it loses its *internal* resolution — you can no
+longer tell which of several relevant items is the best match, separate
+near-duplicates from distinct-but-related neighbors, or rank a cluster's own members.
+Many tasks need exactly that within-set resolution (fine-grained retrieval, dedup,
+re-ranking, recommendation diversity). ambit's field is **relatedness-agnostic by
+construction**: it is unsupervised, so the local density counts whatever sits in each
+item's neighborhood, related or not — high local density is lost resolution either
+way. The per-item NN margin (RES 04, cos top-1 minus cos top-2) is precisely that
+within-neighborhood resolution; a small margin means even the nearest neighbors are
+near-ties. So a dense pocket flagged in RES 06/07 is *not* automatically benign just
+because the items in it look like they "belong together" — if its internal margins
+are small, you have lost the ability to resolve *within* the set, which is what many
+downstream tasks actually need.
 
 ### Density/coverage vs resolution: picture and measurement
 
@@ -1117,10 +1347,14 @@ The **DEN / COV / 3D** facets are the *picture* of crowding; the **RES** facet i
   spatial face of the same anisotropy the RES figures quantify. A space with one
   towering density peak (DEN 04) and tiny NN distances everywhere (COV 09) *is* a
   crowded cone — you can read it off the maps before you read the scalars.
-- The **3-D figures** let you *see* the anisotropy: the triptych (3D 02) and the live
-  cloud (3D · live) make a thin-in-Z flattening visible and rotatable, and the radial
-  shells (3D 05) show whether the mass is a filled core or a hollow shell. These
-  recover the dimension that the 2-D MAP/DEN/COV views flatten away.
+- The **3-D figures** let you *see* the anisotropy: the triptych (3D 02) makes a
+  thin-in-Z flattening visible, the radial shells (3D 05) show whether the mass is a
+  filled core or a hollow shell, and the rotatable **local crowding cloud (RES 07)**
+  lets you turn the cloud while reading local density off its color and shape (it is
+  the default report's interactive 3-D view, having superseded the cluster-colored
+  `3D · live`). These recover the dimension that the 2-D MAP/DEN/COV views flatten
+  away — though, as RES 07's card insists, position in the projection encodes the
+  *gross* shape, not fine local crowding.
 
 A hotspot in the density view and a mass of random-pair cosines piled up near +0.29
 are the **same fact told two ways**. The report's job is to put both in front of you,
@@ -1134,12 +1368,17 @@ first as a profile, then let each figure unpack one fact:
 
 | Header fact | The figure that unpacks it |
 |---|---|
-| mean pair cosine | RES 01 (the full distribution + wedge) |
+| mean pair cosine | RES 01 (the full *global* distribution + wedge); RES 06/07 give the *localized* counterpart — whether that crowding is global or pocketed, and where |
 | isoscore | RES 02b (the gap-to-diagonal it summarizes; formula in the hovercard) |
 | effective rank | RES 02 (the scree rule) and RES 02b (why it can mislead) |
 | dims for 90% var | RES 02b (the 90% crosshair) |
-| groups | RES 05 (separability) and 3D · live (cluster colors) |
+| groups | RES 05 (separability); cluster colors in the hidden `3D · live`, if enabled |
 | hub skew | RES 04 (the retrieval-margin regime where hubness bites) |
+
+Note there is no single header scalar for the *local* density field — that is
+precisely the point of RES 06/07: the localized picture does not collapse to one
+number, so it is read off the **shape** of the field (RES 06) and **where** the
+pockets sit (RES 07), not off the facts row.
 
 ---
 
@@ -1200,7 +1439,38 @@ is the skewness of the k-occurrence distribution.
 
 **NN cosine margin.** Per item, `cos(top-1) − cos(top-2)` — how decisively the best
 neighbor beats the runner-up. A local resolution measure (RES 04). Small margins =
-brittle retrieval.
+brittle retrieval. It is precisely **within-neighborhood resolution**, and it bites
+*regardless of relatedness*: a small margin among unrelated impostors collapses
+precision (you can't rank them out), while a small margin among genuinely related
+neighbors collapses *internal* resolution (you can't tell which of several relevant
+items is the best match, separate near-duplicates from distinct-but-related
+neighbors, or rank a cluster's own members). Crowding costs resolution either way, so
+a tight pocket (RES 06/07) with small internal margins is lost resolution even if its
+members "belong together."
+
+**Local density field.** The unsupervised, multiscale local-crowding measure (RES 06,
+`local_anisotropy.py`): per item, the **mean cosine to its k nearest neighbors** — a
+k-NN density estimate of how concentrated its neighborhood is — at scales k = 10, 50,
+200, with the headline scale `k*` chosen as the one whose field has the
+most-extended upper tail. Read as the **distribution** against a density-matched
+uniform reference (the null): one mode near the reference = roomy, the whole mode
+shifted up = globally dense, a separated high mode = a pocket. The magnitude is a
+**rank, not a calibrated density** (the cosine→density map is nonlinear in high d,
+and k-NN density estimation there suffers distance concentration, hubness, and
+fixed-k boundary bias).
+
+**Local crowding / pocket.** A reference-calibrated dense sub-population surfaced by
+RES 06/07 (`local_anisotropy.py`). An item is flagged crowded where its robust z
+exceeds the *uniform reference's own* upper-tail threshold (per scale, unioned across
+scales) — a cutoff anchored to "denser than the reference ever gets," not to a
+fraction of the dataset's own bulk peak, so small but cleanly separated pockets are
+not swamped by a tall bulk. Surviving the angular-clustering and minimum-size filter,
+each **pocket** is characterized by its mean local **density** (concentration), its
+mean **NN margin** (within-pocket resolution), an **IsoScore\*** (an `n < d`-robust
+isotropy of the pocket — collapsed sliver vs round dense ball), and the **scale** k
+at which it is most anomalous. RES 06 shows pockets as flags on the field; RES 07
+locates them spatially as ringed red pyramids. A uniformly crowded "dandelion" yields
+*no* pockets, because its z-tail matches the reference's.
 
 **Alignment & uniformity.** A representation-quality decomposition on the unit
 hypersphere (Wang & Isola [2020](https://arxiv.org/abs/2005.10242)): **alignment** =
