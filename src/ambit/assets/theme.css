@@ -140,6 +140,18 @@
   header .crumb { font-size: 11px; color: var(--ink-faint); }
   header .crumb a { color: var(--ink-faint); text-decoration: none; }
   header .crumb a:hover { color: var(--accent); }
+  /* research-preview status tag — a quiet two-line mark pinned next to the
+     wordmark. Echoes the crumb's register: small, faint, monospace, uppercase
+     tracking, theme-adaptive. A hairline divider off the wordmark, NOT a coloured
+     rail; no tint, no glow, no animation; informational only. */
+  header .respreview {
+    display: inline-flex; flex-direction: column; justify-content: center; align-self: center;
+    pointer-events: none; user-select: none;
+    font-size: 9px; line-height: 1.2; text-transform: uppercase; letter-spacing: .1em;
+    color: var(--ink-faint);
+    border-left: 1px solid var(--rule); padding-left: 8px; margin-left: -6px;
+  }
+  header .respreview span { display: block; white-space: nowrap; }
   header .spacer { flex: 1; }
 
   main { max-width: 1180px; margin: 0 auto; padding: 0 24px; }

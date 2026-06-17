@@ -509,6 +509,8 @@ def build_report(ctx, *, out=None, title="ambit — embedding-space occupancy", 
         '<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'
         f'<title>{title}</title>\n<style>{style}</style>\n</head>\n<body>\n'
         f'<header><h1>{title}</h1><span class="crumb">ambit / report</span>'
+        '<span class="respreview" role="note" aria-label="research preview">'
+        '<span>research</span><span>preview</span></span>'
         '<span class="spacer"></span><span class="theme-pick-label">theme</span>'
         '<span id="theme-picker"></span></header>\n<main>\n'
         '<h2>occupancy</h2><div class="lede">How this dataset occupies its embedding space — '
