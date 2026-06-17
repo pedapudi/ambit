@@ -15,13 +15,9 @@ import json
 
 import numpy as np
 
-from . import embed as embedmod
-from . import metrics
-from . import pipeline
-from . import render
+from . import api
+from .api import Diagnostics
 from .config import Config
-from .config import enabled as fig_enabled
-from .scan import scan as run_scan
 
 
 def _config(a) -> Config:
@@ -61,57 +57,41 @@ def _ascii_hist(vals, lo, hi, bins: int = 30, width: int = 46) -> str:
                      for k in range(bins))
 
 
-def cmd_info(a) -> int:
-    cfg = _config(a)
-    sc = run_scan(a.embeddings, sample=cfg.sample, embedding_col=cfg.embedding_col,
-                  id_col=cfg.id_col, label_col=cfg.label_col, metric=cfg.metric,
-                  batch_rows=cfg.batch_rows, device=cfg.device, approx=cfg.approx)
-    eigs = sc.eigs
-    cos = metrics.random_pair_cosine(sc.sample.X, n_pairs=cfg.pairs)
-    erank = metrics.effective_rank(eigs)
-    pr = metrics.participation_ratio(eigs)
-    d90 = metrics.dims_for_variance(eigs, 0.9)
-    ref = metrics.isotropy_ref(sc.dim)
-    m = float(cos.mean())
+def _print_diagnostics(d: Diagnostics) -> None:
+    """Format a Diagnostics result for the terminal (presentation only)."""
+    sc = d.scan
     print(f"source                 {sc.source}")
     tag = f"  (~{sc.scanned:,} sampled, approx)" if sc.approximate else "  (full corpus, streamed)"
     print(f"items x dims           {sc.n:,} x {sc.dim}{tag}")
     print(f"mean L2 norm           {sc.norm_mean:.4f}  +/- {sc.norm_std:.4f}")
     print()
     print("--- resolution / isotropy ---")
-    print(f"mean random-pair cos   {m:+.4f}   (isotropic ref ~ 0.000 +/- {ref:.4f})")
-    print(f"  verdict              {'anisotropic / crowded' if m > 4 * ref else 'near-isotropic'}"
-          f"  (lower magnitude = higher resolution)")
-    print(f"effective rank         {erank:.1f} / {sc.dim}")
-    print(f"participation ratio    {pr:.1f} / {sc.dim}")
-    print(f"dims for 90% variance  {d90} / {sc.dim}")
+    print(f"mean random-pair cos   {d.mean_cos:+.4f}   (isotropic ref ~ 0.000 +/- {d.isotropy_ref:.4f})")
+    print(f"  verdict              {d.verdict}  (lower magnitude = higher resolution)")
+    print(f"effective rank         {d.effective_rank:.1f} / {sc.dim}")
+    print(f"participation ratio    {d.participation_ratio:.1f} / {sc.dim}")
+    print(f"dims for 90% variance  {d.dims_for_90pct} / {sc.dim}")
     print()
     print("random-pair cosine distribution")
-    print(_ascii_hist(cos, min(-0.2, float(cos.min())), max(0.8, float(cos.max()))))
+    print(_ascii_hist(d.cos, min(-0.2, float(d.cos.min())), max(0.8, float(d.cos.max()))))
+
+
+def cmd_info(a) -> int:
+    _print_diagnostics(api.diagnose(a.embeddings, config=_config(a)))
     return 0
 
 
 def cmd_embed(a) -> int:
-    cfg = _config(a)
-    client = embedmod.EmbeddingClient(cfg.model, base_url=cfg.base_url,
-                                      api_key=cfg.api_key, batch=cfg.embed_batch)
-    n = embedmod.embed_dataset(a.dataset, a.out, client=client, text_col=cfg.text_col,
-                               id_col=cfg.id_col, label_col=cfg.label_col, batch=cfg.embed_batch,
-                               progress=lambda k: print(f"\r  embedded {k:,}", end="", flush=True))
+    n = api.embed(a.dataset, a.out, config=_config(a),
+                  progress=lambda k: print(f"\r  embedded {k:,}", end="", flush=True))
     print(f"\nwrote {n:,} embeddings -> {a.out}")
     return 0
 
 
 def cmd_report(a) -> int:
-    cfg = _config(a)
-    sc = run_scan(a.embeddings, sample=cfg.sample, embedding_col=cfg.embedding_col,
-                  id_col=cfg.id_col, label_col=cfg.label_col, metric=cfg.metric,
-                  batch_rows=cfg.batch_rows, device=cfg.device, approx=cfg.approx)
-    ctx = pipeline.build_ctx(sc, projector=cfg.projector, pairs=cfg.pairs, k=cfg.k,
-                             clusters=cfg.clusters, device=cfg.device, knn_backend=cfg.knn_backend)
-    render.build_report(ctx, out=a.out, title=cfg.title, config=cfg)
-    shown = sum(1 for key in render.FIGURES if fig_enabled(cfg.figures, key))
-    print(f"wrote {a.out}  ({sc.n:,} items x {sc.dim} dims, {shown}/{len(render.FIGURES)} shown)")
+    rep = api.report(a.embeddings, out=a.out, config=_config(a))
+    sc = rep.scan
+    print(f"wrote {a.out}  ({sc.n:,} items x {sc.dim} dims, {rep.shown}/{rep.total} shown)")
     return 0
 
 
