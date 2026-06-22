@@ -29,6 +29,8 @@ class Ctx:
     labels: Optional[np.ndarray] = None   # (m,) group labels — provided or clustered
     labels_source: Optional[str] = None   # "provided" | "k-means (...)" | "hdbscan (...)" | None
     hub_skew: Optional[float] = None      # k-occurrence skewness over the reservoir kNN
+    mutual_knn: bool = False              # kNN graph filtered to reciprocal (mutual) edges
+    cmp: Optional["CmpCtx"] = None        # two-embedding comparison, set when config.compare is given
 
     @property
     def es(self):
@@ -36,7 +38,8 @@ class Ctx:
 
 
 def build_ctx(sc: Scan, *, projector: str = "pca", pairs: int = 200_000, k: int = 10,
-              clusters="auto", seed: int = 0, device: str = "cpu", knn_backend: str = "auto") -> Ctx:
+              clusters="auto", seed: int = 0, device: str = "cpu", knn_backend: str = "auto",
+              mutual_knn: bool = False) -> Ctx:
     """clusters: "auto"/True -> auto-label when no metadata column; an int -> force
     that many k-means clusters; False/None/0 -> no unsupervised labeling.
     device: "cpu" (numpy) or a torch device ("cuda"/"auto"/"mps"/"torch")."""
@@ -78,5 +81,13 @@ def build_ctx(sc: Scan, *, projector: str = "pca", pairs: int = 200_000, k: int 
         except Exception:
             labels = labels_source = None
 
+    # reciprocal (mutual) kNN: keep only edges that both endpoints agree on. Applied
+    # once here so every downstream reader (margin, sparsity, purity, hubness, the kNN
+    # graphs) sees the same mutual graph; figures that recompute neighbors honor the
+    # ctx.mutual_knn flag themselves.
+    if mutual_knn and knn_idx is not None and knn_dist is not None:
+        knn_idx, knn_dist = knnmod.reciprocal_filter(knn_idx, knn_dist)
+
     hub_skew = metrics.hubness_skew(knn_idx) if knn_idx is not None else None
-    return Ctx(sc, xy, xyz, sc.eigs, cos, knn_idx, knn_dist, labels, labels_source, hub_skew)
+    return Ctx(sc, xy, xyz, sc.eigs, cos, knn_idx, knn_dist, labels, labels_source,
+               hub_skew, mutual_knn)

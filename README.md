@@ -46,6 +46,9 @@ environment):
 cfg = ambit.Config(sample=100_000, projector="umap")
 ambit.report("embeddings.parquet", config=cfg).write("report.html")
 ambit.report("embeddings.parquet", sample=100_000, title="my corpus")   # or inline
+
+# compare the same items embedded two ways (aligned by id) — adds the CMP figures
+ambit.report("encoder-a.parquet", compare="encoder-b.parquet", id_col="uuid").write("diff.html")
 ```
 
 Or drive the pipeline stage by stage:
@@ -63,6 +66,11 @@ la   = ambit.localized_anisotropy(ctx.es.X)  # the local-density measure
 ambit info   embeddings.parquet                 # scan -> resolution diagnostics
 ambit report embeddings.parquet --out report.html
 ambit embed  items.jsonl --out vecs.parquet --model text-embedding-3-small
+
+# the same items embedded two ways — a local neighbor-overlap view + CKA, aligned by id
+ambit report encoder-a.parquet --compare encoder-b.parquet --id-col uuid --out diff.html
+# reciprocal (mutual) kNN everywhere — suppresses hubs in every neighbor view
+ambit report embeddings.parquet --mutual-knn --out report.html
 ```
 
 ## Status

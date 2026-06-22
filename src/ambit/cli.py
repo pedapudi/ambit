@@ -38,11 +38,15 @@ def _config(a) -> Config:
         projector=getattr(a, "projector", "pca"),
         k=getattr(a, "k", 10),
         knn_backend=getattr(a, "knn_backend", "auto"),
+        mutual_knn=getattr(a, "mutual_knn", False),
         clusters=clusters,
         model=getattr(a, "model", None),
         base_url=getattr(a, "base_url", None),
         api_key=getattr(a, "api_key", None),
         embed_batch=getattr(a, "batch", 256),
+        compare=getattr(a, "compare", None),
+        compare_label=getattr(a, "compare_label", "B"),
+        compare_id_col=getattr(a, "compare_id_col", None),
         title=getattr(a, "title", Config.title),
     )
     if getattr(a, "config", None):
@@ -110,6 +114,8 @@ def _scan_args(p):
                    help="cap the covariance/diagnostics to ~N rows (approximate, fast on 1M+)")
     p.add_argument("--knn-backend", default="auto",
                    choices=["auto", "pynndescent", "sklearn", "brute", "faiss"])
+    p.add_argument("--mutual-knn", action="store_true",
+                   help="filter every kNN graph to reciprocal (mutual) neighbors — suppresses hubs")
     p.add_argument("--config", default=None, help="JSON object overriding Config fields / figures")
 
 
@@ -140,6 +146,11 @@ def main(argv=None) -> int:
     pr.add_argument("--title", default="ambit — embedding-space occupancy")
     pr.add_argument("--clusters", type=int, default=None, help="force k clusters for auto-labeling")
     pr.add_argument("--no-cluster", action="store_true", help="disable unsupervised labeling")
+    pr.add_argument("--compare", default=None,
+                    help="second embeddings to diff against (same items, aligned by id) — enables the CMP figures")
+    pr.add_argument("--compare-label", default="B", help="display name for the second set (primary is A)")
+    pr.add_argument("--compare-id-col", default=None,
+                    help="id column to align the two sets on (defaults to --id-col)")
     pr.set_defaults(func=cmd_report)
 
     args = ap.parse_args(argv)

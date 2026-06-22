@@ -58,7 +58,7 @@ def fig_d3_mesh(ctx):
     # depth -> [0,1], 1 = nearest the camera
     dn = (depth - depth.min()) / max(float(np.ptp(depth)), 1e-9)
 
-    k = min(6, ctx.knn_idx.shape[1])  # k=6 cosine edges, like the study figure
+    k = min(6, ctx.knn_idx.shape[1])  # k=6 cosine edges
     idx = np.asarray(ctx.knn_idx[:, :k])
     dist = (np.asarray(ctx.knn_dist[:, :k]) if ctx.knn_dist is not None
             else np.zeros_like(idx, float))

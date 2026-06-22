@@ -56,14 +56,20 @@ def fig_res_margin(ctx):
                           "neighbor index is available.",
                 "cls": ""}
 
-    # ---- margin = sim(top1) - sim(top2), sim = 1 - dist
+    # ---- margin = sim(top1) - sim(top2), sim = 1 - dist. A reciprocal (mutual) graph
+    # pads rows that have <k mutual neighbors (dist = inf -> sim = -inf); the margin is
+    # only defined where a point has >=2 mutual neighbors, so restrict the distribution
+    # to those (a point with <2 mutual neighbors has no runner-up to beat).
     sim = 1.0 - np.asarray(ctx.knn_dist, float)
+    finite_cnt = np.isfinite(sim).sum(1)
     if sim.shape[1] < 2:
-        s = np.sort(sim, axis=1)
         margin = np.zeros(sim.shape[0])
     else:
-        s = np.sort(sim, axis=1)[:, ::-1]
-        margin = np.clip(s[:, 0] - s[:, 1], 0.0, None)
+        s = np.sort(np.where(np.isfinite(sim), sim, -np.inf), axis=1)[:, ::-1]
+        keep = finite_cnt >= 2
+        margin = np.clip(s[keep, 0] - s[keep, 1], 0.0, None)
+        if margin.size == 0:
+            margin = np.zeros(1)
     n = margin.shape[0]
     med = float(np.median(margin))
 

@@ -23,10 +23,10 @@ optional backend selected at runtime.
 ## The data flow
 
 ```
-                          ┌─────────── tier 2/3: raw items ───────────┐
-                          │  embed.py: EmbeddingClient + embed_dataset │
-                          │  (OpenAI-compatible /v1/embeddings, stdlib)│
-                          └───────────────────┬────────────────────────┘
+                          ┌──────────── tier 2/3: raw items ────────────┐
+                          │ embedding.py: EmbeddingClient + embed_dataset│
+                          │  (OpenAI-compatible /v1/embeddings, stdlib)  │
+                          └───────────────────┬──────────────────────────┘
                                               │ writes .jsonl/.parquet
                                               ▼
   source.py  ──iter_chunks()──►  Chunk(X, ids, labels)   (streaming, fixed-size)
@@ -68,9 +68,15 @@ EmbeddingSet(
   metric="cosine",          # "cosine" | "euclidean"
   normalized=False,         # True once rows are L2-normalized
   source=None,              # provenance string for reporting
+  ids_provided=True,        # False when ids fell back to arange (no stable id column)
 )
 # .n, .dim, .normalize(eps=1e-12) -> copy, .subsample(k, seed) -> deterministic copy
 ```
+
+`ids_provided` is `False` when no id column was supplied and `ids` defaulted to row
+indices. It matters for `--compare`: aligning two independently sampled sets needs a
+real, stable id, so `compare.build_cmp` refuses when `ids_provided` is `False` rather
+than pairing unrelated rows.
 
 `__post_init__` enforces the invariants (float32 contiguous, 2-D, finite, matching
 id/label lengths) — invalid data fails loudly at construction, so no figure has to
@@ -99,18 +105,24 @@ the true corpus size when cheaply known, else `scanned`.
 Computed once from a `Scan`, passed to every figure (read-only):
 
 ```python
-Ctx(scan, xy, xyz, eigs, cos, knn_idx, knn_dist, labels, labels_source, hub_skew)
+Ctx(scan, xy, xyz, eigs, cos, knn_idx, knn_dist, labels, labels_source,
+    hub_skew, mutual_knn, cmp)
 #  xy (m,2), xyz (m,3)  projected reservoir
 #  eigs                 full-corpus covariance eigenvalues
 #  cos                  random-pair cosine sample
 #  knn_idx/knn_dist     (m,k) kNN over the reservoir (None if no backend)
 #  labels/labels_source provided metadata column, else unsupervised clusters
 #  hub_skew             k-occurrence skewness
+#  mutual_knn           bool — the kNN graph is filtered to reciprocal (mutual) edges
+#  cmp                  CmpCtx (compare.py) when --compare was given, else None
 #  .es  == scan.sample  (the reservoir EmbeddingSet, L2-normalized in build_ctx)
 ```
 
-Optional fields (`knn_*`, `labels`, `hub_skew`, `xyz`) may be `None`; figures must
-degrade gracefully.
+Optional fields (`knn_*`, `labels`, `hub_skew`, `xyz`, `cmp`) may be `None`; figures
+must degrade gracefully. `mutual_knn` is applied once in `build_ctx` (every downstream
+reader sees the same reciprocal graph); a figure that recomputes its own neighbors
+reads `ctx.mutual_knn` and honors it. `cmp` is filled by `api.report` when
+`config.compare` is set — it carries the two-embedding comparison the CMP figures draw.
 
 ### `Config` (`config.py`) — the single run description
 
@@ -132,15 +144,19 @@ are **no environment variables** — a run is fully described by its `Config`.
 | `source.py` | streaming `iter_chunks()` + `expand()` (glob/dir → shards); zero-copy Arrow vector reads |
 | `ingest.py` | non-streaming `load()` → one `EmbeddingSet`; column-name detection (`_EMB_KEYS`/`_ID_KEYS`/`_LABEL_KEYS`, `_pick`) |
 | `scan.py` | one-pass `scan()` → `Scan`; `_NumpyCov` accumulator; reservoir sampling; `_source_rows()` |
-| `metrics.py` | native-space diagnostics: random-pair cosine, eigs, effective rank, participation ratio, dims-for-variance, isotropy ref, hubness skew |
-| `project.py` | `project()` → PCA (numpy SVD or sklearn randomized) / UMAP, on the reservoir |
+| `metrics.py` | native-space diagnostics: random-pair cosine, eigs, effective rank, participation ratio, dims-for-variance, isotropy ref, IsoScore, uniformity (Wang–Isola), hubness skew |
+| `project.py` | `project()` → PCA (numpy SVD or sklearn randomized) / UMAP, on the reservoir; `pca_fit`/`pca_transform` (the shared PCA frame the drift figures reuse) |
 | `cluster.py` | unsupervised labeling: HDBSCAN if present, else MiniBatchKMeans with silhouette-picked *k* |
-| `knn.py` | `knn()` with backends auto/pynndescent/sklearn/brute/faiss; cosine dist = 1−cos; `_drop_self` |
+| `knn.py` | `knn()` with backends auto/pynndescent/sklearn/brute/faiss; cosine dist = 1−cos; `topk_cosine`; `reciprocal_mask`/`reciprocal_filter` (mutual-kNN) |
+| `separability.py` | the label-aware separability panel (RES 05b): centroid-cosine matrix, kNN purity, silhouette, Fisher ratio, and — for discovered clusters — stability + Laplacian eigengap |
+| `local_anisotropy.py` | the local density field (RES 06/07): per-item k-NN density against a density-matched uniform null |
+| `compare.py` | the two-embedding comparison + `CmpCtx`/`build_cmp`: id-aligned, linear & RBF CKA, MMD², energy, Procrustes, neighbor overlap |
 | `accel.py` | optional torch backend mirroring the hot kernels (`TorchCov`, `torch_pca`, `torch_random_pair_cosine`, `torch_knn`); `resolve_device` |
 | `pipeline.py` | `build_ctx()` — assembles the `Ctx` from a `Scan` |
-| `render.py` | `build_report()`, the `@figure` registry (`FIGURES`), SVG helpers (`_box`/`_svg`/`_local_density`), theme assembly |
+| `api.py` | the library verbs (`report` / `diagnose` / `embed` / `build_context`); `report` wires `build_cmp` and the CMP auto-on figures when `config.compare` is set |
+| `render.py` | `build_report()`, the `@figure` registry (`FIGURES`), `_DISPLAY_ORDER`, SVG helpers (`_box`/`_svg`/`_local_density`), theme assembly |
 | `figures/*.py` | one module per figure; see **ambit-figures** |
-| `embed.py` | tier-2 `EmbeddingClient` (stdlib OpenAI-compatible) + `embed_dataset` streaming writer |
+| `embedding.py` | tier-2 `EmbeddingClient` (stdlib OpenAI-compatible) + `embed_dataset` streaming writer |
 | `assets/theme.css`, `assets/picker.js` | inlined into every report (16-theme tokens + live picker) |
 
 ## Key design decisions (the "why")

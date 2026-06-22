@@ -12,19 +12,36 @@ import numpy as np
 from .types import EmbeddingSet
 
 
-def pca(X: np.ndarray, n_components: int = 2, randomized: bool = False, seed: int = 0):
-    A = X - X.mean(0, keepdims=True)
+def pca_fit(X: np.ndarray, n_components: int = 2, randomized: bool = False, seed: int = 0):
+    """PCA that also returns the fitted frame, so a *second* point set can be mapped
+    into the same coordinates. Returns ``(coords, mean, comps, var)`` where
+    ``coords = (X - mean) @ comps.T``, ``comps`` is the ``(n_components, d)`` basis, and
+    ``var`` the variance along each component. Project another set ``Y`` into this frame
+    with ``pca_transform(Y, mean, comps)`` — the CMP drift field uses this to place the
+    second embedding (B) in A's projection so the two are directly comparable."""
+    mean = X.mean(0)
+    A = X - mean
     if randomized:
         try:
             from sklearn.utils.extmath import randomized_svd
             _, S, Vt = randomized_svd(A, n_components=n_components, random_state=seed)
             comps = Vt[:n_components]
-            return A @ comps.T, S
+            return A @ comps.T, mean, comps, (S[:n_components] ** 2) / max(1, A.shape[0] - 1)
         except ImportError:
             pass
     _, S, Vt = np.linalg.svd(A, full_matrices=False)
     comps = Vt[:n_components]
-    return A @ comps.T, (S[:n_components] ** 2) / max(1, A.shape[0] - 1)
+    return A @ comps.T, mean, comps, (S[:n_components] ** 2) / max(1, A.shape[0] - 1)
+
+
+def pca_transform(Y: np.ndarray, mean: np.ndarray, comps: np.ndarray) -> np.ndarray:
+    """Project ``Y`` into a frame previously fit by ``pca_fit`` (same mean & basis)."""
+    return (np.asarray(Y, dtype=float) - mean) @ comps.T
+
+
+def pca(X: np.ndarray, n_components: int = 2, randomized: bool = False, seed: int = 0):
+    coords, _mean, _comps, var = pca_fit(X, n_components, randomized=randomized, seed=seed)
+    return coords, var
 
 
 def project(es: EmbeddingSet, n_components: int = 2, method: str = "pca",

@@ -84,8 +84,9 @@ Source: `src/ambit/metrics.py` and the RES-family figures.
 | **participation ratio** | `participation_ratio(eigs)` = `(Σλ)²/Σλ²` | → full dim | small | a second effective-dimensionality read, weighted toward dominant eigenvalues |
 | **dims for 90% variance** | `dims_for_variance(eigs, .9)` | spread over many | a handful | how concentrated variance is across axes |
 | **eigenvalue scree** | `eigs_from_cov` | gentle decay | steep cliff | the structural *cause* of cosine crowding (a few axes hold the variance) |
-| **IsoScore / utilization** | `res_iso` gauge (erank / nominal dims) | → 1 | → 0 | fraction of available dimensions actually exercised |
-| **nearest-neighbor margin** | `res_margin` (top-1 minus top-2 cosine) | wide | thin (~0.04) | how much the best match beats the runner-up; a thin margin means neighbors are unresolvable and retrieval is fragile |
+| **IsoScore** | `isoscore(eigs)` (Rudman et al. 2022) | → 1 | → 0 | how uniformly variance fills the space; carried by the cumulative-variance figure and the header scalar |
+| **uniformity** | `uniformity_from_cos(cos)` (Wang & Isola 2020) | more negative | → 0 | how evenly items spread on the sphere; read against the isotropic reference (a header scalar; figure `res_uniformity`) |
+| **nearest-neighbor margin** | `res_margin` (top-1 minus top-2 cosine) | wide | thin | how much the best match beats the runner-up; a thin margin means neighbors are unresolvable and retrieval is fragile |
 | **within- vs between-cluster cosine** | `res_wb` | clear rightward gap | overlapping | whether real cluster structure survives the crowding (alignment vs uniformity) |
 | **hubness (k-occurrence skew)** | `hubness_skew(knn_idx)` | low | high positive | a few hubs absorb most retrievals |
 
@@ -94,23 +95,45 @@ can be a cone globally yet approximately isotropic *within* clusters (Cai et al.
 2021). That's why ambit reports both global (cosine histogram, scree) and local
 (NN-margin, within/between, density views) facets.
 
+## Comparing the same items embedded two ways
+
+Beyond a single space, ambit can read the **same dataset embedded two ways** — the same
+items run through two embedding models / encoders / configurations, aligned by id
+(`--compare`, see `ambit-cli`). The reading pairs two scales:
+
+- **Local — neighbor-overlap drift.** Per item, the fraction of its top-k nearest
+  neighbors that are the *same* in both embeddings. This is the retrieval-relevant
+  signal: it tracks whether the neighborhoods that drive top-k retrieval actually
+  reshuffle. Because it compares neighbor *identities*, it is **dimension-agnostic** —
+  it works even when the two embeddings have different widths.
+- **Global — CKA.** Linear CKA (Kornblith et al. 2019) scores overall representational
+  similarity in [0, 1], invariant to rotation, isotropic scaling, and neuron
+  permutation. It is a second-moment statistic dominated by the top variance
+  directions, so it can read "barely changed" while local neighborhoods churn — which
+  is exactly why ambit reads it *against* the local neighbor-overlap view rather than
+  alone. Equal-dimension comparisons add MMD, energy distance, Procrustes disparity,
+  and a drift field; differing dimensions fall back to the two CKA variants.
+
+No labels are needed — the comparison is purely geometric.
+
 ## A worked reading
 
-A representative, realistically-imperfect 768-d corpus (from the concepts doc):
+An illustrative sketch of a crowded, realistically-imperfect `d`-dimensional space —
+the shape of the readout, not measured values from any one dataset:
 
-| diagnostic | value | isotropic ref | verdict |
+| diagnostic | reads | isotropic ref | verdict |
 |---|---|---|---|
-| mean random-pair cosine | 0.34 | ≈ 0.00 ± 0.036 | strongly anisotropic — a cone |
-| effective rank | 47 / 768 | → 768 | severe dimensional collapse |
-| top-1 PC variance | 37% (90% in 31 dims) | evenly spread | a few axes dominate |
-| IsoScore | 0.27 / 1.0 | 1.0 | space badly under-used |
-| NN cosine margin (median) | 0.041 | ≈ 0.11 | thin — top-1 barely beats top-2 |
-| hubness (top-1 k-occurrence) | 184 | ≈ 10 | a few hubs dominate retrieval |
+| mean random-pair cosine | well above 0 (e.g. ≈ 0.3) | ≈ 0 ± `1/√d` | strongly anisotropic — a cone |
+| effective rank | a small fraction of `d` | → `d` | severe dimensional collapse |
+| top PC variance | one axis dominates; 90% in a handful | evenly spread | a few axes dominate |
+| IsoScore | low (≈ 0.2–0.3) | 1.0 | space badly under-used |
+| NN cosine margin (median) | thin | ≈ `1/√d`-scale | top-1 barely beats top-2 |
+| hubness (k-occurrence skew) | high positive | low | a few hubs dominate retrieval |
 
-Read together: this space *looks* 768-d but lives on ~47 effective axes, packs
-unrelated items at cosine ≈ 0.34, and resolves neighbors by only ~0.04 — so
-retrieval is fragile and a few hubs absorb most queries. Don't read any single
-number alone; they corroborate one story.
+Read together: such a space *looks* `d`-dimensional but lives on far fewer effective
+axes, packs unrelated items at a high cosine, and resolves neighbors by only a thin
+margin — so retrieval is fragile and a few hubs absorb most queries. Don't read any
+single number alone; they corroborate one story.
 
 ## Why it matters downstream
 
@@ -148,6 +171,6 @@ absolute threshold.
 | density / hotspots | crowded, low-resolution regions — the local face of anisotropy |
 | coverage / voids | unused capacity — the spatial face of dimensional collapse |
 | topology (kNN graph, bridges) | where distinctness is load-bearing vs. fragile |
-| comparison vs reference | the gap from isotropic |
+| comparison (CMP) | the gap from isotropic, or — with `--compare` — the same items embedded two ways: a local neighbor-overlap view read against a global CKA similarity |
 | 3-D views | anisotropy you can rotate and see (broad in X–Y, thin in Z) |
 | resolution / isotropy (RES) | the scalar measurement of all the above |

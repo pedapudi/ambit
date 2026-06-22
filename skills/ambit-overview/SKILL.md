@@ -46,11 +46,12 @@ For the science and how to read the numbers, see **`ambit-concepts`**.
 |---|---|---|
 | **Density / hotspots** | where do items pile up? | density-peak prominence, hexbin, KDE contours |
 | **Coverage / voids** | what does the data fill vs. leave empty? | NN-sparsity field, alpha-hull reach, void discs |
-| **Resolution / isotropy** | is the space well-used or collapsed into a cone? | random-pair cosine, scree/effective-rank, IsoScore, NN-margin, hubness |
+| **Resolution / isotropy** | is the space well-used or collapsed into a cone? | random-pair cosine, scree/effective-rank, IsoScore, uniformity, NN-margin, hubness |
 
-Plus **topology** (kNN graph, bridge chokepoints), **comparison** (vs a reference
-space), and **3-D volume** (occupancy you can orbit). See **`ambit-figures`** for
-the full catalog.
+Plus **topology** (kNN graph, bridge chokepoints), **comparison** (against an isotropic
+reference, or the same items embedded two ways via `--compare` — a local neighbor-overlap
+view read against a global CKA), and **3-D volume** (occupancy you can orbit). See
+**`ambit-figures`** for the full catalog.
 
 ## The three input tiers (graceful degradation)
 

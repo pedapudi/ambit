@@ -156,12 +156,17 @@ def fig_res_cmap(ctx):
     Sm = U @ U.T
     np.fill_diagonal(Sm, -np.inf)
     nbr = np.argpartition(-Sm, kth=kk, axis=1)[:, :kk]
+    # mutual-kNN: keep only reciprocal edges (both endpoints list each other)
+    mutual = getattr(ctx, "mutual_knn", False)
+    nbr_sets = [set(int(j) for j in nbr[i]) for i in range(ncap)] if mutual else None
     eset = set()
     for i in range(ncap):
         for j in nbr[i]:
-            a, b = (i, int(j)) if i < int(j) else (int(j), i)
-            if a != b:
-                eset.add((a, b))
+            j = int(j)
+            if i == j or (mutual and i not in nbr_sets[j]):
+                continue
+            a, b = (i, j) if i < j else (j, i)
+            eset.add((a, b))
     eb = "[" + ",".join("[%d,%d]" % (a, b) for a, b in sorted(eset)) + "]"
 
     pts = "[" + ",".join(

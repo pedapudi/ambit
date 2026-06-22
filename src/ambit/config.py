@@ -26,10 +26,12 @@ DEFAULT_FIGURES = {
     "res_cumvar":   True,   # RES 02b · cumulative variance & dimensional concentration (carries the IsoScore)
     "res_margin":   True,   # RES 04 · nearest-neighbor cosine margin (study ISO 04 · local distinctness)
     "res_wb":       True,   # RES 05 · within- vs between-cluster cosine
+    "res_separability": True,  # RES 05b · label-aware separability panel (centroid matrix · kNN purity)
     "res_field":    True,   # RES 06 · local concentration field (localized anisotropy · distribution)
     "res_cmap":     True,   # RES 07 · local crowding map (projection recolored by the field z)
     # hidden (flip to True to show)
-    "d3_live":      False,  # 3D · live · drag/zoom cloud by cluster — superseded by RES 07 (crowding cloud + kNN edges)
+    "res_uniformity": False, # RES 08 · uniformity on the hypersphere (auto-on in --compare/series; header scalar always shown)
+    "d3_live":      False,  # 3D · live · drag/zoom cloud by cluster — covered by RES 07 (crowding cloud + kNN edges)
     "cloud":        False,  # MAP 01 · projected density cloud
     "den_contour":  False,  # DEN 02 · isodensity contour relief
     "den_hexbin":   False,  # DEN 03 · hexbin occupancy
@@ -39,6 +41,10 @@ DEFAULT_FIGURES = {
     "cov_void":     False,  # COV 08 · void detection
     "cmp_diff":     False,  # CMP 10 · differential vs reference
     "cmp_qq":       False,  # CMP 11 · Q-Q occupancy curve
+    "cmp_overlap":   False, # CMP 12a · neighbor-overlap drift (local; leads the CMP block) — auto-on with --compare
+    "cmp_scorecard": False, # CMP 12 · representational drift (CKA & distances) — auto-on with --compare
+    "cmp_drift":     False, # CMP 13 · drift field (where the representation moved) — auto-on with --compare
+    "cmp_shift":     False, # CMP 14 · distance-distribution shift (A vs B cosine) — auto-on with --compare
     "d3_scatter":   False,  # 3D 01 · depth-cued 3-D scatter
     "d3_voxel":     False,  # 3D 03 · isometric voxel occupancy
     "d3_mesh":      False,  # 3D 04 · kNN mesh in 3-space (static; live version is d3_mesh_live)
@@ -66,12 +72,18 @@ class Config:
     projector: str = "pca"
     k: int = 10
     knn_backend: str = "auto"                    # auto | pynndescent | sklearn | brute | faiss
+    mutual_knn: bool = False                      # filter every kNN graph to reciprocal (mutual) edges
     clusters: Union[str, int, None] = "auto"     # "auto" | int | False/None
     # ---- embedding endpoint (no env vars) ----
     model: Optional[str] = None
     base_url: Optional[str] = None
     api_key: Optional[str] = None
     embed_batch: int = 256
+    # ---- two-embedding comparison (CMP) ----
+    compare: Optional[str] = None                # second embeddings to diff against (same items, by id)
+    compare_label: str = "B"                     # display name for the second set (primary is "A")
+    compare_id_col: Optional[str] = None         # column to align the two sets on (defaults to id_col)
+    cmp_kernel_sample: int = 8192                # n for O(n²) kernel / MMD / energy / RBF-CKA estimators
     # ---- render ----
     title: str = "ambit — embedding-space occupancy"
     figures: dict = field(default_factory=lambda: dict(DEFAULT_FIGURES))

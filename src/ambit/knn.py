@@ -99,3 +99,62 @@ def _brute(U, k, cosine):
 def hubness(idx) -> np.ndarray:
     """k-occurrence: how often each point is *somebody's* neighbor (high skew = hubs)."""
     return np.bincount(idx.reshape(-1), minlength=len(idx))
+
+
+def topk_cosine(Xn, k: int, *, block: int = 2048) -> np.ndarray:
+    """Top-k cosine-nearest neighbor **indices** per row (self excluded), blocked so the
+    full m×m similarity is never materialized. `Xn` must be L2-normalized. Returns
+    (m, k) int32. Used to compare two embeddings' neighborhoods item-by-item."""
+    Xn = np.ascontiguousarray(Xn, np.float32)
+    m = len(Xn)
+    k = int(min(k, m - 1))
+    idx = np.empty((m, max(k, 1)), np.int32)
+    Xt = np.ascontiguousarray(Xn.T)
+    for s in range(0, m, block):
+        e = min(s + block, m)
+        S = Xn[s:e] @ Xt
+        S[np.arange(e - s), s + np.arange(e - s)] = -2.0          # drop self
+        part = np.argpartition(-S, k - 1, axis=1)[:, :k]
+        rows = np.arange(e - s)[:, None]
+        idx[s:e, :k] = part[rows, np.argsort(-S[rows, part], axis=1)]
+    return idx[:, :k]
+
+
+def reciprocal_mask(idx) -> np.ndarray:
+    """(m, k) bool: True where neighbor j of row i is *reciprocal* — i.e. i is also
+    among j's listed neighbors. Vectorized via packed directed-edge keys (i·m + j)."""
+    idx = np.asarray(idx)
+    m, k = idx.shape
+    r = np.repeat(np.arange(m, dtype=np.int64), k)
+    c = idx.reshape(-1).astype(np.int64)
+    valid = (c >= 0) & (c < m) & (c != r)
+    fwd = np.sort((r * m + c)[valid])              # directed edges i->j present
+    rev = c * m + r                                # the edge j->i we need to also exist
+    return (np.isin(rev, fwd) & valid).reshape(m, k)
+
+
+def reciprocal_filter(idx, dist):
+    """Keep only reciprocal (mutual) neighbors, re-packed nearest-first, and pad the
+    rest of each row with a gather-safe **self-loop sentinel** (idx = the row index,
+    dist = +inf) so the graph stays a dense (m, k) array. Padding is identifiable as
+    ``idx == row`` (equivalently ``dist == inf``); the hubness / purity / margin /
+    sparsity readers skip it. Mutual-kNN suppresses hubs by construction (a hub that is
+    in many lists but reciprocates few keeps only the few)."""
+    idx = np.asarray(idx)
+    dist = np.asarray(dist, float)
+    m, k = idx.shape
+    mask = reciprocal_mask(idx)
+    oi = np.empty_like(idx)
+    od = np.empty_like(dist)
+    for r in range(m):
+        keep = np.flatnonzero(mask[r])
+        if keep.size:
+            order = keep[np.argsort(dist[r, keep], kind="stable")]
+            p = order.size
+            oi[r, :p] = idx[r, order]
+            od[r, :p] = dist[r, order]
+        else:
+            p = 0
+        oi[r, p:] = r                              # self-loop sentinel (gather-safe)
+        od[r, p:] = np.inf
+    return oi, od

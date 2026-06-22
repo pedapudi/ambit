@@ -34,7 +34,7 @@ def fig_<slug>(ctx) -> dict:
     """One-line description of what this visualizes."""
     return {
         "num":    "FAM 04",   # family code + number, e.g. "DEN 04", "3D 05", "RES 02b"
-        "order":  4.0,        # ascending sort key in the report (float allows fine-tuning)
+        "order":  4.0,        # ascending sort key in the report (float for fractional placement)
         "name":   "Human-readable title",
         "tech":   "comma, separated, technique tags",
         "why":    "Prose: what it shows and why it matters.",
@@ -46,12 +46,16 @@ def fig_<slug>(ctx) -> dict:
     }
 ```
 
-`render.build_report()` calls every enabled figure with the `Ctx`, sorts the
-returned dicts by `order`, wraps each in a `<section class="opt">` card
-(header = num/name/tech/why; body = svg/legend/reveal), collects all `script`
-fields into one trailing `<script>` block, and inlines the theme CSS/JS — producing
-a single file with no external requests. The function name is the slug:
-`fig_den_prom` → `"den_prom"`.
+`render.build_report()` calls every enabled figure with the `Ctx`, sorts them by the
+explicit `render._DISPLAY_ORDER` (then by `order`), wraps each in a
+`<section class="opt">` card, collects all `script` fields into one trailing
+`<script>` block, and inlines the theme CSS/JS — producing a single file with no
+external requests. The function name is the slug: `fig_den_prom` → `"den_prom"`.
+
+Each card header is the figure's **`name`** (the report titles figures by name), its
+`tech` tags, and a how-to-read popover. The `num` family code (`"CMP 12"`, `"RES 05b"`)
+is internal: it carries the family and ordering and is available for cross-reference,
+but it is not shown as a pill in the report. Body = svg / legend / reveal.
 
 ## The registry (auto-discovery)
 
@@ -73,8 +77,8 @@ def _load_figures():                           # imports every figures/*.py at b
 
 So **dropping a new `@figure`-decorated module into `figures/` registers it
 automatically** — no central list to edit. A broken module is skipped with a stderr
-note instead of failing the whole report. A handful of figures (`cloud`, `cos_hist`,
-`scree`, `res_cumvar`) are defined directly in `render.py` rather than in `figures/`.
+note instead of failing the whole report. A few base figures (`cloud`, `cos_hist`,
+`scree`) are defined directly in `render.py` rather than in `figures/`.
 
 Visibility is decided by `config.DEFAULT_FIGURES` (slug → bool) and
 `config.enabled(figures, key)`; `build_report` renders only enabled figures. Toggle
@@ -86,9 +90,10 @@ which figures exist and which are on — prefer reading them over any static lis
 
 `scan` (`.n`, `.dim`, `.source`, `.approximate`), `xy` (m,2), `xyz` (m,3), `eigs`
 (full-corpus eigenvalues), `cos` (random-pair sample), `knn_idx`/`knn_dist` (m,k),
-`labels`/`labels_source`, `hub_skew`, and `ctx.es` (= `scan.sample`, the
-L2-normalized reservoir `EmbeddingSet`: `.X`, `.n`, `.dim`). See ambit-architecture
-for the full `Ctx`.
+`labels`/`labels_source`, `hub_skew`, `mutual_knn` (bool — the kNN graph is reciprocal),
+`cmp` (a `CmpCtx` from `compare.py` when `--compare` was given, else `None`), and
+`ctx.es` (= `scan.sample`, the L2-normalized reservoir `EmbeddingSet`: `.X`, `.n`,
+`.dim`, `.ids`, `.ids_provided`). See ambit-architecture for the full `Ctx`.
 
 **Degrade gracefully.** `knn_*`, `labels`, `hub_skew`, and `xyz` may be `None`
 (missing backend, no labels). A figure must return a valid dict with a terse
@@ -101,6 +106,12 @@ if ctx.knn_idx is None:
             "<text x='20' y='40'>no kNN backend</text>"),
             "legend": "", "reveal": "<b>Reveals:</b> nothing (no kNN).", "cls": ""}
 ```
+
+**Comparison figures** read `ctx.cmp` (filled by `api.report` when `config.compare` is
+set, else `None`) and render a `needs --compare` placeholder when it is absent — the same
+never-vanish rule, never `return None`. A figure that recomputes its own neighbors should
+honor `ctx.mutual_knn` (filter to reciprocal edges via `knn.reciprocal_mask`) so the
+`--mutual-knn` toggle stays consistent across the whole report.
 
 ## SVG helpers (`render.py`)
 
@@ -138,7 +149,8 @@ reference — every technique as a static, theme-adaptive SVG.
 ## Figure catalog (by family)
 
 Families: **MAP** projected occupancy · **DEN** density · **TOP** topology · **COV**
-coverage · **CMP** comparison vs reference · **3D** three-dimensional · **RES**
+coverage · **CMP** comparison (vs an isotropic reference, or vs a *second embedding* of
+the same items via `--compare`) · **3D** three-dimensional · **RES**
 resolution/isotropy. Enabled-by-default per `DEFAULT_FIGURES` (✓ = on). *(Verify
 against `config.py`/`render.py`, which are authoritative.)*
 
@@ -154,19 +166,26 @@ against `config.py`/`render.py`, which are authoritative.)*
 | `cov_void` | COV 08 | COV | largest empty interior discs (voids) | — |
 | `cov_sparsity` | COV 09 | COV | per-point 1-NN sparsity field (slider at scale) | ✓ |
 | `cmp_diff` | CMP 10 | CMP | log-ratio surplus/deficit vs isotropic reference | — |
-| `cmp_qq` | CMP 11 | CMP | Q-Q occupancy curve vs reference | — |
+| `cmp_qq` | CMP 11 | CMP | Q-Q occupancy curve vs isotropic reference | — |
+| `cmp_overlap` | CMP 12a | CMP | neighbor-overlap drift — per-item top-k retention (the **local** headline; leads the CMP block; needs `ctx.cmp`) | auto-on w/ `--compare` |
+| `cmp_scorecard` | CMP 12 | CMP | the **global** scorecard — CKA / MMD / energy / Procrustes (needs `ctx.cmp`) | auto-on w/ `--compare` |
+| `cmp_drift` | CMP 13 | CMP | drift field — where the representation moved, with a quiver (needs equal dims) | auto-on w/ `--compare` |
+| `cmp_shift` | CMP 14 | CMP | A-vs-B random-pair cosine distribution shift | auto-on w/ `--compare` |
 | `d3_scatter` | 3D 01 | 3D | depth-cued static 3-D scatter | — |
 | `d3_trip` | 3D 02 | 3D | orthographic XY/XZ/YZ triptych (anisotropy) | ✓ |
 | `d3_voxel` | 3D 03 | 3D | isometric voxel occupancy lattice | — |
 | `d3_mesh` | 3D 04 | 3D | kNN mesh drawn in projected 3-space | — |
 | `d3_shell` | 3D 05 | 3D | radial shell occupancy (filled ball vs hollow rind) | ✓ |
-| `d3_live` | 3D · live | 3D | interactive canvas cloud (drag/zoom, kNN-edge toggle) | ✓ |
+| `d3_live` | 3D · live | 3D | interactive canvas cloud (drag/zoom, kNN-edge toggle) | — |
 | `cos_hist` | RES 01 | RES | random-pair cosine distribution vs isotropic spike | ✓ |
 | `scree` | RES 02 | RES | covariance eigenvalue scree + effective rank | ✓ |
-| `res_cumvar` | RES 02b | RES | cumulative variance vs isotropic diagonal | ✓ |
-| `res_iso` | RES 03 | RES | IsoScore space-utilization gauge | ✓ |
+| `res_cumvar` | RES 02b | RES | cumulative variance vs isotropic diagonal (carries the IsoScore badge) | ✓ |
 | `res_margin` | RES 04 | RES | nearest-neighbor cosine margin (needs kNN) | ✓ |
 | `res_wb` | RES 05 | RES | within- vs between-cluster cosine (needs labels) | ✓ |
+| `res_separability` | RES 05b | RES | separability panel — centroid matrix · kNN purity · silhouette · stability (any partition) | ✓ |
+| `res_field` | RES 06 | RES | local density field — k-NN density vs a density-matched uniform null | ✓ |
+| `res_cmap` | RES 07 | RES | local density cloud — 3-D projection recolored/reshaped by native local density | ✓ |
+| `res_uniformity` | RES 08 | RES | uniformity on the hypersphere vs isotropic ref; A-vs-B trajectory in compare mode | auto-on w/ `--compare` |
 
 ## Adding a figure (step by step)
 

@@ -24,6 +24,7 @@ class EmbeddingSet:
     metric: str = "cosine"              # "cosine" | "euclidean"
     normalized: bool = False            # True once rows are L2-normalized
     source: Optional[str] = None        # provenance string for reporting
+    ids_provided: bool = True           # False when ids fell back to arange (no stable id)
 
     def __post_init__(self) -> None:
         self.X = np.ascontiguousarray(self.X, dtype=np.float32)
@@ -40,6 +41,7 @@ class EmbeddingSet:
                 raise ValueError(f"{name} length {len(arr)} != n_rows {n}")
         if self.ids is None:
             self.ids = np.arange(n)
+            self.ids_provided = False           # arange fallback — not a stable cross-set id
         if self.metric not in ("cosine", "euclidean"):
             raise ValueError(f"metric must be 'cosine' or 'euclidean'; got {self.metric!r}")
 
@@ -57,7 +59,7 @@ class EmbeddingSet:
             return self
         norms = np.linalg.norm(self.X, axis=1, keepdims=True)
         return EmbeddingSet(self.X / np.maximum(norms, eps), self.ids, self.labels,
-                            self.meta, self.metric, True, self.source)
+                            self.meta, self.metric, True, self.source, self.ids_provided)
 
     def subsample(self, k: int, seed: int = 0) -> "EmbeddingSet":
         """Deterministic random subsample — the projected scatter/3-D views never draw
@@ -70,7 +72,7 @@ class EmbeddingSet:
         meta = None if self.meta is None else self.meta.iloc[idx].reset_index(drop=True)
         labels = None if self.labels is None else self.labels[idx]
         return EmbeddingSet(self.X[idx], self.ids[idx], labels, meta,
-                            self.metric, self.normalized, self.source)
+                            self.metric, self.normalized, self.source, self.ids_provided)
 
     def __repr__(self) -> str:
         return (f"EmbeddingSet(n={self.n:,}, dim={self.dim}, metric={self.metric!r}, "

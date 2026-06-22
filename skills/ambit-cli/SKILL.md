@@ -44,7 +44,7 @@ an ASCII histogram of the random-pair cosine distribution.
 
 ```bash
 ambit info embeddings.parquet
-ambit info ~/embed-legal/out/            # a sharded directory (all shards as one corpus)
+ambit info ~/embeddings/out/             # a sharded directory (all shards as one corpus)
 ambit info vecs.npy --approx 200000      # cap diagnostics to ~200k rows (fast on 1M+)
 ambit info big.parquet --device auto     # route covariance onto GPU if available
 ```
@@ -65,6 +65,7 @@ Shared scan flags (also used by `report`):
 | `--device` | `cpu` | `cpu` (numpy) \| `auto` \| `cuda` \| `mps` \| `torch` |
 | `--approx` | none | stop after ~N rows; estimate spectrum from that sample |
 | `--knn-backend` | `auto` | `auto` \| `pynndescent` \| `sklearn` \| `brute` \| `faiss` |
+| `--mutual-knn` | off | filter **every** kNN graph to reciprocal (mutual) neighbors — suppresses hubs across all neighbor-based figures and the hub-skew fact |
 | `--config` | none | JSON object overriding any `Config` field / figure toggle |
 
 ## `ambit embed` — raw items → vectors
@@ -77,7 +78,7 @@ only — no provider SDK. Writes `.jsonl` or `.parquet` you can then feed to
 ```bash
 ambit embed corpus.jsonl \
   --out vecs.parquet \
-  --model Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0 \
+  --model your-embedding-model \
   --base-url http://localhost:8081/v1 \
   --text-col text --id-col uuid --batch 128
 ```
@@ -109,10 +110,12 @@ clusters), then renders a **single self-contained, theme-adaptive HTML file**.
 
 ```bash
 ambit report embeddings.parquet --out report.html
-ambit report vecs.npy --projector umap --title "MiniLM · 100k legal"
+ambit report vecs.npy --projector umap --title "my corpus · 100k"
 ambit report data/ --label-col subset            # color by a metadata column
 ambit report vecs.parquet --clusters 8           # force 8 k-means groups
 ambit report vecs.parquet --no-cluster           # skip unsupervised labeling
+ambit report encoder-a.parquet --compare encoder-b.parquet --id-col uuid   # same items, two ways: neighbor overlap + CKA
+ambit report vecs.parquet --mutual-knn           # reciprocal (mutual) kNN everywhere
 ```
 
 Report-only flags (plus all shared scan flags above):
@@ -124,10 +127,27 @@ Report-only flags (plus all shared scan flags above):
 | `--title` | "ambit — embedding-space occupancy" | report title |
 | `--clusters` | auto | force *k* k-means clusters for auto-labeling |
 | `--no-cluster` | off | disable unsupervised labeling entirely |
+| `--compare` | none | a second embedding of the **same items** to diff against (aligned by id) — turns on the CMP figures (neighbor-overlap drift, the CKA/MMD/Procrustes scorecard, the drift field, the distribution shift) and the uniformity trajectory |
+| `--compare-label` | `B` | display name for the second set (the primary is "A") |
+| `--compare-id-col` | `--id-col` | id column to align the two sets on (defaults to `--id-col`) |
 
 **Labeling:** if `--label-col` is present, groups come from that column
 ("provided"); otherwise ambit clusters the geometry itself (HDBSCAN if installed,
-else k-means with a silhouette-picked *k*). `--no-cluster` turns this off.
+else k-means with a silhouette-picked *k*). `--no-cluster` turns this off. The
+**separability panel** (centroid-cosine matrix + kNN purity) reads whichever
+partition you have; on discovered clusters it also reports stability and modal count.
+
+**Comparing two embeddings (`--compare`):** diffs the *same items embedded two ways* —
+the same dataset run through two embedding models / encoders / configurations. The two
+sets are aligned by **stable id**, never row order, so `--id-col` (or `--compare-id-col`)
+is **required**: without real ids the run refuses rather than silently pairing unrelated
+rows. The local headline is **neighbor-overlap drift** — per item, how much of its top-k
+neighborhood is preserved (retrieval-relevant, and dimension-agnostic) — read against a
+global **CKA** similarity. Linear CKA is exact over the whole reservoir and works even
+when the two dimensions differ (e.g. a truncated vs full set); MMD, energy, Procrustes
+and the drift field need equal dimensions and degrade with a placeholder otherwise. The
+O(n²) kernel estimators (RBF CKA, MMD, energy) run on a capped subsample —
+`cmp_kernel_sample` rows (default 8192), settable via `--config`.
 
 ## Input formats & auto-detection
 
@@ -194,8 +214,8 @@ ambit embed corpus.jsonl --out vecs.parquet --model my-embed \
 ambit report vecs.parquet --out report.html --label-col subset
 
 # Large sharded dump on GPU, approximate spectrum, ANN kNN
-ambit report ~/embed-legal/out/ --device auto --approx 300000 \
-  --knn-backend pynndescent --out legal.html
+ambit report ~/embeddings/out/ --device auto --approx 300000 \
+  --knn-backend pynndescent --out report.html
 
 # Color by a real label column instead of auto-clusters
 ambit report vecs.parquet --label-col category

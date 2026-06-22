@@ -39,8 +39,10 @@ ambit installs an `ambit` console script (`ambit.cli:main`); equivalently
 `<embeddings>` is `.npy` / `.npz` / `.parquet` / `.jsonl`, or a directory / glob of
 parquet shards (streamed). Common flags: `--embedding-col`, `--label-col`,
 `--device cpu|auto|cuda|mps`, `--approx N` (cap the scan for 1M+ rows),
-`--knn-backend auto|pynndescent|sklearn|brute|faiss`, `--config <json>`. See
-`skills/ambit-cli` for every flag.
+`--knn-backend auto|pynndescent|sklearn|brute|faiss`, `--mutual-knn` (reciprocal/mutual
+kNN everywhere — suppresses hubs), `--compare <embeddings> --id-col <col>` (the same items
+embedded two ways — a local neighbor-overlap view read against a global CKA, aligned by id),
+`--config <json>`. See `skills/ambit-cli` for every flag.
 
 ## Conventions (hard rules)
 
@@ -60,10 +62,12 @@ parquet shards (streamed). Common flags: `--embedding-col`, `--label-col`,
 ## Layout
 
 - `src/ambit/` — the engine: `scan.py` (streaming scan), `pipeline.py`
-  (`build_ctx` / `Ctx`), `project.py`, `knn.py`, `cluster.py`, `metrics.py`,
+  (`build_ctx` / `Ctx`), `project.py`, `knn.py` (+ reciprocal/mutual filter),
+  `cluster.py`, `metrics.py`, `local_anisotropy.py` (RES 06/07 density field),
+  `separability.py` (RES 05b), `compare.py` (CMP two-embedding diff + `CmpCtx`),
   `render.py` (+ `figures/`, `assets/`), `source.py` (input streaming),
-  `ingest.py`, `embed.py` (embedding client), `accel.py` (torch backend),
-  `cli.py`, `config.py`, `types.py`.
+  `ingest.py`, `embedding.py` (embedding client), `accel.py` (torch backend),
+  `cli.py`, `config.py`, `api.py`, `types.py`.
 - `docs/concepts/` — the science (anisotropy & resolution), with citations.
 - `docs/guide/` — how to interpret a generated report.
 - `docs/design/` — the visualization design study (the design language).

@@ -28,8 +28,10 @@ Every report answers the same three questions, stated in its own lede:
 3. **How distinct are its items?** — the resolution / isotropy views: whether
    cosine similarity can still tell two items apart, globally and locally.
 
-These map onto the **facet families** that name the figures. Each figure carries a
-short label like `RES 01` or `3D 05`; the prefix is its family:
+These map onto the **facet families**. In the report each card is titled by its
+**name**; the short family codes like `RES 01` or `CMP 12` are this guide's own
+cross-reference shorthand — the report surfaces figures by name and does not print
+the codes as pills. The prefix is its family:
 
 | Family | Question it serves | Reads on |
 |---|---|---|
@@ -38,23 +40,28 @@ short label like `RES 01` or `3D 05`; the prefix is its family:
 | **COV** | how much space it uses | coverage, sparsity, reach, voids |
 | **3D** | how much volume / its shape | the 3-D occupied volume and its anisotropy |
 | **RES** | how distinct items are | native-space resolution / isotropy diagnostics, **global *and* localized** (the local-density field, RES 06/07) |
+| **CMP** | how two embeddings differ | the same items embedded **two ways** (`--compare`, aligned by id): neighbor-overlap drift, CKA / MMD / Procrustes, the drift field, the distribution shift |
 
 > A given report only renders the figures that are **enabled** in its run
 > configuration. Enabling and disabling figures is done through the `Config`
 > object (a figure-toggle map) or the equivalent CLI flags — never through
 > environment variables. This guide documents the **default-enabled** set: the
-> eleven figures plus the header facts row. A report with a custom configuration may
+> default figures plus the header facts row — the **separability panel** joins them
+> whenever a partition exists, `uniformity` is a header scalar, and the **CMP** figures
+> appear when you pass `--compare`. A report with a custom configuration may
 > show fewer or more; figures not covered here are hidden by default.
 
 The figures appear in a fixed reading order. It is set by the explicit
 `render._DISPLAY_ORDER` list (any enabled figure not named there sorts after, by
-its own `order` field), not by the order in this guide's table. The default report
-reads top to bottom as: **RES 07 → 3D 02 → RES 06 → RES 04 → RES 05 → RES 01 →
-RES 02b → RES 02 → 3D 05 → DEN 04 → COV 09**. So the interactive **local crowding
-cloud (RES 07)** opens the report, the **orthographic triptych (3D 02)** follows,
-and the **local density field (RES 06)** sits mid-stack with the rest of the RES
-block. This guide documents the figures grouped by family for teaching, but notes
-each figure's actual position.
+its own `order` field), not by the order in this guide's table. With the default
+figure set the report reads top to bottom as: **RES 07 → 3D 02 → RES 06 → RES 04 →
+RES 05 → RES 05b → RES 01 → RES 02b → RES 02 → 3D 05 → DEN 04 → COV 09**. So the
+interactive **local crowding cloud (RES 07)** opens the report, the **orthographic
+triptych (3D 02)** follows, and the **local density field (RES 06)** sits mid-stack
+with the rest of the RES block. The **CMP** figures, when a `--compare` set is
+present, sort ahead of all of these and lead the report; **RES 08 (uniformity)**
+sits among the RES block in `--compare` / series mode. This guide documents the
+figures grouped by family for teaching, but notes each figure's actual position.
 
 ---
 
@@ -124,8 +131,8 @@ interactive:
 - **RES 07** (local crowding cloud) is a full interactive canvas: **drag to
   rotate**, **scroll or pinch to zoom**, a **#-samples slider**, and a
   **kNN-edges checkbox** that overlays the neighbor graph. It auto-spins when idle.
-  This is the report's one rotatable 3-D view — it superseded the old `3D · live`
-  cloud (now hidden by default), adding the local-density recoloring and reshaping.
+  This is the report's one rotatable 3-D view, recoloring and reshaping the cloud by
+  local density.
 - The **IsoScore readout** (inside RES 02b, and shown as a header fact) is a
   **dotted-underline hovercard**. Hover it with the mouse, or focus it with the
   keyboard and activate, and a card unfolds showing the exact formula, the
@@ -139,6 +146,19 @@ Several figures need inputs that may be absent (a kNN backend, cluster labels, a
 not vanish — it renders a faint placeholder cloud and a "needs kNN backend" /
 "needs cluster labels" note. If you see such a note, the figure isn't broken; the
 run simply didn't have that ingredient.
+
+### Reciprocal (mutual) kNN
+
+By default each point's k nearest neighbors are taken **as found** — a directed graph,
+where *i* listing *j* says nothing about *j* listing *i*. The `--mutual-knn` flag filters
+**every** kNN graph in the report to its **reciprocal** edges: a neighbor survives only
+when both points list each other. This suppresses **hubs** by construction (a point that
+appears in many lists but reciprocates few keeps only the few), so the hub-skew fact
+drops sharply, the retrieval margin (RES 04) and sparsity field (COV 09) read off the
+mutual graph, the local-density field (RES 06/07) becomes a hubness-corrected estimate,
+and a point with *no* mutual neighbor reads as maximally isolated. It re-skins every
+neighbor-based figure at once — use it to separate genuine local structure from hubness
+artifacts.
 
 ---
 
@@ -218,6 +238,20 @@ common and not alarming in itself; it reflects how much structure lives on a few
 axes. Read it next to effective rank and dims-for-90%: those say *how many* axes;
 IsoScore says *how unevenly* the variance is split among them.
 
+### uniformity
+
+**What:** **uniformity** on the unit hypersphere (Wang & Isola 2020) —
+`U = log E exp(−2·‖x−y‖²)` over random pairs. For unit vectors `‖x−y‖² = 2 − 2·cos`, so
+it is a function of the same random-pair cosines as *mean pair cosine* above
+(`metrics.uniformity_from_cos`), and costs nothing extra.
+
+**How read — DIRECTION:** lower (more negative) is better — a more uniform spread, more
+of the sphere occupied. It is the formal, pair-potential version of the cone reading: a
+strongly anisotropic cone reads as a *less* negative (worse) uniformity. Read it against
+the isotropic reference in **RES 08** (below). This is the *uniformity* half of the
+alignment/uniformity pair; the *alignment* half needs positive pairs (supervision) and
+is outside ambit's unsupervised scope.
+
 ### effective rank
 
 **What:** the continuous effective dimensionality, printed as `erank / dim`
@@ -263,9 +297,8 @@ tag distinguishes labels you **supplied** from labels ambit **derived** by
 clustering (`ctx.labels_source`).
 
 **How read:** This is the partition that RES 05 (within- vs between-cluster cosine)
-uses (and the cluster coloring in the hidden-by-default `3D · live` cloud, if it is
-enabled). If the source is `clustered`, the groups are ambit's own guess at
-structure, not ground truth — interpret separability accordingly.
+and the RES 05b separability panel read. If the source is `clustered`, the groups are
+ambit's own guess at structure, not ground truth — interpret separability accordingly.
 
 ### hub skew
 
@@ -293,13 +326,12 @@ Each figure is documented with the same six sub-headings: **What it answers**,
 **How it's computed**, **How to read it**, **What to look for**, a **Worked
 example**, and **Caveats**.
 
-Two running examples recur, to show how the numbers read *together*:
+Two abstract running examples recur, to show how the numbers read *together*:
 
-- **An anisotropic cone (the legal corpus this tool was last run on):** mean pair
-  cosine ≈ **+0.29**, IsoScore ≈ **0.06**, effective rank ≈ **553 / 768**, 90%
-  variance in ≈ **276 / 768** dims, median NN margin **small**. Globally crowded,
-  yet high-ish entropy rank with a front-loaded spectrum — a real, useful, but
-  cone-shaped space.
+- **An anisotropic cone:** mean pair cosine ≈ **+0.29**, IsoScore ≈ **0.06**,
+  effective rank ≈ **553 / 768**, 90% variance in ≈ **276 / 768** dims, median NN
+  margin **small**. Globally crowded, yet high-ish entropy rank with a front-loaded
+  spectrum — a real, useful, but cone-shaped space.
 - **A collapsed space (contrast):** IsoScore ≈ **0.00**, effective rank ≈ **20**,
   90% variance in ≈ **5** dims. Almost everything lives on a few axes; resolution is
   largely gone.
@@ -374,13 +406,13 @@ where the mean falls relative to the reference spread.
 
 #### Worked example
 
-For the legal cone: the accent hump centers at **mean cos ≈ +0.29**, well to the
-right of the dashed `N(0, 1/√768)` reference spike (whose sd ≈ 0.036). The
+For the anisotropic cone: the accent hump centers at **mean cos ≈ +0.29**, well to
+the right of the dashed `N(0, 1/√768)` reference spike (whose sd ≈ 0.036). The
 anisotropy-gap wedge spans the whole stretch from 0 to +0.29 — a large shaded slab.
-The verdict reads **anisotropic cone**. Interpretation: pick two random legal
-documents and they already agree at cosine ≈ 0.29; a *truly* relevant document has
-to beat that floor, so retrieval is operating in a compressed band. This is the
-global picture; RES 04 will show whether *local* neighborhoods still resolve.
+The verdict reads **anisotropic cone**. Interpretation: pick two random items and they
+already agree at cosine ≈ 0.29; a *truly* related item has to beat that floor, so
+retrieval is operating in a compressed band. This is the global picture; RES 04 will
+show whether *local* neighborhoods still resolve.
 
 For a near-isotropic space, the hump would sit on top of the spike at 0 and the
 wedge would nearly disappear.
@@ -442,8 +474,8 @@ normalize by the largest eigenvalue, and plot them on a **log y-axis** (1e0 down
 
 #### Worked example
 
-For the legal cone, the spectrum is **front-loaded** — the first several axes carry
-a visibly larger share than the rest — yet the tail does not crater to the noise
+For the anisotropic cone, the spectrum is **front-loaded** — the first several axes
+carry a visibly larger share than the rest — yet the tail does not crater to the noise
 floor; it decays gradually enough that the entropy-based effective rank rule lands
 far right at **≈ 553 of 768**. Reading: a few dominant directions (the cone's
 backbone) plus a broad, still-populated tail. Contrast the collapsed space, whose
@@ -532,7 +564,7 @@ Marked on it:
 
 #### Worked example
 
-For the legal cone: **50% of variance by some early dimension, 90% by ≈ 276 of
+For the anisotropic cone: **50% of variance by some early dimension, 90% by ≈ 276 of
 768.** The curve rises faster than the diagonal but doesn't slam into the ceiling —
 it's a moderate upward bow, leaving a real but not enormous gap. The verdict is in
 the *moderately concentrated* range (≈ 276/768 ≈ 36% of dims hold 90%). The
@@ -556,6 +588,45 @@ IsoScore ≈ **0.00**.
 - Like all the spectral figures, this is **variance**, not semantics. A space can
   spread variance broadly and still be poorly aligned; spectral spread is necessary
   for resolution, not sufficient for usefulness.
+
+---
+
+### RES 08 — Uniformity on the hypersphere
+
+*Order: renders after RES 02b. Source: `figures/res_uniformity.py`. The `uniformity`
+header fact is always shown; the figure is on by default in `--compare` / series mode.*
+
+#### What it answers
+
+How evenly the data spreads over the unit sphere — the **uniformity** half of the
+alignment/uniformity decomposition (Wang & Isola 2020). Alignment (the other half) needs
+positive pairs — a supervised signal — so it is outside ambit's unsupervised scope and is
+not drawn.
+
+#### How it's computed
+
+`U = log E exp(−2·‖x−y‖²)` over random pairs, from the same cosines as the header *mean
+pair cosine* (`metrics.uniformity_from_cos`). The figure places the dataset's U on a number
+line against the **isotropic-sphere reference** (`metrics.uniformity_ref(dim)`), the gap
+shaded. In `--compare` mode it draws the **trajectory** from A to B (the same items embedded
+two ways) along the axis.
+
+#### How to read it
+
+- **More negative = more uniform = better** occupancy of the whole sphere. The axis puts
+  *more uniform* to the right; the isotropic reference is the rightmost (ideal) mark.
+- **The gap** to the reference is how far the data sits from a perfectly even spread — the
+  formal, pair-potential version of RES 01's cone reading.
+- **Trajectory (compare mode):** a rightward step from A to B is the second embedding
+  spreading the same items more uniformly. Uniformity improving while *local* structure
+  does not is the classic trap — read it alongside the separability panel and the
+  neighbor-overlap drift.
+
+#### Caveats
+
+- Uniformity is **necessary, not sufficient**: a perfectly uniform space can still put the
+  wrong things together. It is the occupancy half of the story, not the whole — which is
+  exactly why ambit does not claim the alignment half it cannot measure unsupervised.
 
 ---
 
@@ -634,7 +705,7 @@ same way, because crowding costs resolution either way.
 
 #### Worked example
 
-For the legal cone, the median NN margin is **small** — the histogram piles up
+For the anisotropic cone, the median NN margin is **small** — the histogram piles up
 toward the resolution floor on the left, with the accent median rule sitting close
 to 0, and only a thin right tail of items that have a clearly-separated nearest
 neighbor. Reading: despite the corpus being usable in aggregate, *at the retrieval
@@ -714,8 +785,8 @@ For a healthy run with provided labels, you'd see a between-cluster hump near
 cosine 0 and a within-cluster hump out around, say, +0.5, with a separation caliper
 reading `separation = +0.5` and a slim confusable zone — clusters cleanly separable.
 
-For the legal cone, expect both humps shifted **right of 0** (the global cone pulls
-*everything* positive), with the between-cluster peak sitting above the ideal 0
+For an anisotropic cone, expect both humps shifted **right of 0** (the global cone
+pulls *everything* positive), with the between-cluster peak sitting above the ideal 0
 reference rather than on it. If clusters are genuine, the within hump still leads the
 between hump (positive separation) but the confusable zone is wider than in an
 isotropic space — same-cluster and cross-cluster pairs overlap more, so cosine
@@ -731,6 +802,50 @@ resolves the partition only partially. If the separation came out near zero, the
   right; what matters is their *relative* position, not their absolute cosine.
 - The densities are sampled pairs, not exhaustive; the peaks are stable but the tails
   are estimates.
+
+---
+
+### RES 05b — Separability panel
+
+*Order: renders right after RES 05. Source: `figures/res_separability.py`, reading
+`separability.py`. On by default whenever a partition exists.*
+
+#### What it answers
+
+Do the categories you care about occupy **distinct regions** of the space? This panel
+reports the per-label geometry — the centroid-cosine matrix and kNN purity — that fixes
+the separability of a partition. The partition is your `--label-col` if present,
+otherwise ambit's own clusters.
+
+#### How it's computed
+
+On the reservoir, for the partition `y`:
+
+- **Centroid-cosine matrix** — `cos(μ_a, μ_b)` between per-group mean unit vectors; the
+  off-diagonal cells show which groups collapse together (share a direction).
+- **kNN purity** — per item, the fraction of its neighbors that share its label (reads
+  `ctx.knn_idx`), drawn as per-group bars against an overall rule.
+- **Scorecard** — cosine **silhouette**, **Fisher ratio** (between/within scatter), and
+  overall purity.
+- **Unsupervised extras** (discovered clusters only) — **stability** (mean adjusted-Rand
+  index across bootstrap re-clusterings) and **n-modes** (the graph-Laplacian eigengap),
+  with a badge that the read is *geometric, not semantic*.
+
+#### How to read it
+
+- **Heatmap:** deeper accent off-diagonal = two groups entangled (bad); light = separated.
+  The diagonal is blanked.
+- **Bars:** longer = higher purity (good); compare each to the overall rule.
+- **Scorecard direction:** higher silhouette / Fisher / purity = more separable.
+- **Unsupervised badge:** trust the heatmap only when **stability** is high — a low ARI
+  means the clusters are an artifact of one run, so the separability is not meaningful.
+
+#### Caveats
+
+- On **clustered** (not provided) labels this is the separability of ambit's *own* guess at
+  structure — geometric, not your ground-truth categories. Stability and the eigengap exist
+  precisely to tell you whether that guess is worth interpreting.
+- Reservoir-based; exact values reflect the sample, the picture is robust.
 
 ---
 
@@ -803,13 +918,13 @@ because its z-tail matches the reference's.
 
 #### Worked example
 
-For the legal cone, the bulk sits well to the right of the uniform ghost — a wide
-gap bracket and a `globally denser than uniform` tag — consistent with the global
-anisotropy RES 01 reads. If a sub-population (say one document family) were crammed
-far tighter than the rest, you'd instead see the bulk near the ghost with a separated
-high mode flagged `pocket · n=…`, and the report would say the crowding is *local*,
-not global. The distinction is invisible to a single mean-cosine scalar; it is the
-whole reason this figure draws the distribution.
+For the anisotropic cone, the bulk sits well to the right of the uniform ghost — a
+wide gap bracket and a `globally denser than uniform` tag — consistent with the global
+anisotropy RES 01 reads. If a sub-population were crammed far tighter than the rest,
+you'd instead see the bulk near the ghost with a separated high mode flagged
+`pocket · n=…`, and the report would say the crowding is *local*, not global. The
+distinction is invisible to a single mean-cosine scalar; it is the whole reason this
+figure draws the distribution.
 
 #### Caveats
 
@@ -837,8 +952,8 @@ edges).*
 **Where** does the local density sit — is the crowding spatially coherent (one
 region of dense pockets) or an even wash across the cloud? This is the *spatial
 companion* to RES 06: RES 06 says how much and what kind of crowding; RES 07 says
-where it lives. It is the figure that **superseded the old `3D · live`** cloud — the
-report's one rotatable 3-D view, now carrying the local-density signal.
+where it lives. It is the report's one rotatable 3-D view, carrying the local-density
+signal in its color and shape.
 
 #### How it's computed
 
@@ -889,9 +1004,9 @@ slider** thins the field and a lower-left **x/y/z gnomon** tracks orientation.
 
 #### Worked example
 
-Spin the legal cone and you'll see crowding spread broadly rather than knotted in one
-place — pyramids scattered across the cloud, matching RES 06's `globally denser than
-uniform` read. If instead one document family were crammed, you'd find a localized
+Spin an anisotropic cone and you'll see crowding spread broadly rather than knotted in
+one place — pyramids scattered across the cloud, matching RES 06's `globally denser than
+uniform` read. If instead one sub-population were crammed, you'd find a localized
 cluster of tall red pyramids; toggling kNN edges, the tinted crowded-to-crowded links
 would concentrate there. Either way, resist reading density off how tightly the dots
 *appear* to sit — the green dots are the least-crowded items **relative to this
@@ -1039,9 +1154,9 @@ set (defaulting to ~6,000 points).
 
 #### Worked example
 
-For the legal cone, expect a dense interior of small neutral dots (points packed
+For the anisotropic cone, expect a dense interior of small neutral dots (points packed
 together inside the cone) with the good-token isolated-decile rings concentrated
-toward the *edges* of the projected cloud — the few documents that sit in open space.
+toward the *edges* of the projected cloud — the few items that sit in open space.
 Reading: the bulk of the corpus is crowded (small NN distances), and genuine
 isolation is the exception, confined to the periphery. Thin the field with the slider
 to confirm the isolated rings really are edge-dwellers and not just hidden by the
@@ -1126,28 +1241,26 @@ alone) would hide this; the matched-scale triptych makes it measurable.
 
 ---
 
-### 3D · live — Live 3-D cloud (drag · zoom · kNN edges) *(hidden by default; superseded by RES 07)*
+### 3D · live — Live 3-D cloud (drag · zoom · kNN edges) *(hidden by default)*
 
-*Status: **disabled by default** (`d3_live: False`). It is **superseded by RES 07**,
-the local crowding cloud, which is also a turnable canvas (drag-rotate, kNN-edge
-overlay, #-samples slider) but recolors and reshapes the cloud by local density
-rather than by cluster. This section is kept for runs that explicitly re-enable
-`d3_live`; it is **not** part of the default report. Source: `figures/d3_live.py`.
-Interactive.*
+*Status: **hidden by default** (`d3_live: False`); flip it on to add a cluster-colored
+turnable cloud alongside RES 07's density-colored one. This section documents it for
+runs that enable it; it is **not** part of the default report. Source:
+`figures/d3_live.py`. Interactive.*
 
 #### What it answers
 
 How do the **clusters sit in the occupied volume**, seen from any angle, and where
 does the neighbor graph cohere or bridge across clusters? The same `ctx.xyz` cloud
 the triptych shows, but turnable and colored by cluster. (RES 07 turns the same cloud
-but colors it by local density instead — enable `d3_live` only when the
-cluster-coloring view is what you specifically want.)
+but colors it by local density instead — enable `d3_live` when the cluster-coloring
+view is what you specifically want.)
 
 #### How it's computed
 
 The 3-D projection is baked into a vanilla-JS canvas (no dependencies; reads CSS
 tokens so it re-skins on theme swap). Up to 8,000 points are kept (subsampled if
-more), centered and scaled into a unit box, and **colored by cluster** (genre
+more), centered and scaled into a unit box, and **colored by cluster** (the partition
 labels mapped to a stable palette). Points are **depth-sorted** (painter's order)
 and depth-cued — nearer points larger and brighter, farther points smaller and
 dimmer. A small **x/y/z origin gnomon** at lower-left tracks orientation as you
@@ -1163,7 +1276,7 @@ alpha, but only between points currently visible under the slider.
 
 - **Drag to rotate, scroll/pinch to zoom.** It auto-spins when idle and resumes
   spinning a couple seconds after you let go.
-- **Point color = cluster** (legend lists each genre's color). **Depth grades the
+- **Point color = cluster** (legend lists each group's color). **Depth grades the
   color** (near brighter, far dimmer) so you can perceive 3-D layering.
 - **#-points slider** thins the field; the count updates.
 - **kNN-edges checkbox** overlays the neighbor graph: colored same-cluster threads
@@ -1185,7 +1298,7 @@ alpha, but only between points currently visible under the slider.
 
 #### Worked example
 
-Spin the legal corpus and you'll likely see one dominant colored mass (the bulk of
+Spin an anisotropic cone and you'll likely see one dominant colored mass (the bulk of
 the cone) with smaller colored satellites; flatten your view to find the thin axis
 confirming the triptych's anisotropy. Toggle kNN edges: if you see many neutral
 bridge threads weaving between colors, the clusters share a lot of boundary (mixing,
@@ -1268,12 +1381,12 @@ is marked neutral; the **single fullest shell** carries the accent dot.
 
 #### Worked example
 
-For the legal cone, the centroid sits inside a filled core, so expect the occupancy
-curve to **peak near small radius** (accent "fullest" dot on an inner shell) and fall
-off outward, with the primary panel showing a dense accent center fading through the
-shells to a thin rind. If instead the corpus were normalized to a sphere, you'd see a
-**cavity** near the center and the fullest shell pushed outward — a hollow shell
-rather than a filled ball.
+For the anisotropic cone, the centroid sits inside a filled core, so expect the
+occupancy curve to **peak near small radius** (accent "fullest" dot on an inner shell)
+and fall off outward, with the primary panel showing a dense accent center fading
+through the shells to a thin rind. If instead the corpus were normalized to a sphere,
+you'd see a **cavity** near the center and the fullest shell pushed outward — a hollow
+shell rather than a filled ball.
 
 #### Caveats
 
@@ -1285,6 +1398,70 @@ rather than a filled ball.
 - The occupancy uses a spherical-shell volume in 3-D, a modeling choice; the *shape*
   of the profile (core-full vs hollow) is the signal, not the absolute × values.
 - Subsampled to ~3,500 points for a clean isometric cloud.
+
+---
+
+## 4b. Comparison figures (CMP) — diffing two embeddings
+
+These render only when you pass a **second embedding of the same items** with `--compare`:
+the same corpus run through **two different embedding models / encoders / configurations**,
+aligned by **id** (never row order — `--id-col` is required; without stable ids the run
+refuses rather than pair unrelated rows). They answer one question — *how much, and **where**,
+do the two embeddings differ?* — at two scales: a **local** view (which items' neighborhoods
+reshuffled) and a **global** view (whether the whole representation moved). Source:
+`compare.py` (`CmpCtx`) + `figures/cmp_*.py`. When present they lead the report, with the
+local neighbor-overlap view first. The two sets are labeled **A** (the primary) and **B**
+(the compare set); they may even have **different dimensionality**, and the figures degrade
+cleanly when a metric needs them equal.
+
+### CMP 12a — Neighbor-overlap drift *(the local headline; leads the block)*
+
+The **local, retrieval-relevant** comparison, and the first CMP card. Each set gets its own
+kNN graph; for every item, this measures the **fraction of its top-k nearest neighbors that
+are shared** between the two embeddings (`compare.neighbor_overlap`) — 1 = an identical
+neighborhood, 0 = fully reshuffled. A left panel histograms that per-item retention (with the
+mean rule and the retention at each scale); a right panel re-draws A's projection with each
+point **shaded by how much its neighborhood changed**, so you can see *where* the reshuffling
+lives. Because it compares neighbor **identities**, it is **dimension-agnostic** — it works
+even when `d_A ≠ d_B` (where the drift field cannot be drawn). This is the view the global
+CKA scorecard can miss: CKA is a global second-moment statistic that can read "barely changed"
+while the neighborhoods that drive retrieval reshuffle underneath it, so **read CMP 12a and
+CMP 12 against each other.**
+
+### CMP 12 — Representational drift (CKA & distances) *(the global view)*
+
+A scorecard of how similar A and B are *globally*, each on a 0–1 track:
+
+- **linear CKA** — the exact, whole-reservoir headline; **1 = the same space re-skinned**,
+  lower = a genuine rebuild. Invariant to rotation, isotropic scaling and neuron
+  permutation, so it ignores the nuisances that make raw coordinate diffs meaningless. It
+  is a **global second-moment statistic** dominated by the top variance directions, so it
+  can read "similar" while local neighborhoods reshuffle — which is exactly why it is read
+  against CMP 12a. It is defined even when the two **dimensions differ** (e.g. a
+  Matryoshka-truncated set).
+- **RBF CKA**, **1 − MMD²** — sampled kernel / distributional companions.
+- **Procrustes disparity** — the best rigid-alignment residual; **higher = more change**
+  (drawn in the *bad* token). Needs equal dimensions.
+
+### CMP 13 — Drift field
+
+The "*where*" map: a standardized projection grid with each cell shaded by the **mean
+per-point drift** (‖B − A‖ in A's projection frame), with a sparse **quiver** — one arrow
+per high-drift cell, from its A-centroid to its B-centroid. A knot of deep cells and long
+arrows is a region where the two embeddings place items most differently; no single-set
+figure localizes *change* like this. Needs equal dimensions (a placeholder explains when it
+can't be drawn — reach for CMP 12a, which localizes change without them).
+
+### CMP 14 — Distance-distribution shift
+
+The two random-pair cosine densities (A faint, B accent) overlaid on one −1…+1 axis, the gap
+between their means shaded, with a `Δmean cos` (and `1 − MMD²`) callout. Answers whether the
+*whole* similarity distribution moved, not just individual items. Works at any dimensions.
+
+**Degradation matrix.** When `d_A ≠ d_B`, the two CKA variants and the neighbor-overlap drift
+stay defined; MMD, energy, Procrustes, the drift field and the per-item drift cosine all need
+equal dims and are dropped with a note. CKA and **neighbor-overlap drift** are the
+dimension-agnostic headlines — the global and the local one, respectively.
 
 ---
 
@@ -1320,6 +1497,31 @@ local margins (RES 04 healthy) and clean cluster separation (RES 05 separable) i
 the readings pointing the same way: high mean cosine, collapsed spectrum, near-tie
 margins, entangled clusters — resolution is genuinely gone.
 
+### Local vs global: the scalars miss what the localized views catch
+
+A theme runs through the whole report: **the global scalars summarize, and the
+localized views catch what they smooth over.** A single number — mean pair cosine,
+IsoScore, uniformity, or (when comparing) CKA — is an average over the entire space,
+and an average can read "fine" while specific regions are anything but.
+
+- **Mean pair cosine** (one global number) cannot tell "the whole space is crowded"
+  from "a few sub-populations are crammed and the rest is roomy." The **local density
+  field (RES 06/07)** draws the *distribution* and *locates* the pockets, which is
+  exactly the structure the mean hides.
+- **A high uniformity or a healthy spectrum** describes how the variance is *spread*,
+  not whether your categories occupy *distinct* regions. The **separability panel
+  (RES 05b)** localizes that to the per-group geometry — which groups share a
+  direction, whose neighborhoods are pure — so two spaces with identical global
+  scalars can separate the partition very differently.
+- **CKA** (the global representational-similarity scalar in `--compare`) can read
+  "barely changed" while the neighborhoods that drive retrieval reshuffle. The
+  **neighbor-overlap drift (CMP 12a)** localizes the change item by item, catching the
+  fine-grained reshuffling a second-moment statistic averages away.
+
+The discipline is the same in every case: read the scalar for the headline, then let
+the localized view (RES 06/07, RES 05b, CMP 12a) tell you whether the headline holds
+*everywhere* or only on average.
+
 **Crowding costs resolution whether or not the crowded items are related.** This is
 worth holding onto when reading RES 04, RES 06, and RES 07 together. Unrelated items
 squeezed together is the obvious failure — impostors crowd the top of a search and
@@ -1350,11 +1552,10 @@ The **DEN / COV / 3D** facets are the *picture* of crowding; the **RES** facet i
 - The **3-D figures** let you *see* the anisotropy: the triptych (3D 02) makes a
   thin-in-Z flattening visible, the radial shells (3D 05) show whether the mass is a
   filled core or a hollow shell, and the rotatable **local crowding cloud (RES 07)**
-  lets you turn the cloud while reading local density off its color and shape (it is
-  the default report's interactive 3-D view, having superseded the cluster-colored
-  `3D · live`). These recover the dimension that the 2-D MAP/DEN/COV views flatten
-  away — though, as RES 07's card insists, position in the projection encodes the
-  *gross* shape, not fine local crowding.
+  lets you turn the cloud while reading local density off its color and shape (the
+  default report's interactive 3-D view). These recover the dimension that the 2-D
+  MAP/DEN/COV views flatten away — though, as RES 07's card insists, position in the
+  projection encodes the *gross* shape, not fine local crowding.
 
 A hotspot in the density view and a mass of random-pair cosines piled up near +0.29
 are the **same fact told two ways**. The report's job is to put both in front of you,
@@ -1372,7 +1573,8 @@ first as a profile, then let each figure unpack one fact:
 | isoscore | RES 02b (the gap-to-diagonal it summarizes; formula in the hovercard) |
 | effective rank | RES 02 (the scree rule) and RES 02b (why it can mislead) |
 | dims for 90% var | RES 02b (the 90% crosshair) |
-| groups | RES 05 (separability); cluster colors in the hidden `3D · live`, if enabled |
+| uniformity | RES 08 (the gap to the isotropic reference; a trajectory in `--compare` / series mode) |
+| groups | RES 05 (within/between) and RES 05b (the separability panel) |
 | hub skew | RES 04 (the retrieval-margin regime where hubness bites) |
 
 Note there is no single header scalar for the *local* density field — that is
@@ -1474,8 +1676,11 @@ locates them spatially as ringed red pyramids. A uniformly crowded "dandelion" y
 
 **Alignment & uniformity.** A representation-quality decomposition on the unit
 hypersphere (Wang & Isola [2020](https://arxiv.org/abs/2005.10242)): **alignment** =
-similar items map close; **uniformity** = items spread evenly. ambit's "resolution"
-is essentially **low uniformity**; good representations need both.
+similar items map close; **uniformity** = items spread evenly. ambit reports the
+**uniformity** half (header fact and RES 08) because it needs no labels; **alignment**
+requires positive pairs (a supervised signal) and is outside ambit's unsupervised
+scope. Crowding/anisotropy is essentially **low uniformity**; good representations need
+both halves, only one of which ambit can measure unsupervised.
 
 **Rogue dimensions.** A few high-magnitude dimensions that dominate the dot product
 and inflate cosine; standardizing them away often restores hidden resolution (Timkey
@@ -1487,6 +1692,20 @@ only interpretable *relative to the distribution* of similarities in the space, 
 against a fixed threshold (Steck et al.
 [2024](https://arxiv.org/abs/2403.05440)). This is why every cosine figure in ambit
 draws an isotropic reference rather than printing a pass/fail number.
+
+**CKA (representational similarity).** Centered Kernel Alignment (Kornblith et al.
+[2019](https://arxiv.org/abs/1905.00414)) — a [0,1] similarity between two embeddings of
+the same items, invariant to rotation, isotropic scaling and neuron permutation, and
+defined even when their dimensions differ. ambit's `--compare` headline (CMP 12). It is a
+**global** second-moment statistic dominated by the top variance directions, so it can
+read "similar" while local neighborhoods reshuffle — hence it is read against the
+neighbor-overlap drift.
+
+**Neighbor-overlap drift.** Per item, the fraction of its top-k nearest neighbors **shared**
+between two embeddings of the same items (CMP 12a, `compare.neighbor_overlap`). The
+**local**, retrieval-relevant counterpart to CKA: it compares neighbor *identities*, so it
+is dimension-agnostic and sees the fine-grained reshuffling a global similarity score
+averages away. 1 = an identical neighborhood, 0 = fully reshuffled.
 
 **Reservoir.** The sampled subset of items ambit actually scans (default 20,000) when
 the corpus is large. Several figures (RES 04, COV 09, RES 05, the 3-D views) are

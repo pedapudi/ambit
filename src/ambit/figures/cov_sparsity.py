@@ -33,10 +33,16 @@ def fig_cov_sparsity(ctx):
                 "legend": '<span><i class="f"></i> point (no kNN)</span>',
                 "reveal": "<b>Reveals:</b> nothing yet — kNN distances are unavailable.", "cls": ""}
 
-    d0 = np.nan_to_num(np.asarray(kd[:, 0], float), nan=0.0)
-    med = float(np.median(d0))
-    p90 = float(np.quantile(d0, 0.90))
-    dmax = float(d0.max()) or 1.0
+    # a reciprocal (mutual) graph leaves some points with no mutual neighbor at all
+    # (dist = inf); read those as maximally isolated rather than letting inf wreck the
+    # scale. Finite distances set the spacing references.
+    d0 = np.asarray(kd[:, 0], float)
+    finite = np.isfinite(d0)
+    base = d0[finite] if finite.any() else np.array([1.0])
+    med = float(np.median(base))
+    p90 = float(np.quantile(base, 0.90))
+    dmax = float(base.max()) or 1.0
+    d0 = np.where(finite, d0, dmax)                 # no reciprocal neighbor -> most isolated
     R_MAX = 22.0
     scale_hi = max(p90 * 1.6, dmax * 0.85, 1e-9)
 

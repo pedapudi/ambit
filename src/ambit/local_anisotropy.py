@@ -35,6 +35,7 @@ from typing import Optional
 
 import numpy as np
 
+from . import knn
 from . import metrics
 
 DEFAULT_SCALES = (10, 50, 200)
@@ -76,7 +77,8 @@ def for_ctx(ctx, **kw):
     numbers come from this generation step — the figures only draw them."""
     cached = getattr(ctx, "_local_aniso", None)
     if cached is None:
-        cached = localized_anisotropy(ctx.es.X, labels=getattr(ctx, "labels", None), **kw)
+        cached = localized_anisotropy(ctx.es.X, labels=getattr(ctx, "labels", None),
+                                      mutual=getattr(ctx, "mutual_knn", False), **kw)
         try:
             ctx._local_aniso = cached
         except Exception:
@@ -108,6 +110,21 @@ def _topk_sims(X: np.ndarray, kmax: int, block: int = 2048):
 def _mad(a):
     med = float(np.median(a))
     return med, float(1.4826 * np.median(np.abs(a - med)))
+
+
+def _mutual_mean(sims_k, recip_k):
+    """Mean cosine over the *reciprocal* neighbors within the top-k (a hubness-corrected
+    density estimate). Rows with no reciprocal neighbor fall back to the least-dense
+    value (the column min), so anti-hubs read as sparse rather than NaN."""
+    cnt = recip_k.sum(1)
+    with np.errstate(invalid="ignore"):
+        masked = np.where(recip_k, sims_k, 0.0)
+        m = np.where(cnt > 0, masked.sum(1) / np.maximum(cnt, 1), np.nan)
+    if np.isnan(m).any():
+        finite = m[np.isfinite(m)]
+        fill = float(finite.min()) if finite.size else 0.0
+        m = np.where(np.isnan(m), fill, m)
+    return m
 
 
 def _angular_components(X, dist_thr):
@@ -144,7 +161,8 @@ def _angular_components(X, dist_thr):
 
 def localized_anisotropy(X, *, labels: Optional[np.ndarray] = None,
                          scales=DEFAULT_SCALES, threshold: float = 3.0,
-                         n_ref: int = 4000, seed: int = 0) -> LocalAnisotropy:
+                         n_ref: int = 4000, seed: int = 0,
+                         mutual: bool = False) -> LocalAnisotropy:
     X = np.asarray(X, np.float32)
     X = X / np.maximum(np.linalg.norm(X, axis=1, keepdims=True), 1e-12)
     m, d = X.shape
@@ -154,7 +172,11 @@ def localized_anisotropy(X, *, labels: Optional[np.ndarray] = None,
     kmax = max(scales)
 
     sims, idx = _topk_sims(X, kmax)
-    per_scale = {k: sims[:, :k].mean(1) for k in scales}
+    if mutual:
+        recip = knn.reciprocal_mask(idx)                       # mutual neighbors only
+        per_scale = {k: _mutual_mean(sims[:, :k], recip[:, :k]) for k in scales}
+    else:
+        per_scale = {k: sims[:, :k].mean(1) for k in scales}
 
     # isotropic reference: a uniform same-density sample (k scaled to hold k/N fixed)
     rng = np.random.default_rng(seed)
@@ -162,8 +184,12 @@ def localized_anisotropy(X, *, labels: Optional[np.ndarray] = None,
     R = rng.standard_normal((nref, d)).astype(np.float32)
     R /= np.maximum(np.linalg.norm(R, axis=1, keepdims=True), 1e-12)
     kref = {k: max(2, int(round(k * nref / m))) for k in scales}
-    rsims, _ = _topk_sims(R, max(kref.values()))
-    iso_ref = {k: rsims[:, :kref[k]].mean(1) for k in scales}
+    rsims, ridx = _topk_sims(R, max(kref.values()))
+    if mutual:
+        rrecip = knn.reciprocal_mask(ridx)                     # mutual neighbors in the null too
+        iso_ref = {k: _mutual_mean(rsims[:, :kref[k]], rrecip[:, :kref[k]]) for k in scales}
+    else:
+        iso_ref = {k: rsims[:, :kref[k]].mean(1) for k in scales}
 
     # per-scale robust z for the dataset, and for the isotropic reference (the null)
     zs, zref = {}, {}
@@ -201,7 +227,7 @@ def localized_anisotropy(X, *, labels: Optional[np.ndarray] = None,
     # This replaces a histogram valley whose threshold was 2% of the *bulk peak
     # height*. At a fixed reservoir of m points that bar is ~2% of the tallest bin, so
     # a small pocket — tens of items spread over a few bins — sits below it however
-    # cleanly it is separated, and the valley-walk swallows it. On the m=20000 legal
+    # cleanly it is separated, and the valley-walk swallows it. On a large (m≈20000)
     # reservoir the bar is ~24 items/bin while the real pockets peak at ~8 items/bin,
     # so they read as "0 pockets". (It is not that the reservoir changes size; the bar
     # was simply anchored to the wrong quantity.) The reference null is a fixed,

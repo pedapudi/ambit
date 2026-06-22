@@ -1,7 +1,7 @@
 """Native-space resolution / isotropy diagnostics — pure numpy, no heavy deps.
 
 These run on the ORIGINAL high-dimensional vectors (not a 2-D projection); they
-are the scalar backbone of the study's "resolution / isotropy" facet. See
+are the scalar backbone of the "resolution / isotropy" facet. See
 docs/concepts/anisotropy-and-resolution.md for what each one means.
 """
 
@@ -127,8 +127,45 @@ def isoscore_star(eigs: np.ndarray, n_samples: int, zeta: Optional[float] = None
 
 def hubness_skew(knn_idx: np.ndarray) -> float:
     """Skewness of the k-occurrence distribution — how often each point is *somebody's*
-    neighbor. High positive skew = a few hubs dominate retrieval (Radovanović et al.)."""
-    occ = np.bincount(knn_idx.reshape(-1), minlength=len(knn_idx)).astype(np.float64)
+    neighbor. High positive skew = a few hubs dominate retrieval (Radovanović et al.).
+    Self-references are dropped, so a reciprocal (mutual) graph's self-loop padding does
+    not pollute the count."""
+    idx = np.asarray(knn_idx)
+    rows = np.arange(len(idx))[:, None]
+    flat = idx[idx != rows]                              # drop self-loop padding (mutual-kNN)
+    occ = np.bincount(flat.reshape(-1), minlength=len(idx)).astype(np.float64)
     m = occ.mean()
     sd = occ.std() or 1.0
     return float(((occ - m) ** 3).mean() / sd ** 3)
+
+
+def uniformity_from_cos(cos: np.ndarray, *, t: float = 2.0) -> float:
+    """Wang–Isola (2020) uniformity from a random-pair cosine sample. For unit vectors
+    ‖x−y‖² = 2 − 2·cos, so U = log E exp(−t·‖x−y‖²) is a function of the cosines ambit
+    already samples — more negative = more uniformly spread on the sphere (better
+    occupancy). Reuses `ctx.cos`, so the header scalar costs nothing extra."""
+    sq = 2.0 - 2.0 * np.asarray(cos, dtype=np.float64)
+    return float(np.log(np.mean(np.exp(-t * sq))))
+
+
+def uniformity(X, *, t: float = 2.0, n_pairs: int = 200_000, seed: int = 0,
+               normalized: bool = False) -> float:
+    """Uniformity (Wang–Isola) over `n_pairs` random pairs of `X`. Mirrors the
+    `random_pair_cosine` sampling, so it is O(n_pairs) and trivial on 1M rows."""
+    U = X if normalized else _unit(X)
+    rng = np.random.default_rng(seed)
+    n = len(U)
+    i = rng.integers(0, n, n_pairs)
+    j = rng.integers(0, n, n_pairs)
+    keep = i != j
+    cos = np.einsum("ij,ij->i", U[i[keep]], U[j[keep]])
+    return uniformity_from_cos(cos, t=t)
+
+
+def uniformity_ref(dim: int, *, t: float = 2.0, n: int = 4000, seed: int = 0) -> float:
+    """Uniformity of an isotropic cloud (iid uniform on the unit `dim`-sphere) — the
+    reference the dataset's uniformity is read against (cf. `isotropy_ref` for cosine)."""
+    rng = np.random.default_rng(seed)
+    R = rng.standard_normal((n, dim)).astype(np.float64)
+    R /= np.maximum(np.linalg.norm(R, axis=1, keepdims=True), 1e-12)
+    return uniformity(R, t=t, n_pairs=min(200_000, n * n), seed=seed, normalized=True)

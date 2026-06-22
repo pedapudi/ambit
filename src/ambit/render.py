@@ -107,13 +107,19 @@ def _hc_fig(svg, hc):
 # Explicit display order, by figure registry key. Listed figures render in this
 # sequence; any enabled figure not listed sorts after, by its own `order`.
 _DISPLAY_ORDER = [
+    "cmp_overlap",     # CMP 12a · neighbor-overlap drift (LOCAL) — leads the CMP block
+    "cmp_scorecard",   # CMP 12 · representational drift (GLOBAL CKA & distances)
+    "cmp_drift",       # CMP 13 · drift field
+    "cmp_shift",       # CMP 14 · distance-distribution shift
     "res_cmap",    # RES 07 · local crowding cloud
     "d3_trip",     # 3D 02 · orthographic triptych
     "res_field",   # RES 06 · local concentration field
     "res_margin",  # RES 04 · nearest-neighbor cosine margin
     "res_wb",      # RES 05 · within- vs between-cluster cosine
+    "res_separability",  # RES 05b · label-aware separability panel
     "cos_hist",    # RES 01 · random-pair cosine distribution
     "res_cumvar",  # RES 02b · cumulative variance
+    "res_uniformity",  # RES 08 · uniformity on the hypersphere
     "scree",       # RES 02 · covariance eigenvalue scree
     "d3_shell",    # 3D 05 · radial shell occupancy
     "den_prom",    # DEN 04 · density-peak prominence
@@ -215,7 +221,7 @@ def _interpret_hc(key, meta):
     """A header 'how to read' hovercard for one figure — same popover as the IsoScore
     explainer, opened from an info icon in the card header. Falls back to the figure's
     own why/reveal when no curated entry exists."""
-    num = meta.get("num", "")
+    name = meta.get("name", "this figure")
     spec = _INTERP.get(key)
     if spec:
         h, sub, body = spec
@@ -224,7 +230,7 @@ def _interpret_hc(key, meta):
         rev = meta.get("reveal", "")
         body = f'<p>{meta.get("why", "")}</p>' + (f"<p>{rev}</p>" if rev else "")
     return (f'<span class="hc hc-head" tabindex="0" role="button" '
-            f'aria-label="How to read {num} — activate for guidance on interpreting this figure">'
+            f'aria-label="How to read the {name} figure — activate for guidance on interpreting it">'
             f'<i class="hc-i" aria-hidden="true">i</i>'
             f'<span class="hc-card" role="tooltip">'
             f'<span class="hc-h">{h}</span><span class="hc-sub">{sub}</span>{body}</span></span>')
@@ -258,7 +264,7 @@ def fig_cloud(ctx):
 
 @figure
 def fig_cos_hist(ctx):
-    # Mirrors the study's ISO 01: a smooth random-pair cosine *density* over the
+    # A smooth random-pair cosine *density* over the
     # full [-1, +1] axis (0 dead-centre = isotropic), with the analytic isotropic
     # d-sphere reference drawn as a razor spike at 0, the anisotropy-gap wedge
     # between 0 and the dataset mean, and an accent mean tick. An isotropic space
@@ -470,6 +476,7 @@ def _facts(ctx):
         ("mean L2 norm", f"{ctx.scan.norm_mean:.3f}"),
         ("mean pair cosine", f"{ctx.cos.mean():+.3f}"),
         ("isoscore", f"{metrics.isoscore(ctx.eigs):.3f}"),
+        ("uniformity", f"{metrics.uniformity_from_cos(ctx.cos):.3f}"),
         ("effective rank", f"{metrics.effective_rank(ctx.eigs):.1f} / {ctx.scan.dim}"),
         ("dims for 90% var", f"{metrics.dims_for_variance(ctx.eigs, 0.9)} / {ctx.scan.dim}"),
     ]
@@ -498,7 +505,7 @@ def build_report(ctx, *, out=None, title="ambit — embedding-space occupancy", 
         hc = _interpret_hc(f.get("_key", ""), f)
         cards.append(
             f'<section class="opt"><div class="opt-head">'
-            f'<span class="num">{f["num"]}</span><span class="name">{f["name"]}</span>{hc}'
+            f'<span class="name">{f["name"]}</span>{hc}'
             f'<span class="tech">{f["tech"]}</span></div>'
             f'<div class="opt-body"><figure class="{f.get("cls","")}">{f["svg"]}</figure>'
             f'<div class="leg">{f["legend"]}</div><div class="reveal">{f["reveal"]}</div></div></section>')

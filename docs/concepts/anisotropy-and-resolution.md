@@ -101,6 +101,17 @@ alignment is noise. SimCSE (Gao, Yao & Chen,
 [2021](https://arxiv.org/abs/2104.08821)) made these two the standard lens for
 diagnosing sentence embeddings and showed contrastive training improves uniformity.
 
+The two halves are not symmetric in what they *demand*. **Uniformity is
+measurable without labels** — it asks only how the points are spread over the
+sphere, so it can be read off the embeddings alone. **Alignment cannot**: it is
+$\mathbb{E}_{(x,y)\sim\text{pos}}\lVert f(x)-f(y)\rVert^2$ over a distribution of
+*positive pairs*, and without knowing which items are supposed to be close there is
+nothing to average. ambit is unsupervised, so it **reports uniformity** (as a
+scalar; more negative = more uniform) and deliberately **does not claim
+alignment** — that is the supervised half, out of scope here. A measured-uniformity
+number is therefore a statement about spread only; it says nothing about whether the
+right things ended up together.
+
 ### The named pathologies
 
 - **Representation degeneration / the "cone effect"** — Gao, He, Tan, Qin, Wang &
@@ -131,7 +142,47 @@ Radovanović, Nanopoulos & Ivanović
 curse-of-dimensionality effect: in crowded high-dimensional spaces a few points
 become the nearest neighbor of disproportionately many queries ("hubs") while
 others are nobody's neighbor ("anti-hubs"). Hubness directly degrades kNN retrieval
-and is a practical fingerprint of poor resolution.
+and is a practical fingerprint of poor resolution. ambit reports the k-occurrence
+skew, and `--mutual-knn` recomputes every neighbor view on the **reciprocal (mutual)**
+graph — a standard hubness-reduction that keeps only edges both points agree on,
+dropping a hub's surplus one-sided connections so genuine local structure is read
+apart from the hubness artifact.
+
+### Representational similarity (comparing two embeddings of the same data)
+
+The questions above ask about one space. A second, distinct question is *relational*:
+take the **same items embedded two ways** — two encoders, or two configurations of
+one model, aligned by id — and ask how much, and *where*, the two representations
+differ. This is not a similarity between individual vectors (the two spaces need not
+even share a dimensionality, and have no common basis); it is a similarity between
+*geometries*. Two scales answer it, and ambit reads both:
+
+- **Global — representational similarity (CKA).** Centered Kernel Alignment
+  (Kornblith, Norouzi, Lee & Hinton, [2019](https://arxiv.org/abs/1905.00414)) is a
+  normalized **HSIC** — equivalently, the cosine between the two *centered Gram
+  matrices* of pairwise similarities. Because it compares the second-moment
+  structure of *all pairs* rather than coordinates, it is invariant to orthogonal
+  rotation, to isotropic scaling, and to permutation of the feature axes (and to a
+  consistent re-indexing of the items) — exactly the nuisances that make two
+  embedding spaces incomparable axis-by-axis. CKA is thus a single **global**
+  statistic: did the two spaces encode the *same overall relational structure*? It
+  is blind, however, to *which* items moved.
+- **Local — neighbor overlap.** For each item, take its top-$k$ nearest neighbors in
+  space A and in space B and measure the **overlap** (the fraction shared, e.g.
+  Jaccard or the rank-weighted variant). Averaged, it is a single number; kept
+  per-item, it is a field that lights up exactly the items whose neighborhoods were
+  rewritten. This is the **retrieval-relevant** view — it speaks in the currency
+  retrieval actually uses (who is near whom) — and, like CKA, it is
+  **dimension-agnostic**: it never compares the two coordinate systems, only the
+  neighbor *sets* they induce.
+
+The two are complementary and can disagree informatively: high global CKA with low
+neighbor overlap is a *rotation/rescaling that preserves gross structure while
+reshuffling fine neighborhoods* (a re-skin felt locally); low CKA with locally
+intact pockets is the opposite. ambit pairs them with a distribution-level read of
+the change — **MMD** and **Procrustes** distance and an explicit distribution
+shift — so the comparison spans local, global-relational, and global-distributional
+scales at once. None of this needs labels; it is a property of the two geometries.
 
 ### A note on the word "crowding"
 
@@ -204,9 +255,11 @@ Useful formulas:
   $\;A=\mathbb{E}_{i\neq j}\big[\cos(x_i,x_j)\big]$, isotropic ⇒ $A\approx 0$.
   For iid points on the unit $d$-sphere, random-pair cosine is ≈ $\mathcal N(0, 1/d)$
   — the reference ambit draws against.
-- **Uniformity loss** (lower = more uniform):
+- **Uniformity loss** (lower = more uniform) — label-free, so this is the half ambit
+  reports as a scalar:
   $\;\mathcal{L}_{\text{unif}}=\log\,\mathbb{E}_{x,y}\big[e^{-t\lVert x-y\rVert^2}\big]$.
-- **Alignment loss**:
+- **Alignment loss** — defined only over a distribution of *positive pairs*, so it
+  needs supervision; ambit does not compute it:
   $\;\mathcal{L}_{\text{align}}=\mathbb{E}_{(x,y)\sim\text{pos}}\big[\lVert f(x)-f(y)\rVert^2\big]$.
 - **Effective rank** from singular values $\sigma_i$, with $p_i=\sigma_i/\sum_j\sigma_j$:
   $\;\operatorname{erank}=\exp\!\big(-\sum_i p_i\log p_i\big)$.
@@ -226,9 +279,11 @@ compare against the isotropic reference distribution (Steck et al., 2024).
 
 ## 6. A worked reading
 
-The numbers below are the diagnostic profile ambit's *resolution / isotropy* facet
-reports for a representative, realistically-imperfect corpus (12,000 sentence
-embeddings, 768-d) — useful as a template for how the metrics read *together*:
+The numbers below are an illustrative profile of how ambit's *resolution /
+isotropy* facet reads on a representative, realistically-imperfect collection — a
+generic mid-size set of embeddings (on the order of 10⁴ items in a few-hundred
+dimensions) — useful only as a template for how the metrics read *together*, not as
+a measurement of any particular dataset:
 
 | Diagnostic | Value | Isotropic reference | Verdict |
 |---|---|---|---|
@@ -313,6 +368,9 @@ in §5 summarize as scalars. The mapping is direct:
 | **Coverage / voids** (VIZ 07–09) | what the data fills vs. leaves empty | **unused capacity** — the spatial face of dimensional collapse |
 | **Topology / structure** (VIZ 05–06) | clusters, bridges, chokepoints | where distinctness is load-bearing vs. fragile; local-isotropy structure (Cai et al. 2021) |
 | **Comparison / reference** (VIZ 10–11) | dataset vs. an ideal/reference distribution | the gap from **isotropic** |
+| **Two-embedding comparison** (CMP 12–14, `--compare`) | the *same items* embedded two ways (two encoders / configurations, aligned by id): how much and *where* the representations differ — local **neighbor-overlap** alongside global **CKA**, plus the drift field and distribution shift | a *local* vs *global* read of representational change: did each item keep its neighbors, and did the space agree on its overall shape — a re-skin or a rebuild |
+| **Separability** (RES 05b) | whether a partition — provided labels *or* ambit's own discovered clusters — occupies distinct regions: centroid-cosine matrix, kNN purity (and, for discovered clusters, stability / modal count) | the separability rows of §5, read as a spatial fact |
+| **Uniformity** (RES 08) | a single label-free scalar for how evenly the items spread over the sphere (more negative = more uniform) | the **uniformity** half of Wang & Isola — the spread the embeddings achieve, reported without claiming alignment |
 | **Three dimensions** (3D · live, 3D 01–05) | the occupied *volume* and its anisotropy (e.g. thin-in-Z) | anisotropy you can rotate and see |
 | **Resolution / isotropy** (ISO 01–05) | random-pair cosine histogram, eigenvalue scree & effective rank, IsoScore gauge, NN-margin, within-vs-between cosine | the scalar metrics of §5 and the worked reading of §6, made legible |
 
@@ -352,6 +410,11 @@ is to put both in front of you so "the embeddings look fine" can be replaced wit
 - Rudman, Gillman, Rayne, Eickhoff (2022). [*IsoScore: Measuring the Uniformity of Embedding Space Utilization*](https://aclanthology.org/2022.findings-acl.262/). Findings of ACL 2022 (arXiv:2108.07344).
 - Garrido, Balestriero, Najman, LeCun (2023). [*RankMe: Assessing the Downstream Performance of Pretrained Self-Supervised Representations by Their Rank*](https://arxiv.org/abs/2210.02885). ICML 2023.
 - Yu, Chan, You, Song, Ma (2020). [*Learning Diverse and Discriminative Representations via the Principle of Maximal Coding Rate Reduction (MCR²)*](https://arxiv.org/abs/2006.08558). NeurIPS 2020.
+
+**Comparing two representations**
+- Kornblith, Norouzi, Lee, Hinton (2019). [*Similarity of Neural Network Representations Revisited*](https://arxiv.org/abs/1905.00414). ICML 2019 — CKA (normalized HSIC) for representational similarity.
+- Gretton, Bousquet, Smola, Schölkopf (2005). [*Measuring Statistical Dependence with Hilbert-Schmidt Norms*](https://doi.org/10.1007/11564089_7). ALT 2005 — HSIC, the dependence measure CKA normalizes.
+- Gretton, Borgwardt, Rasch, Schölkopf, Smola (2012). [*A Kernel Two-Sample Test*](https://www.jmlr.org/papers/v13/gretton12a.html). JMLR 13 — the Maximum Mean Discrepancy (MMD).
 
 **Remedies**
 - Mu, Bhat, Viswanath (2018). [*All-but-the-Top: Simple and Effective Postprocessing for Word Representations*](https://arxiv.org/abs/1702.01417). ICLR 2018.

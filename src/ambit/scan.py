@@ -161,7 +161,8 @@ def scan(source, *, sample: int = 20_000, seed: int = 0, embedding_col=None,
     es = EmbeddingSet(res[:keep],
                       ids=None if res_ids is None else res_ids[:keep],
                       labels=None if res_lab is None else res_lab[:keep],
-                      metric=metric, source=str(source))
+                      metric=metric, source=str(source),
+                      ids_provided=res_ids is not None)
     total = _source_rows(source) or scanned
     return Scan(max(total, scanned), dim, cov, mean, norm_mean, norm_std,
                 es, str(source), metric, scanned)

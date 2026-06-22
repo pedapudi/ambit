@@ -1,11 +1,10 @@
 """ambit's high-level library surface — the API the CLI (and any other caller) drives.
 
-The package has always been factored as a pipeline of modules — `scan` streams a
-corpus into a `Scan`, `pipeline.build_ctx` turns that into a `Ctx`, `render`
-turns a `Ctx` into HTML — but the orchestration that wires them together used to
-live inside the CLI. This module lifts that wiring into three library functions
-that *return values* instead of printing, so ambit can be invoked from a notebook,
-a web service, a batch job, or another program just as well as from the terminal:
+The package is factored as a pipeline of modules — `scan` streams a corpus into a
+`Scan`, `pipeline.build_ctx` turns that into a `Ctx`, `render` turns a `Ctx` into
+HTML. This module wires them together into three library functions that *return
+values* instead of printing, so ambit can be invoked from a notebook, a web service,
+a batch job, or another program just as well as from the terminal:
 
     import ambit
     rep = ambit.report("embeddings.parquet", sample=50_000)
@@ -17,9 +16,9 @@ a web service, a batch job, or another program just as well as from the terminal
     ambit.embed("items.jsonl", "vecs.parquet", model="text-embedding-3-small")
 
 Each verb takes either a `Config` (the same object the CLI builds from its flags)
-or plain keyword overrides; nothing is read from the environment. The CLI is now a
-thin presentation layer: it builds a `Config`, calls one of these, and formats the
-result for a terminal.
+or plain keyword overrides; nothing is read from the environment. The CLI is a thin
+presentation layer: it builds a `Config`, calls one of these, and formats the result
+for a terminal.
 """
 
 from __future__ import annotations
@@ -123,7 +122,13 @@ def report(source, *, out=None, config: Optional[Config] = None, **overrides) ->
     sc = _run_scan(source, cfg)
     ctx = pipeline.build_ctx(sc, projector=cfg.projector, pairs=cfg.pairs, k=cfg.k,
                              clusters=cfg.clusters, device=cfg.device,
-                             knn_backend=cfg.knn_backend)
+                             knn_backend=cfg.knn_backend, mutual_knn=cfg.mutual_knn)
+    if cfg.compare:
+        from . import compare as _compare
+        ctx.cmp = _compare.build_cmp(ctx, cfg)               # raises on the id preconditions
+        cfg = cfg.merge({"figures": {"cmp_overlap": True, "cmp_scorecard": True,
+                                     "cmp_drift": True, "cmp_shift": True,
+                                     "res_uniformity": True}})
     html = render.build_report(ctx, out=out, title=cfg.title, config=cfg)
     shown = sum(1 for key in render.FIGURES if enabled(cfg.figures, key))
     return Report(html=html, ctx=ctx, config=cfg, shown=shown, total=len(render.FIGURES))
@@ -137,7 +142,7 @@ def build_context(source, *, config: Optional[Config] = None, **overrides) -> Ct
     sc = _run_scan(source, cfg)
     return pipeline.build_ctx(sc, projector=cfg.projector, pairs=cfg.pairs, k=cfg.k,
                               clusters=cfg.clusters, device=cfg.device,
-                              knn_backend=cfg.knn_backend)
+                              knn_backend=cfg.knn_backend, mutual_knn=cfg.mutual_knn)
 
 
 # -------------------------------------------------------------------------- embed

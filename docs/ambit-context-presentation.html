@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="monokai">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ambit — the background</title>
+<style>
+  /* ---- Console THEME tokens: the full 16-theme colour-scheme set, ported 1:1
+       from the study's token names. The picker sets html[data-theme]; each block
+       fully restyles the page. Default: monokai. Every colour on every slide is a
+       token below, so a theme swap re-skins the whole deck with no re-render. ---- */
+  html[data-theme="monokai"] {
+    --paper:#1e1f1c; --panel:#272822; --panel-2:#23241f;
+    --ink:#f8f8f2; --ink-soft:#c9cabf; --ink-faint:#8f908a;
+    --rule:#3a3b34; --rule-soft:#2f302a;
+    --good:#a6e22e; --good-soft:#2c361a; --bad:#f92672; --caution:#e6db74;
+    --accent:#66d9ef; --accent-2:#66d9ef; --zicato-accent:#66d9ef;
+  }
+  html[data-theme="solarized-dark"] {
+    --paper:#04222B; --panel:#0A2D38; --panel-2:#0A2730;
+    --ink:#93A1A1; --ink-soft:#839496; --ink-faint:#5E7079;
+    --rule:#0E3540; --rule-soft:#0B2E39;
+    --good:#8BB80E; --good-soft:#1C3320; --bad:#E0483C; --caution:#C4920A;
+    --accent:#2AA198; --accent-2:#2AA198; --zicato-accent:#2AA198;
+  }
+  html[data-theme="solarized-light"] {
+    --paper:#FDF6E3; --panel:#FBF1D6; --panel-2:#F2E9CE;
+    --ink:#586E75; --ink-soft:#657B83; --ink-faint:#93A1A1;
+    --rule:#E7DCBE; --rule-soft:#F0E7CC;
+    --good:#6B9B0B; --good-soft:#E3ECCB; --bad:#DC322F; --caution:#B58900;
+    --accent:#268BD2; --accent-2:#268BD2; --zicato-accent:#268BD2;
+  }
+  html[data-theme="google-light"] {
+    --paper:#FFFFFF; --panel:#F4F4F4; --panel-2:#F8F8F8;
+    --ink:#474A4E; --ink-soft:#5F6368; --ink-faint:#9FA1A4;
+    --rule:#E2E3E4; --rule-soft:#F1F1F1;
+    --good:#34A853; --good-soft:#D2ECD9; --bad:#EA4335; --caution:#C99700;
+    --accent:#1B9CB8; --accent-2:#1B9CB8; --zicato-accent:#1B9CB8;
+  }
+  html[data-theme="google-dark"] {
+    --paper:#202124; --panel:#2C2D30; --panel-2:#28292C;
+    --ink:#FFFFFF; --ink-soft:#E8EAED; --ink-faint:#989A9D;
+    --rule:#444548; --rule-soft:#323336;
+    --good:#34A853; --good-soft:#243F2E; --bad:#EA4335; --caution:#FBBC05;
+    --accent:#24C1E0; --accent-2:#24C1E0; --zicato-accent:#24C1E0;
+  }
+  html[data-theme="lunaria-light"] {
+    --paper:#EBE4E1; --panel:#E2DCD9; --panel-2:#E6DFDC;
+    --ink:#363434; --ink-soft:#484646; --ink-faint:#898584;
+    --rule:#CEC8C5; --rule-soft:#DCD6D3;
+    --good:#497D46; --good-soft:#C7CDBF; --bad:#783C1F; --caution:#8F750B;
+    --accent:#3778A9; --accent-2:#3778A9; --zicato-accent:#3778A9;
+  }
+  html[data-theme="lunaria-eclipse"] {
+    --paper:#323F46; --panel:#3B484F; --panel-2:#38454C;
+    --ink:#DFE2ED; --ink-soft:#C9CDD7; --ink-faint:#8D949D;
+    --rule:#4D5960; --rule-soft:#404C53;
+    --good:#BEDBC1; --good-soft:#516161; --bad:#BA9088; --caution:#F1DFB4;
+    --accent:#C8429F; --accent-2:#C8429F; --zicato-accent:#C8429F;
+  }
+  html[data-theme="belafonte-day"] {
+    --paper:#D5CCBA; --panel:#CCC3B2; --panel-2:#D0C6B5;
+    --ink:#34292D; --ink-soft:#45373C; --ink-faint:#7F736E;
+    --rule:#BBB1A3; --rule-soft:#C8BFAF;
+    --good:#6E6A4E; --good-soft:#C3BCA7; --bad:#BE100E; --caution:#B57A1E;
+    --accent:#426A79; --accent-2:#426A79; --zicato-accent:#426A79;
+  }
+  html[data-theme="belafonte-night"] {
+    --paper:#20111B; --panel:#271821; --panel-2:#25161F;
+    --ink:#D5CCBA; --ink-soft:#968C83; --ink-faint:#675B59;
+    --rule:#35272E; --rule-soft:#2B1C24;
+    --good:#A6A07A; --good-soft:#362A2B; --bad:#D6403E; --caution:#EAA549;
+    --accent:#6F8E97; --accent-2:#6F8E97; --zicato-accent:#6F8E97;
+  }
+  html[data-theme="paper"] {
+    --paper:#F2EEDE; --panel:#E6E2D3; --panel-2:#E8E4D5;
+    --ink:#1A1A1A; --ink-soft:#33312B; --ink-faint:#85837A;
+    --rule:#C6C3B6; --rule-soft:#DCD9CA;
+    --good:#216609; --good-soft:#CCD6B8; --bad:#CC3E28; --caution:#B58900;
+    --accent:#1E6FCC; --accent-2:#1E6FCC; --zicato-accent:#1E6FCC;
+  }
+  html[data-theme="zenburn"] {
+    --paper:#3A3A3A; --panel:#424241; --panel-2:#404040;
+    --ink:#DCDCCC; --ink-soft:#C5C5B8; --ink-faint:#83837C;
+    --rule:#575754; --rule-soft:#494947;
+    --good:#8FB28F; --good-soft:#2E3A2E; --bad:#CC9393; --caution:#FFD7A7;
+    --accent:#8CD0D3; --accent-2:#8CD0D3; --zicato-accent:#8CD0D3;
+  }
+  html[data-theme="selenized-black"] {
+    --paper:#181818; --panel:#202020; --panel-2:#1E1E1E;
+    --ink:#DEDEDE; --ink-soft:#B9B9B9; --ink-faint:#606060;
+    --rule:#353535; --rule-soft:#262626;
+    --good:#83C746; --good-soft:#243218; --bad:#FF5E56; --caution:#EFC541;
+    --accent:#56D8C9; --accent-2:#56D8C9; --zicato-accent:#56D8C9;
+  }
+  html[data-theme="relaxed"] {
+    --paper:#353A44; --panel:#3D424B; --panel-2:#3C404A;
+    --ink:#F7F7F7; --ink-soft:#D9D9D9; --ink-faint:#7F8287;
+    --rule:#53575F; --rule-soft:#444851;
+    --good:#A0AC77; --good-soft:#353D2E; --bad:#BC5653; --caution:#EBC17A;
+    --accent:#7EAAC7; --accent-2:#7EAAC7; --zicato-accent:#7EAAC7;
+  }
+  html[data-theme="espresso"] {
+    --paper:#323232; --panel:#3A3A3A; --panel-2:#383838;
+    --ink:#FFFFFF; --ink-soft:#D9D9D9; --ink-faint:#8A8A8A;
+    --rule:#4C4C4C; --rule-soft:#3E3E3E;
+    --good:#A5C261; --good-soft:#353D24; --bad:#D25252; --caution:#FFC66D;
+    --accent:#6C99BB; --accent-2:#6C99BB; --zicato-accent:#6C99BB;
+  }
+  html[data-theme="dracula"] {
+    --paper:#282A36; --panel:#343746; --panel-2:#2E303D;
+    --ink:#F8F8F2; --ink-soft:#D4D4CF; --ink-faint:#6272A4;
+    --rule:#44475A; --rule-soft:#353848;
+    --good:#50FA7B; --good-soft:#213A2A; --bad:#FF5555; --caution:#F1FA8C;
+    --accent:#BD93F9; --accent-2:#BD93F9; --zicato-accent:#BD93F9;
+  }
+  html[data-theme="ubuntu"] {
+    --paper:#300A24; --panel:#3D1530; --panel-2:#371129;
+    --ink:#EEEEEC; --ink-soft:#CBC3C9; --ink-faint:#8A7383;
+    --rule:#4B2640; --rule-soft:#3E1A32;
+    --good:#8AE234; --good-soft:#2E3320; --bad:#CC0000; --caution:#FCE94F;
+    --accent:#34E2E2; --accent-2:#34E2E2; --zicato-accent:#34E2E2;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px; line-height: 1.5;
+    transition: background .18s, color .18s;
+  }
+
+  /* ---- top bar: wordmark · crumb · research-preview tag · theme picker · counter ---- */
+  .topbar{position:fixed;top:0;left:0;right:0;height:44px;display:flex;align-items:center;gap:13px;padding:0 24px;z-index:60;}
+  .topbar .wm{font-weight:700;letter-spacing:.04em;color:var(--ink);font-size:15px;}
+  .topbar .crumb{font-size:11px;color:var(--ink-faint);letter-spacing:.12em;text-transform:uppercase;}
+  .topbar .spacer{flex:1;}
+  .topbar .count{font-size:12px;color:var(--ink-faint);font-variant-numeric:tabular-nums;}
+  .theme-pick-label{font-size:11px;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;}
+  /* research-preview status tag — a quiet two-line mark by the wordmark; faint,
+     monospace, a hairline divider, no fill / glow / animation; informational only. */
+  .topbar .respreview{display:inline-flex;flex-direction:column;justify-content:center;align-self:center;pointer-events:none;user-select:none;font-size:8.5px;line-height:1.2;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-faint);border-left:1px solid var(--rule);padding-left:9px;}
+  .topbar .respreview span{display:block;white-space:nowrap;}
+
+  .progress{position:fixed;bottom:0;left:0;height:3px;background:var(--accent);width:0;z-index:60;transition:width .25s;}
+  .hint{position:fixed;bottom:11px;right:22px;font-size:10.5px;color:var(--ink-faint);letter-spacing:.06em;z-index:55;}
+
+  /* ---- the fixed 1280x800 stage, scaled to the viewport by fit() ---- */
+  .stage{position:fixed;transform-origin:0 0;width:1280px;height:800px;background:var(--paper);}
+  .slide{position:absolute;inset:0;padding:42px 92px 48px;display:none;flex-direction:column;justify-content:center;overflow:hidden;}
+  .slide.active{display:flex;animation:fin .28s ease both;}
+  @keyframes fin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .slide .kick{font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px;}
+  .slide h2{font-size:42px;font-weight:700;line-height:1.12;margin:0 0 .5em;color:var(--ink);max-width:1090px;}
+  .slide .accent{color:var(--accent);}
+  .slide .body{font-size:19px;color:var(--ink-soft);line-height:1.6;max-width:1050px;}
+  .slide .body p{margin:0 0 .7em;} .slide .body b,.slide .body strong{color:var(--ink);}
+  .slide ul{margin:.3em 0;padding-left:1.1em;} .slide li{margin:.34em 0;}
+  .slide .lead{font-size:21px;}
+  .slide code{background:var(--panel);padding:1px 6px;border-radius:4px;font-size:.86em;color:var(--ink);}
+  .slide .good{color:var(--good);} .slide .bad{color:var(--bad);} .slide .faint{color:var(--ink-faint);}
+
+  figure.dg{margin:8px 0 0;text-align:center;}
+  figure.dg svg{display:block;max-height:404px;width:auto;max-width:1010px;margin:0 auto;}
+  figure.dg figcaption{font-size:13px;color:var(--ink-faint);margin-top:9px;max-width:990px;margin-left:auto;margin-right:auto;line-height:1.5;}
+
+  .note{border:1px solid var(--rule);background:var(--panel-2);border-radius:8px;padding:11px 15px;margin-top:14px;font-size:15px;color:var(--ink-soft);line-height:1.55;max-width:1050px;}
+  .note strong{color:var(--ink);} .note .acc{color:var(--accent);}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:10px 0;max-width:1010px;}
+  .compare .box{border:1px solid var(--rule);background:var(--panel);border-radius:8px;padding:14px 16px;font-size:16px;color:var(--ink-soft);line-height:1.5;}
+  .compare .box .t{font-weight:700;margin-bottom:6px;} .compare .box .t.good{color:var(--good);} .compare .box .t.bad{color:var(--bad);} .compare .box .t.acc{color:var(--accent);}
+  .eq{font-size:22px;color:var(--ink);margin:.35em 0;font-family:inherit;}
+  .eq .op{color:var(--ink-faint);} .eq .v{color:var(--accent);}
+  .num-list{list-style:none;padding:0;counter-reset:n;max-width:1080px;}
+  .num-list li{counter-increment:n;position:relative;padding-left:2.5em;margin:.5em 0;font-size:17px;color:var(--ink-soft);line-height:1.5;}
+  .num-list li::before{content:counter(n);position:absolute;left:0;top:.05em;font-weight:700;color:var(--paper);background:var(--accent);border-radius:5px;padding:1px 9px;font-size:.82em;}
+  .num-list li b{color:var(--ink);}
+
+  /* small inline legend under figures */
+  .leg{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--ink-faint);margin-top:12px;justify-content:center;}
+  .leg span{display:inline-flex;align-items:center;gap:6px;}
+  .leg i{width:13px;height:13px;border-radius:2px;display:inline-block;border:1px solid transparent;}
+  .leg i.g{background:var(--good);} .leg i.r{background:var(--bad);} .leg i.a{background:var(--accent);}
+  .leg i.f{background:var(--ink-faint);} .leg i.dash{background:transparent;border:1px dashed var(--ink-faint);}
+
+  /* ---- title slide ---- */
+  .slide.title{justify-content:center;align-items:flex-start;}
+  .slide .wm{font-size:148px;font-weight:700;line-height:.86;color:var(--ink);letter-spacing:-.02em;}
+  .slide .tagline{font-size:32px;color:var(--ink-soft);margin-top:.32em;max-width:1010px;line-height:1.2;}
+  .slide .title-sub{font-size:16px;color:var(--ink-faint);margin-top:1.25em;max-width:840px;line-height:1.6;}
+
+  /* ---- split layout: text beside a diagram ---- */
+  .slide.split{flex-direction:row;align-items:center;gap:48px;padding:38px 74px;}
+  .slide.split .col-text{flex:1 1 0;min-width:0;max-width:560px;}
+  .slide.split .col-fig{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .slide.split h2{font-size:30px;line-height:1.15;margin:0 0 .5em;}
+  .slide.split .body{font-size:16px;line-height:1.55;max-width:none;}
+  .slide.split .body p{margin:0 0 .62em;}
+  .slide.split .lead{font-size:17px;}
+  .slide.split .compare{grid-template-columns:1fr;gap:10px;max-width:none;margin:8px 0;}
+  .slide.split .compare .box{font-size:13.5px;padding:11px 14px;}
+  .slide.split .note{font-size:13px;padding:9px 13px;margin-top:11px;max-width:none;}
+  .slide.split .num-list{max-width:none;}
+  .slide.split .num-list li{font-size:13.5px;margin:.4em 0;padding-left:2.3em;line-height:1.45;}
+  .slide.split .eq{font-size:19px;margin:.2em 0 .55em;}
+  .col-fig figure.dg{margin:0;width:100%;}
+  .col-fig figure.dg svg{max-height:454px;max-width:100%;margin:0 auto;}
+  .col-fig figcaption{font-size:12px;color:var(--ink-faint);margin-top:11px;line-height:1.5;max-width:560px;margin-left:auto;margin-right:auto;text-align:left;}
+  /* ---- title slide as split ---- */
+  .slide.title.split{align-items:center;justify-content:center;}
+  .slide.title.split .col-text{max-width:620px;}
+  .slide.split .wm{font-size:118px;}
+  .slide.split .tagline{font-size:26px;margin-top:.3em;}
+  .slide.split .title-sub{font-size:14.5px;margin-top:1.05em;max-width:600px;}
+
+  /* ---- cv3d vanilla-canvas 3D component (auto-spin, drag-rotate, theme-live) ---- */
+  .cv3d{position:relative;width:100%;max-width:560px;cursor:grab;touch-action:none;margin:0 auto;}
+  .cv3d:active{cursor:grabbing;}
+  .cv3d-canvas{display:block;width:100%;border:1px solid var(--rule-soft);border-radius:8px;background:color-mix(in srgb, var(--panel) 55%, transparent);}
+  .cv3d-tabs{display:flex;gap:6px;margin-bottom:8px;justify-content:center;}
+  .cv3d-tab{font:inherit;font-size:11px;padding:3px 12px;border:1px solid var(--rule);border-radius:999px;background:var(--panel);color:var(--ink-soft);cursor:pointer;}
+  .cv3d-tab.on{background:var(--accent);color:var(--paper);border-color:var(--accent);font-weight:700;}
+  .cv3d-tab:hover{color:var(--ink);}
+
+  /* ---- duo layout: a 2D schematic beside its 3D view ---- */
+  .slide.duo{flex-direction:column;justify-content:center;align-items:center;padding:34px 74px;}
+  .slide.duo .duo-head{width:100%;max-width:1120px;}
+  .slide.duo h2{font-size:29px;line-height:1.14;margin:0 0 .35em;}
+  .slide.duo .body{font-size:15px;line-height:1.5;max-width:1120px;}
+  .slide.duo .body p{margin:0;}
+  .slide.duo .duo-figs{display:grid;grid-template-columns:1fr 1fr;gap:40px;width:100%;max-width:1120px;align-items:center;margin-top:16px;}
+  .slide.duo .duo-figs figure.dg{margin:0;width:100%;}
+  .slide.duo .duo-figs svg{width:100%;height:auto;max-height:360px;}
+  .slide.duo .duo-figs .cv3d{max-width:100%;}
+  .slide.duo .duo-figs figcaption{font-size:11.5px;line-height:1.45;text-align:center;margin:9px auto 0;max-width:none;}
+
+  /* ---- method pipeline: one card per stage, left to right ---- */
+  .slide.method{flex-direction:column;justify-content:center;align-items:center;padding:40px 48px;}
+  .slide.method h2{font-size:34px;line-height:1.12;margin:0 0 .12em;}
+  .slide.method .sub{font-size:15px;color:var(--ink-soft);margin:0 0 4px;text-align:center;max-width:1000px;}
+  .slide.method .pipeline{display:flex;align-items:stretch;justify-content:center;gap:4px;width:100%;max-width:1190px;margin-top:18px;}
+  .slide.method .step{flex:1 1 0;min-width:0;display:flex;flex-direction:column;border:1px solid var(--rule);border-radius:10px;background:var(--panel);padding:10px 11px 12px;}
+  .slide.method .step figure.dg{margin:0;width:100%;}
+  .slide.method .step figure.dg svg{display:block;width:100%;height:auto;max-height:none;}
+  .slide.method .step .cap{margin-top:8px;}
+  .slide.method .step .cap .sb{display:inline-block;font-weight:700;color:var(--paper);background:var(--accent);border-radius:5px;padding:0 7px;font-size:11px;margin-right:6px;}
+  .slide.method .step .cap b{font-size:13px;color:var(--ink);}
+  .slide.method .step .cap p{font-size:11px;color:var(--ink-soft);margin:5px 0 0;line-height:1.42;}
+  .slide.method .parrow{display:flex;align-items:center;color:var(--ink-faint);font-size:17px;flex:0 0 auto;}
+
+  /* ---- a families grid (the report families slide) ---- */
+  .fam-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;max-width:1120px;margin-top:8px;}
+  .fam{border:1px solid var(--rule);background:var(--panel);border-radius:10px;padding:14px 16px;}
+  .fam .code{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--paper);background:var(--accent);border-radius:5px;padding:2px 8px;display:inline-block;}
+  .fam .ttl{font-size:15px;color:var(--ink);margin:9px 0 4px;font-weight:700;}
+  .fam .desc{font-size:12.5px;color:var(--ink-soft);line-height:1.5;}
+  .fam .q{font-size:11px;color:var(--ink-faint);margin-top:7px;letter-spacing:.04em;}
+
+  /* ---- a small two-up metric grid ---- */
+  .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px 22px;width:100%;max-width:1120px;margin-top:6px;}
+  .met{border:1px solid var(--rule);background:var(--panel);border-radius:9px;padding:12px 15px;}
+  .met .nm{font-size:14.5px;color:var(--ink);font-weight:700;}
+  .met .nm .tag{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);border:1px solid var(--rule);border-radius:999px;padding:1px 7px;margin-left:7px;vertical-align:1px;}
+  .met .ds{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-top:4px;}
+  .met .ds .hv{color:var(--good);} .met .ds .pa{color:var(--bad);}
+
+  svg text { font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; }
+
+  /* ---- the COLOUR SWATCH DROPDOWN (16 Console themes) ---- */
+  .dt-cd { position: relative; display: inline-flex; }
+  .dt-cd-trigger { display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--rule); border-radius: 5px; padding: 5px 9px;
+    background: var(--panel); color: var(--ink-soft); cursor: pointer;
+    font: inherit; font-size: 11px; transition: border-color .15s, color .15s; }
+  .dt-cd-trigger:hover { color: var(--ink); border-color: var(--accent); }
+  .dt-cd-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .dt-cd-name { color: var(--ink); white-space: nowrap; }
+  .dt-cd-caret { color: var(--ink-faint); font-size: 8px; transition: transform .15s; }
+  .dt-cd.dt-cd-open .dt-cd-caret { transform: rotate(180deg); }
+  .dt-swatch-strip { display: inline-flex; border-radius: 3px; overflow: hidden; border: 1px solid var(--rule); }
+  .dt-swatch { display: inline-block; width: 11px; height: 13px; }
+  .dt-swatch-strip-sm .dt-swatch { width: 9px; height: 11px; }
+  .dt-cd-list { display: none; position: absolute; top: calc(100% + 5px); right: 0; z-index: 70;
+    min-width: 200px; max-height: 70vh; overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.28); padding: 4px; }
+  .dt-cd.dt-cd-open .dt-cd-list { display: block; }
+  .dt-cd-option { display: flex; align-items: center; gap: 8px; padding: 5px 7px; border-radius: 4px;
+    cursor: pointer; color: var(--ink-soft); transition: background .12s, color .12s; }
+  .dt-cd-option .dt-cd-name { font-size: 10.5px; }
+  .dt-cd-option:hover, .dt-cd-option.dt-cd-active { background: var(--rule-soft); color: var(--ink); }
+  .dt-cd-option[aria-selected="true"] .dt-cd-name { color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) { .slide.active{animation:none;} .progress{transition:none;} }
+</style>
+</head>
+<body>
+<div class="topbar"><span class="wm">ambit</span><span class="crumb">the background</span><span class="respreview" role="note" aria-label="research preview"><span>research</span><span>preview</span></span><span class="spacer"></span><span class="theme-pick-label">theme</span><span id="theme-picker"></span><span class="count" id="count"></span></div>
+
+<div class="stage" id="stage">
+
+<!-- ============================= 1 · TITLE ============================= -->
+<section class="slide title split">
+  <div class="col-text">
+    <div class="kick">the background · how a dataset occupies an embedding space</div>
+    <div class="wm">ambit</div>
+    <div class="tagline">where a space loses <span class="accent">resolution</span> — and <span class="accent">which</span> items.</div>
+    <div class="title-sub">The context you need before the report makes sense: what crowding is, why it costs you, and the geometry ambit measures. A walk from first principles, sparse and from the ground up.</div>
+  </div>
+  <div class="col-fig">
+    <figure class="dg">
+      <svg viewBox="0 0 486 448" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A dandelion drawn in line art: a seed head of fine radiating spokes, each tipped with a pappus tuft, inside a faint round envelope; a few seeds drift off on the wind in the accent color, the items that have lost their room."><circle cx="204.0" cy="190.0" r="156.0" fill="none" stroke="var(--rule)" stroke-width="1" stroke-dasharray="2 5" opacity="0.55"/><path d="M204.0,190.0 C 194.0,280.0 230.0,350.0 218.0,458.0" fill="none" stroke="var(--ink-faint)" stroke-width="1.6" stroke-linecap="round"/><path d="M204.0,190.0 Q 212.9,203.3 230.8,210.9" fill="none" stroke="var(--ink-faint)" stroke-width="1.1" opacity="0.7"/><path d="M204.0,190.0 Q 195.1,203.3 177.2,210.9" fill="none" stroke="var(--ink-faint)" stroke-width="1.1" opacity="0.7"/><g><line x1="204.0" y1="190.0" x2="346.6" y2="182.4" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.5"/><line x1="204.0" y1="190.0" x2="345.3" y2="175.5" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="343.5" y2="156.0" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.5"/><line x1="204.0" y1="190.0" x2="337.8" y2="143.7" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="332.2" y2="129.9" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="327.1" y2="114.1" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.5"/><line x1="204.0" y1="190.0" x2="316.5" y2="108.7" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.5"/><line x1="204.0" y1="190.0" x2="303.1" y2="88.4" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.5"/><line x1="204.0" y1="190.0" x2="295.5" y2="74.3" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="285.1" y2="78.3" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.5"/><line x1="204.0" y1="190.0" x2="275.4" y2="69.8" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="265.1" y2="55.6" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.5"/><line x1="204.0" y1="190.0" x2="238.8" y2="52.6" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="220.6" y2="51.2" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="209.5" y2="46.3" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="189.4" y2="46.1" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="174.2" y2="46.7" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="171.8" y2="51.9" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="157.0" y2="59.0" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="142.6" y2="57.6" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="125.1" y2="73.3" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="112.9" y2="86.2" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="93.8" y2="93.5" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="82.0" y2="106.9" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="83.1" y2="107.4" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="71.9" y2="126.4" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="62.9" y2="150.8" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="66.1" y2="153.3" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="59.2" y2="182.0" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="57.9" y2="190.6" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="61.2" y2="199.3" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="59.4" y2="219.5" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="71.7" y2="241.3" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="77.6" y2="245.9" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="78.0" y2="256.7" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="92.7" y2="273.3" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="99.3" y2="289.3" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="104.4" y2="299.1" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="122.5" y2="307.6" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="135.5" y2="309.6" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="153.8" y2="321.8" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="271.4" y2="310.9" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="288.8" y2="307.9" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="299.7" y2="290.8" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="306.3" y2="293.9" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="319.6" y2="282.0" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="324.0" y2="258.0" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="341.2" y2="245.3" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="342.8" y2="231.3" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="340.9" y2="213.8" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/><line x1="204.0" y1="190.0" x2="343.4" y2="207.9" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.85"/></g><g><line x1="345.3" y1="175.5" x2="356.6" y2="179.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="356.6" cy="179.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="345.3" y1="175.5" x2="357.6" y2="177.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="345.3" y1="175.5" x2="358.5" y2="175.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="358.5" cy="175.4" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="345.3" y1="175.5" x2="357.6" y2="173.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="345.3" y1="175.5" x2="356.6" y2="171.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="356.6" cy="171.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="345.3" y1="175.5" x2="356.3" y2="168.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="337.8" y1="143.7" x2="350.4" y2="145.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="350.4" cy="145.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="337.8" y1="143.7" x2="350.8" y2="142.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="337.8" y1="143.7" x2="350.3" y2="140.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="350.3" cy="140.6" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="337.8" y1="143.7" x2="348.9" y2="138.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="337.8" y1="143.7" x2="349.3" y2="135.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="349.3" cy="135.6" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="337.8" y1="143.7" x2="346.5" y2="134.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="332.2" y1="129.9" x2="345.0" y2="130.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="345.0" cy="130.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="332.2" y1="129.9" x2="344.3" y2="127.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="332.2" y1="129.9" x2="344.9" y2="125.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="344.9" cy="125.3" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="332.2" y1="129.9" x2="342.7" y2="123.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="332.2" y1="129.9" x2="342.4" y2="121.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="342.4" cy="121.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="332.2" y1="129.9" x2="341.5" y2="118.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="295.5" y1="74.3" x2="308.4" y2="68.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="308.4" cy="68.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="295.5" y1="74.3" x2="306.0" y2="66.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="295.5" y1="74.3" x2="304.6" y2="64.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="304.6" cy="64.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="295.5" y1="74.3" x2="302.2" y2="64.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="295.5" y1="74.3" x2="301.2" y2="60.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="301.2" cy="60.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="295.5" y1="74.3" x2="298.4" y2="60.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="275.4" y1="69.8" x2="285.6" y2="63.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="285.6" cy="63.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="275.4" y1="69.8" x2="286.1" y2="59.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="275.4" y1="69.8" x2="283.2" y2="58.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="283.2" cy="58.9" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="275.4" y1="69.8" x2="281.1" y2="57.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="275.4" y1="69.8" x2="279.2" y2="55.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="279.2" cy="55.6" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="275.4" y1="69.8" x2="276.5" y2="55.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="238.8" y1="52.6" x2="248.0" y2="41.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="248.0" cy="41.8" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="238.8" y1="52.6" x2="246.0" y2="40.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="238.8" y1="52.6" x2="243.8" y2="38.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="243.8" cy="38.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="238.8" y1="52.6" x2="240.8" y2="39.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="238.8" y1="52.6" x2="238.5" y2="40.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="238.5" cy="40.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="238.8" y1="52.6" x2="235.8" y2="38.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="220.6" y1="51.2" x2="227.6" y2="40.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="227.6" cy="40.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="220.6" y1="51.2" x2="225.5" y2="39.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="220.6" y1="51.2" x2="223.2" y2="39.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="223.2" cy="39.3" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="220.6" y1="51.2" x2="221.0" y2="38.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="220.6" y1="51.2" x2="218.4" y2="37.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="218.4" cy="37.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="220.6" y1="51.2" x2="216.5" y2="39.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="209.5" y1="46.3" x2="215.8" y2="34.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="215.8" cy="34.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="209.5" y1="46.3" x2="213.8" y2="33.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="209.5" y1="46.3" x2="211.4" y2="31.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="211.4" cy="31.8" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="209.5" y1="46.3" x2="208.7" y2="31.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="209.5" y1="46.3" x2="206.2" y2="32.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="206.2" cy="32.9" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="209.5" y1="46.3" x2="203.9" y2="33.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="189.4" y1="46.1" x2="194.1" y2="33.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="194.1" cy="33.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="189.4" y1="46.1" x2="191.8" y2="32.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="189.4" y1="46.1" x2="189.3" y2="31.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="189.3" cy="31.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="189.4" y1="46.1" x2="186.9" y2="32.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="189.4" y1="46.1" x2="184.9" y2="34.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="184.9" cy="34.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="189.4" y1="46.1" x2="182.6" y2="35.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="174.2" y1="46.7" x2="177.6" y2="33.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="177.6" cy="33.3" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="174.2" y1="46.7" x2="175.1" y2="33.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="174.2" y1="46.7" x2="172.8" y2="34.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="172.8" cy="34.4" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="174.2" y1="46.7" x2="169.8" y2="32.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="174.2" y1="46.7" x2="167.8" y2="34.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="167.8" cy="34.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="174.2" y1="46.7" x2="166.5" y2="36.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="171.8" y1="51.9" x2="174.9" y2="38.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="174.9" cy="38.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="171.8" y1="51.9" x2="172.4" y2="39.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="171.8" y1="51.9" x2="170.0" y2="38.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="170.0" cy="38.8" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="171.8" y1="51.9" x2="167.9" y2="40.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="171.8" y1="51.9" x2="165.0" y2="39.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="165.0" cy="39.6" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="171.8" y1="51.9" x2="162.8" y2="41.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="157.0" y1="59.0" x2="158.5" y2="46.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="158.5" cy="46.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="157.0" y1="59.0" x2="156.1" y2="46.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="157.0" y1="59.0" x2="154.0" y2="47.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="154.0" cy="47.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="157.0" y1="59.0" x2="151.0" y2="46.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="157.0" y1="59.0" x2="148.9" y2="47.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="148.9" cy="47.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="157.0" y1="59.0" x2="148.0" y2="50.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="142.6" y1="57.6" x2="143.0" y2="43.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="143.0" cy="43.4" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="142.6" y1="57.6" x2="140.6" y2="44.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="142.6" y1="57.6" x2="137.9" y2="44.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="137.9" cy="44.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="142.6" y1="57.6" x2="136.5" y2="47.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="142.6" y1="57.6" x2="134.8" y2="48.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="134.8" cy="48.4" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="142.6" y1="57.6" x2="131.4" y2="48.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="125.1" y1="73.3" x2="123.1" y2="59.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="123.1" cy="59.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="125.1" y1="73.3" x2="120.4" y2="59.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="125.1" y1="73.3" x2="118.0" y2="60.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="118.0" cy="60.6" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="125.1" y1="73.3" x2="117.2" y2="63.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="125.1" y1="73.3" x2="113.9" y2="63.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="113.9" cy="63.9" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="125.1" y1="73.3" x2="114.0" y2="67.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="112.9" y1="86.2" x2="109.2" y2="72.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="109.2" cy="72.6" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="112.9" y1="86.2" x2="107.4" y2="74.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="112.9" y1="86.2" x2="105.5" y2="76.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="105.5" cy="76.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="112.9" y1="86.2" x2="102.5" y2="76.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="112.9" y1="86.2" x2="101.5" y2="78.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="101.5" cy="78.8" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="112.9" y1="86.2" x2="100.0" y2="80.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="93.8" y1="93.5" x2="88.7" y2="81.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="88.7" cy="81.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="93.8" y1="93.5" x2="86.0" y2="81.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="93.8" y1="93.5" x2="85.0" y2="84.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="85.0" cy="84.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="93.8" y1="93.5" x2="82.7" y2="85.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="93.8" y1="93.5" x2="80.6" y2="87.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="80.6" cy="87.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="93.8" y1="93.5" x2="82.2" y2="90.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="82.0" y1="106.9" x2="75.3" y2="95.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="75.3" cy="95.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="82.0" y1="106.9" x2="73.2" y2="96.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="82.0" y1="106.9" x2="71.4" y2="98.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="71.4" cy="98.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="82.0" y1="106.9" x2="69.0" y2="99.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="82.0" y1="106.9" x2="69.3" y2="102.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="69.3" cy="102.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="82.0" y1="106.9" x2="67.7" y2="104.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="83.1" y1="107.4" x2="76.0" y2="94.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="76.0" cy="94.8" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="83.1" y1="107.4" x2="73.9" y2="96.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="83.1" y1="107.4" x2="72.5" y2="98.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="72.5" cy="98.6" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="83.1" y1="107.4" x2="70.8" y2="100.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="83.1" y1="107.4" x2="69.9" y2="103.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="69.9" cy="103.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="83.1" y1="107.4" x2="70.6" y2="105.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="71.9" y1="126.4" x2="63.6" y2="115.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="63.6" cy="115.9" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="71.9" y1="126.4" x2="62.9" y2="118.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="71.9" y1="126.4" x2="59.4" y2="119.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="59.4" cy="119.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="71.9" y1="126.4" x2="58.7" y2="121.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="71.9" y1="126.4" x2="58.8" y2="124.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="58.8" cy="124.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="71.9" y1="126.4" x2="58.9" y2="126.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="62.9" y1="150.8" x2="53.1" y2="142.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="53.1" cy="142.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="62.9" y1="150.8" x2="51.9" y2="144.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="62.9" y1="150.8" x2="49.8" y2="145.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="49.8" cy="145.8" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="62.9" y1="150.8" x2="50.2" y2="148.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="62.9" y1="150.8" x2="49.4" y2="150.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="49.4" cy="150.9" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="62.9" y1="150.8" x2="50.1" y2="153.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="66.1" y1="153.3" x2="54.8" y2="143.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="54.8" cy="143.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="66.1" y1="153.3" x2="55.3" y2="146.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="66.1" y1="153.3" x2="54.5" y2="149.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="54.5" cy="149.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="66.1" y1="153.3" x2="51.3" y2="150.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="66.1" y1="153.3" x2="51.9" y2="153.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="51.9" cy="153.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="66.1" y1="153.3" x2="53.0" y2="155.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="59.2" y1="182.0" x2="48.0" y2="175.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="48.0" cy="175.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="59.2" y1="182.0" x2="45.6" y2="177.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="59.2" y1="182.0" x2="46.1" y2="180.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="46.1" cy="180.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="59.2" y1="182.0" x2="46.3" y2="182.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="59.2" y1="182.0" x2="45.1" y2="185.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="45.1" cy="185.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="59.2" y1="182.0" x2="46.3" y2="187.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="57.9" y1="190.6" x2="46.1" y2="184.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="46.1" cy="184.8" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="57.9" y1="190.6" x2="45.6" y2="187.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="57.9" y1="190.6" x2="44.9" y2="189.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="44.9" cy="189.4" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="57.9" y1="190.6" x2="45.9" y2="191.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="57.9" y1="190.6" x2="44.3" y2="194.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="44.3" cy="194.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="57.9" y1="190.6" x2="45.5" y2="196.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="61.2" y1="199.3" x2="48.7" y2="194.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="48.7" cy="194.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="61.2" y1="199.3" x2="46.8" y2="196.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="61.2" y1="199.3" x2="49.1" y2="199.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="49.1" cy="199.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="61.2" y1="199.3" x2="48.2" y2="201.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="61.2" y1="199.3" x2="49.6" y2="203.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="49.6" cy="203.4" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="61.2" y1="199.3" x2="50.8" y2="205.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="59.4" y1="219.5" x2="47.7" y2="216.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="47.7" cy="216.4" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="59.4" y1="219.5" x2="47.0" y2="218.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="59.4" y1="219.5" x2="45.6" y2="221.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="45.6" cy="221.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="59.4" y1="219.5" x2="45.9" y2="223.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="59.4" y1="219.5" x2="47.9" y2="225.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="47.9" cy="225.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="59.4" y1="219.5" x2="49.3" y2="227.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="71.7" y1="241.3" x2="58.4" y2="240.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="58.4" cy="240.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="71.7" y1="241.3" x2="58.5" y2="242.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="71.7" y1="241.3" x2="57.9" y2="245.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="57.9" cy="245.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="71.7" y1="241.3" x2="60.3" y2="246.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="71.7" y1="241.3" x2="60.5" y2="249.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="60.5" cy="249.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="71.7" y1="241.3" x2="62.1" y2="251.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="77.6" y1="245.9" x2="63.0" y2="245.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="63.0" cy="245.3" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="77.6" y1="245.9" x2="65.6" y2="247.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="77.6" y1="245.9" x2="65.1" y2="250.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="65.1" cy="250.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="77.6" y1="245.9" x2="65.2" y2="252.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="77.6" y1="245.9" x2="68.0" y2="253.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="68.0" cy="253.8" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="77.6" y1="245.9" x2="68.3" y2="257.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="78.0" y1="256.7" x2="65.8" y2="257.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="65.8" cy="257.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="78.0" y1="256.7" x2="64.0" y2="259.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="78.0" y1="256.7" x2="64.7" y2="262.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="64.7" cy="262.3" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="78.0" y1="256.7" x2="67.8" y2="263.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="78.0" y1="256.7" x2="67.9" y2="266.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="67.9" cy="266.4" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="78.0" y1="256.7" x2="70.3" y2="267.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="92.7" y1="273.3" x2="79.2" y2="275.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="79.2" cy="275.9" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="92.7" y1="273.3" x2="80.2" y2="278.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="92.7" y1="273.3" x2="82.4" y2="279.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="82.4" cy="279.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="92.7" y1="273.3" x2="82.9" y2="282.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="92.7" y1="273.3" x2="85.1" y2="283.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="85.1" cy="283.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="92.7" y1="273.3" x2="86.8" y2="285.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="99.3" y1="289.3" x2="86.5" y2="293.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="86.5" cy="293.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="99.3" y1="289.3" x2="87.8" y2="295.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="99.3" y1="289.3" x2="87.7" y2="298.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="87.7" cy="298.4" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="99.3" y1="289.3" x2="90.1" y2="299.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="99.3" y1="289.3" x2="92.0" y2="301.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="92.0" cy="301.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="99.3" y1="289.3" x2="94.2" y2="303.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="104.4" y1="299.1" x2="92.6" y2="303.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="92.6" cy="303.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="104.4" y1="299.1" x2="93.6" y2="305.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="104.4" y1="299.1" x2="95.2" y2="307.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="95.2" cy="307.4" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="104.4" y1="299.1" x2="96.3" y2="309.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="104.4" y1="299.1" x2="97.9" y2="312.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="97.9" cy="312.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="104.4" y1="299.1" x2="100.4" y2="312.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="122.5" y1="307.6" x2="111.6" y2="313.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="111.6" cy="313.6" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="122.5" y1="307.6" x2="111.0" y2="317.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="122.5" y1="307.6" x2="113.1" y2="318.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="113.1" cy="318.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="122.5" y1="307.6" x2="116.2" y2="318.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="122.5" y1="307.6" x2="118.2" y2="320.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="118.2" cy="320.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="122.5" y1="307.6" x2="120.6" y2="320.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="135.5" y1="309.6" x2="124.9" y2="316.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="124.9" cy="316.8" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="135.5" y1="309.6" x2="126.8" y2="318.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="135.5" y1="309.6" x2="127.2" y2="321.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="127.2" cy="321.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="135.5" y1="309.6" x2="130.5" y2="320.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="135.5" y1="309.6" x2="132.3" y2="322.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="132.3" cy="322.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="135.5" y1="309.6" x2="134.8" y2="322.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="153.8" y1="321.8" x2="144.2" y2="330.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="144.2" cy="330.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="153.8" y1="321.8" x2="146.5" y2="331.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="153.8" y1="321.8" x2="147.7" y2="334.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="147.7" cy="334.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="153.8" y1="321.8" x2="150.3" y2="334.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="153.8" y1="321.8" x2="152.7" y2="334.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="152.7" cy="334.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="153.8" y1="321.8" x2="155.0" y2="334.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="271.4" y1="310.9" x2="272.1" y2="325.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="272.1" cy="325.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="271.4" y1="310.9" x2="274.6" y2="324.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="271.4" y1="310.9" x2="276.8" y2="323.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="276.8" cy="323.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="271.4" y1="310.9" x2="279.6" y2="322.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="271.4" y1="310.9" x2="281.1" y2="320.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="281.1" cy="320.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="271.4" y1="310.9" x2="283.7" y2="319.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="288.8" y1="307.9" x2="291.2" y2="322.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="291.2" cy="322.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="288.8" y1="307.9" x2="293.6" y2="320.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="288.8" y1="307.9" x2="296.4" y2="320.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="296.4" cy="320.6" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="288.8" y1="307.9" x2="296.9" y2="317.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="288.8" y1="307.9" x2="299.1" y2="316.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="299.1" cy="316.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="288.8" y1="307.9" x2="301.9" y2="314.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="299.7" y1="290.8" x2="303.9" y2="304.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="303.9" cy="304.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="299.7" y1="290.8" x2="305.3" y2="301.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="299.7" y1="290.8" x2="307.5" y2="300.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="307.5" cy="300.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="299.7" y1="290.8" x2="309.3" y2="299.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="299.7" y1="290.8" x2="312.0" y2="298.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="312.0" cy="298.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="299.7" y1="290.8" x2="311.0" y2="294.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="306.3" y1="293.9" x2="310.5" y2="306.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="310.5" cy="306.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="306.3" y1="293.9" x2="312.8" y2="305.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="306.3" y1="293.9" x2="315.2" y2="304.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="315.2" cy="304.8" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="306.3" y1="293.9" x2="316.4" y2="302.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="306.3" y1="293.9" x2="316.7" y2="299.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="316.7" cy="299.9" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="306.3" y1="293.9" x2="319.6" y2="298.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="319.6" y1="282.0" x2="325.0" y2="293.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="325.0" cy="293.6" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="319.6" y1="282.0" x2="327.3" y2="292.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="319.6" y1="282.0" x2="329.1" y2="291.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="329.1" cy="291.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="319.6" y1="282.0" x2="331.8" y2="290.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="319.6" y1="282.0" x2="332.0" y2="287.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="332.0" cy="287.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="319.6" y1="282.0" x2="332.5" y2="284.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="324.0" y1="258.0" x2="332.4" y2="270.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="332.4" cy="270.3" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="324.0" y1="258.0" x2="334.5" y2="268.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="324.0" y1="258.0" x2="335.9" y2="266.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="335.9" cy="266.3" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="324.0" y1="258.0" x2="336.5" y2="263.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="324.0" y1="258.0" x2="337.9" y2="261.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="337.9" cy="261.4" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="324.0" y1="258.0" x2="337.1" y2="258.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="341.2" y1="245.3" x2="350.9" y2="256.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="350.9" cy="256.2" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="341.2" y1="245.3" x2="350.8" y2="252.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="341.2" y1="245.3" x2="352.3" y2="251.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="352.3" cy="251.1" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="341.2" y1="245.3" x2="354.7" y2="249.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="341.2" y1="245.3" x2="353.7" y2="246.7" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="353.7" cy="246.7" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="341.2" y1="245.3" x2="353.4" y2="244.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="342.8" y1="231.3" x2="353.7" y2="241.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="353.7" cy="241.4" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="342.8" y1="231.3" x2="353.6" y2="238.1" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="342.8" y1="231.3" x2="355.8" y2="236.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="355.8" cy="236.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="342.8" y1="231.3" x2="355.7" y2="233.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="342.8" y1="231.3" x2="356.9" y2="231.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="356.9" cy="231.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="342.8" y1="231.3" x2="357.1" y2="228.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="340.9" y1="213.8" x2="352.2" y2="222.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="352.2" cy="222.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="340.9" y1="213.8" x2="354.4" y2="220.2" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="340.9" y1="213.8" x2="354.3" y2="217.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="354.3" cy="217.4" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="340.9" y1="213.8" x2="355.1" y2="214.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="340.9" y1="213.8" x2="353.0" y2="212.5" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="353.0" cy="212.5" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="340.9" y1="213.8" x2="355.2" y2="209.6" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="343.4" y1="207.9" x2="353.8" y2="214.8" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="353.8" cy="214.8" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="343.4" y1="207.9" x2="356.0" y2="213.3" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="343.4" y1="207.9" x2="357.2" y2="211.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="357.2" cy="211.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="343.4" y1="207.9" x2="356.9" y2="208.4" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><line x1="343.4" y1="207.9" x2="356.6" y2="206.0" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/><circle cx="356.6" cy="206.0" r="0.7" fill="var(--ink-soft)" opacity="0.45"/><line x1="343.4" y1="207.9" x2="355.2" y2="203.9" stroke="var(--ink-soft)" stroke-width="0.6" opacity="0.5"/></g><circle cx="204.0" cy="190.0" r="3.4" fill="var(--ink)"/><circle cx="204.0" cy="190.0" r="6.5" fill="none" stroke="var(--ink-faint)" stroke-width="0.8" opacity="0.7"/><g><line x1="369.5" y1="124.4" x2="380.1" y2="127.1" stroke="var(--accent)" stroke-width="0.85" opacity="0.95"/><line x1="369.5" y1="124.4" x2="380.5" y2="124.8" stroke="var(--accent)" stroke-width="0.85" opacity="0.95"/><line x1="369.5" y1="124.4" x2="380.3" y2="122.5" stroke="var(--accent)" stroke-width="0.85" opacity="0.95"/><line x1="369.5" y1="124.4" x2="379.7" y2="120.3" stroke="var(--accent)" stroke-width="0.85" opacity="0.95"/><line x1="369.5" y1="124.4" x2="378.6" y2="118.3" stroke="var(--accent)" stroke-width="0.85" opacity="0.95"/><line x1="369.5" y1="124.4" x2="377.2" y2="116.5" stroke="var(--accent)" stroke-width="0.85" opacity="0.95"/><line x1="369.5" y1="124.4" x2="375.3" y2="115.1" stroke="var(--accent)" stroke-width="0.85" opacity="0.95"/><path d="M369.5,124.4 Q 366.5,123.0 363.0,127.0" fill="none" stroke="var(--accent)" stroke-width="0.9" opacity="0.95"/><circle cx="363.0" cy="127.0" r="1.5" fill="var(--accent)" opacity="0.95"/><line x1="399.4" y1="89.0" x2="409.4" y2="90.5" stroke="var(--accent)" stroke-width="0.85" opacity="0.82"/><line x1="399.4" y1="89.0" x2="409.5" y2="88.4" stroke="var(--accent)" stroke-width="0.85" opacity="0.82"/><line x1="399.4" y1="89.0" x2="409.2" y2="86.3" stroke="var(--accent)" stroke-width="0.85" opacity="0.82"/><line x1="399.4" y1="89.0" x2="408.4" y2="84.3" stroke="var(--accent)" stroke-width="0.85" opacity="0.82"/><line x1="399.4" y1="89.0" x2="407.3" y2="82.6" stroke="var(--accent)" stroke-width="0.85" opacity="0.82"/><line x1="399.4" y1="89.0" x2="405.8" y2="81.1" stroke="var(--accent)" stroke-width="0.85" opacity="0.82"/><line x1="399.4" y1="89.0" x2="404.0" y2="79.9" stroke="var(--accent)" stroke-width="0.85" opacity="0.82"/><path d="M399.4,89.0 Q 396.4,87.9 393.7,91.9" fill="none" stroke="var(--accent)" stroke-width="0.9" opacity="0.82"/><circle cx="393.7" cy="91.9" r="1.4" fill="var(--accent)" opacity="0.82"/><line x1="410.2" y1="31.7" x2="419.5" y2="31.4" stroke="var(--accent)" stroke-width="0.85" opacity="0.62"/><line x1="410.2" y1="31.7" x2="419.2" y2="29.5" stroke="var(--accent)" stroke-width="0.85" opacity="0.62"/><line x1="410.2" y1="31.7" x2="418.6" y2="27.7" stroke="var(--accent)" stroke-width="0.85" opacity="0.62"/><line x1="410.2" y1="31.7" x2="417.6" y2="26.0" stroke="var(--accent)" stroke-width="0.85" opacity="0.62"/><line x1="410.2" y1="31.7" x2="416.2" y2="24.6" stroke="var(--accent)" stroke-width="0.85" opacity="0.62"/><line x1="410.2" y1="31.7" x2="414.6" y2="23.5" stroke="var(--accent)" stroke-width="0.85" opacity="0.62"/><line x1="410.2" y1="31.7" x2="412.9" y2="22.8" stroke="var(--accent)" stroke-width="0.85" opacity="0.62"/><path d="M410.2,31.7 Q 407.2,31.2 405.6,35.2" fill="none" stroke="var(--accent)" stroke-width="0.9" opacity="0.62"/><circle cx="405.6" cy="35.2" r="1.3" fill="var(--accent)" opacity="0.62"/><line x1="479.7" y1="76.9" x2="487.6" y2="78.8" stroke="var(--accent)" stroke-width="0.85" opacity="0.45"/><line x1="479.7" y1="76.9" x2="487.8" y2="77.1" stroke="var(--accent)" stroke-width="0.85" opacity="0.45"/><line x1="479.7" y1="76.9" x2="487.7" y2="75.4" stroke="var(--accent)" stroke-width="0.85" opacity="0.45"/><line x1="479.7" y1="76.9" x2="487.2" y2="73.8" stroke="var(--accent)" stroke-width="0.85" opacity="0.45"/><line x1="479.7" y1="76.9" x2="486.4" y2="72.3" stroke="var(--accent)" stroke-width="0.85" opacity="0.45"/><line x1="479.7" y1="76.9" x2="485.3" y2="71.0" stroke="var(--accent)" stroke-width="0.85" opacity="0.45"/><line x1="479.7" y1="76.9" x2="484.0" y2="69.9" stroke="var(--accent)" stroke-width="0.85" opacity="0.45"/><path d="M479.7,76.9 Q 476.7,74.8 474.9,78.8" fill="none" stroke="var(--accent)" stroke-width="0.9" opacity="0.45"/><circle cx="474.9" cy="78.8" r="1.1" fill="var(--accent)" opacity="0.45"/></g></svg>
+      <figcaption><b>The picture to hold.</b> A globally even cloud whose fine neighborhoods can still be crammed — and a few items drifting out of room.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= 2 · THE PROBLEM ============================= -->
+<section class="slide split">
+  <div class="col-text">
+    <div class="kick">the problem</div>
+    <h2>Crowding is a loss of <span class="accent">resolution</span></h2>
+    <div class="body">
+      <p>An embedding model is only as useful as its ability to keep <b>distinct things distinct</b>. When unrelated items land at nearly the same direction, every metric built on that geometry — cosine, nearest-neighbor retrieval, clustering, dedup — inherits the ambiguity.</p>
+      <p>The space has high nominal <b>capacity</b> (say 768 dimensions) but low <b>effective resolution</b> in practice. The tell is simple: take many random pairs and read their cosine. Healthy spaces keep unrelated pairs near zero; a crowded space scores <em>every</em> pair high, so the signal you care about barely rises above the floor.</p>
+    </div>
+    <div class="note"><strong>Distinct is not only unrelated.</strong> A set of genuinely <em>related</em> items packed too tightly is a harm too — you lose the resolution to tell <span class="acc">which</span> of several relevant items is best. ambit measures crowding as <b>local density</b>: relatedness-agnostic, unsupervised.</div>
+  </div>
+  <div class="col-fig">
+    <figure class="dg">
+      <svg viewBox="0 0 470 470" role="img" aria-label="Two cosine histograms stacked. Top: a healthy space, the mass of random-pair cosines centred on zero with one related pair standing out far to the right. Bottom: a crowded space, the whole mass shoved toward one, the related pair lost in the pile.">
+        <!-- healthy -->
+        <text x="20" y="26" font-size="13" fill="var(--good)">healthy — random pairs ≈ 0</text>
+        <line x1="20" y1="170" x2="450" y2="170" stroke="var(--rule)" stroke-width="1"/>
+        <line x1="235" y1="40" x2="235" y2="176" stroke="var(--ink-faint)" stroke-width="1" stroke-dasharray="3 4"/>
+        <text x="235" y="192" font-size="11" fill="var(--ink-faint)" text-anchor="middle">0</text>
+        <text x="450" y="192" font-size="11" fill="var(--ink-faint)" text-anchor="end">cos = 1</text>
+        <path d="M120,170 C 175,170 200,58 235,58 C 270,58 295,170 350,170 Z" fill="var(--good)" fill-opacity="0.18" stroke="var(--good)" stroke-width="1.6"/>
+        <line x1="408" y1="170" x2="408" y2="96" stroke="var(--accent)" stroke-width="2.4"/>
+        <circle cx="408" cy="92" r="3.4" fill="var(--accent)"/>
+        <text x="408" y="84" font-size="10.5" fill="var(--accent)" text-anchor="middle">a related pair</text>
+        <!-- crowded -->
+        <text x="20" y="262" font-size="13" fill="var(--bad)">crowded — the cone</text>
+        <line x1="20" y1="430" x2="450" y2="430" stroke="var(--rule)" stroke-width="1"/>
+        <line x1="235" y1="300" x2="235" y2="436" stroke="var(--ink-faint)" stroke-width="1" stroke-dasharray="3 4"/>
+        <text x="235" y="452" font-size="11" fill="var(--ink-faint)" text-anchor="middle">0</text>
+        <text x="450" y="452" font-size="11" fill="var(--ink-faint)" text-anchor="end">cos = 1</text>
+        <path d="M300,430 C 350,430 372,300 400,300 C 428,300 444,430 452,430 Z" fill="var(--bad)" fill-opacity="0.16" stroke="var(--bad)" stroke-width="1.6"/>
+        <line x1="430" y1="430" x2="430" y2="320" stroke="var(--accent)" stroke-width="2.4" opacity="0.85"/>
+        <circle cx="430" cy="316" r="3.4" fill="var(--accent)" opacity="0.85"/>
+        <text x="384" y="298" font-size="10.5" fill="var(--accent)" text-anchor="middle">lost in the pile</text>
+      </svg>
+      <figcaption>The same related pair, two spaces. On the right, the dynamic range cosine can express has been compressed — the thing you wanted to find no longer stands out.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= 3 · ISOTROPY vs ANISOTROPY (duo, live 3D) ============================= -->
+<section class="slide duo">
+  <div class="duo-head">
+    <div class="kick">the core axis</div>
+    <h2>Isotropy <span class="faint">vs</span> <span class="accent">anisotropy</span></h2>
+    <div class="body"><p><b class="good">Isotropy</b> (healthy): variance is spread across directions; the cloud fills the space; random pairs are ~orthogonal. <b class="bad">Anisotropy</b> (the crowding you observe): the cloud concentrates into a narrow <b>cone</b>, sharing a dominant direction, so items look similar regardless of meaning. Drag either cloud to rotate it.</p></div>
+  </div>
+  <div class="duo-figs">
+    <figure class="dg">
+      <div class="cv3d" data-cloud="sphere" data-h="320" role="img" aria-label="An isotropic point cloud: points fill a sphere evenly in three dimensions, no preferred direction."></div>
+      <figcaption><b class="good">Isotropic</b> — variance fills every axis; no preferred direction. Random pairs land near orthogonal.</figcaption>
+    </figure>
+    <figure class="dg">
+      <div class="cv3d" data-cloud="cone" data-h="320" role="img" aria-label="An anisotropic point cloud: the points collapse into a narrow cone along one direction."></div>
+      <figcaption><b class="bad">Anisotropic</b> — the cloud is a thin cone; one direction dominates. Every pair shares it, so all cosines inflate.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= 4 · THE GEOMETRY IN ONE PICTURE ============================= -->
+<section class="slide split">
+  <div class="col-text">
+    <div class="kick">the geometry, in one line</div>
+    <h2>A shared part swamps the residual</h2>
+    <div class="body">
+      <p>Write each embedding as a shared component plus an item-specific residual,
+      <code>x<sub>i</sub> = &mu; + r<sub>i</sub></code>. The cosine between two items is</p>
+      <div class="eq">cos(x<sub>i</sub>,&nbsp;x<sub>j</sub>) <span class="op">=</span> <span class="v">(&mu;+r<sub>i</sub>)&middot;(&mu;+r<sub>j</sub>)</span> / ‖&mu;+r<sub>i</sub>‖&nbsp;‖&mu;+r<sub>j</sub>‖</div>
+      <p>When the shared part <code>&mu;</code> (or a few dominant directions) is large next to the residuals, the numerator is dominated by <code>&mu;&middot;&mu;</code> for <em>every</em> pair — so all cosines inflate toward one common value. That is the cone.</p>
+    </div>
+    <div class="note">The information you want lives in the residuals <code>r<sub>i</sub></code>, but it is buried under the shared direction. The same picture explains why ambit reads cosine against an <span class="acc">isotropic reference</span> rather than a fixed number.</div>
+  </div>
+  <div class="col-fig">
+    <figure class="dg">
+      <svg viewBox="0 0 430 410" role="img" aria-label="A vector diagram: a long shared mean vector mu, and two short item residuals branching off its tip. Because mu dominates, the two full vectors point almost the same way, so the small angle between residuals is invisible.">
+        <defs>
+          <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--ink-faint)"/></marker>
+          <marker id="ahr" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--accent)"/></marker>
+        </defs>
+        <!-- origin -->
+        <circle cx="70" cy="350" r="3" fill="var(--ink)"/>
+        <text x="58" y="368" font-size="12" fill="var(--ink-faint)">o</text>
+        <!-- shared mean mu -->
+        <line x1="70" y1="350" x2="300" y2="120" stroke="var(--ink-faint)" stroke-width="2.4" marker-end="url(#ah)"/>
+        <text x="176" y="218" font-size="15" fill="var(--ink-soft)" transform="rotate(-45 176 218)">&mu; (shared)</text>
+        <!-- residuals off the tip -->
+        <line x1="300" y1="120" x2="350" y2="86" stroke="var(--accent)" stroke-width="2" marker-end="url(#ahr)"/>
+        <line x1="300" y1="120" x2="338" y2="150" stroke="var(--accent)" stroke-width="2" marker-end="url(#ahr)"/>
+        <text x="360" y="78" font-size="12.5" fill="var(--accent)">r&#8202;<tspan dy="2" font-size="9">i</tspan></text>
+        <text x="346" y="166" font-size="12.5" fill="var(--accent)">r&#8202;<tspan dy="2" font-size="9">j</tspan></text>
+        <!-- full vectors x_i, x_j, nearly collinear -->
+        <line x1="70" y1="350" x2="350" y2="86" stroke="var(--ink)" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/>
+        <line x1="70" y1="350" x2="338" y2="150" stroke="var(--ink)" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/>
+        <!-- the tiny angle arc -->
+        <polyline points="146.40,277.97 148.49,280.26 150.42,282.49 152.28,284.77 154.15,287.20" fill="none" stroke="var(--bad)" stroke-width="2"/>
+        <line x1="190" y1="334" x2="156" y2="288" stroke="var(--bad)" stroke-width="1" opacity="0.65"/><text x="192" y="346" font-size="11.5" fill="var(--bad)">tiny angle &rarr; cos &asymp; 1</text>
+      </svg>
+      <figcaption>Two items differ only in their short residuals, but the long shared <code>&mu;</code> makes the full vectors nearly collinear — the difference is real and invisible at once.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= 5 · WHY IT MATTERS ============================= -->
+<section class="slide split">
+  <div class="col-text">
+    <div class="kick">why it matters</div>
+    <h2>Low resolution caps everything built on top</h2>
+    <div class="body"><p>Crowding silently lowers the ceiling of every downstream task — and it does so quietly, because the embeddings still <em>look</em> fine.</p></div>
+    <ul class="num-list">
+      <li><b>Retrieval / RAG</b> — a compressed similarity range puts the right item barely above the wrong ones; top-k gets noisy and thresholds stop meaning anything.</li>
+      <li><b>Clustering &amp; dedup</b> — crowded regions merge distinct entities; boundaries blur.</li>
+      <li><b>Monitoring &amp; drift</b> — if the baseline is already a cone, there is little headroom to detect a real distributional shift.</li>
+      <li><b>Model selection</b> — effective dimensionality is a label-free predictor of downstream quality, so resolution can rank encoders before you have task labels.</li>
+    </ul>
+  </div>
+  <div class="col-fig">
+    <figure class="dg">
+      <svg viewBox="0 0 430 400" role="img" aria-label="A retrieval ranking shown twice. On the healthy side, the top match sits well above the rest, a clear margin. On the crowded side, the top three bars are nearly the same height, so the ranking is fragile.">
+        <text x="16" y="24" font-size="13" fill="var(--good)">resolved</text>
+        <text x="240" y="24" font-size="13" fill="var(--bad)">crowded</text>
+        <!-- resolved bars -->
+        <g>
+          <rect x="16" y="60" width="180" height="20" rx="3" fill="var(--accent)"/>
+          <rect x="16" y="92" width="96"  height="20" rx="3" fill="var(--ink-faint)" opacity="0.6"/>
+          <rect x="16" y="124" width="80" height="20" rx="3" fill="var(--ink-faint)" opacity="0.5"/>
+          <rect x="16" y="156" width="64" height="20" rx="3" fill="var(--ink-faint)" opacity="0.45"/>
+          <text x="200" y="75" font-size="11" fill="var(--good)">top-1</text>
+        </g>
+        <!-- margin bracket -->
+        <line x1="206" y1="70" x2="206" y2="102" stroke="var(--good)" stroke-width="1.4"/>
+        <text x="212" y="92" font-size="10.5" fill="var(--good)">wide margin</text>
+        <!-- crowded bars -->
+        <g>
+          <rect x="240" y="60"  width="168" height="20" rx="3" fill="var(--accent)"/>
+          <rect x="240" y="92"  width="160" height="20" rx="3" fill="var(--ink-faint)" opacity="0.75"/>
+          <rect x="240" y="124" width="156" height="20" rx="3" fill="var(--ink-faint)" opacity="0.7"/>
+          <rect x="240" y="156" width="150" height="20" rx="3" fill="var(--ink-faint)" opacity="0.65"/>
+        </g>
+        <line x1="416" y1="70" x2="416" y2="102" stroke="var(--bad)" stroke-width="1.4"/>
+        <text x="312" y="196" font-size="10.5" fill="var(--bad)" text-anchor="middle">top-1 barely beats top-2</text>
+        <!-- the floor lines -->
+        <line x1="16" y1="240" x2="414" y2="240" stroke="var(--rule)"/>
+        <text x="16" y="300" font-size="13" fill="var(--ink-soft)">A handful of <tspan fill="var(--bad)">hubs</tspan> absorb most</text>
+        <text x="16" y="320" font-size="13" fill="var(--ink-soft)">queries; the rest are nobody's</text>
+        <text x="16" y="340" font-size="13" fill="var(--ink-soft)">neighbor. Retrieval becomes</text>
+        <text x="16" y="360" font-size="13" fill="var(--ink-soft)">fragile from both ends.</text>
+      </svg>
+      <figcaption>Same query, two spaces. The margin between top-1 and the rest is the resolution you actually spend at retrieval time.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= 6 · THE PIPELINE (method) ============================= -->
+<!-- ============================= 7 · RESERVOIR & SCALE ============================= -->
+<!-- ============================= 8 · METRICS I — occupancy & collapse ============================= -->
+<section class="slide method">
+  <div class="kick">the metrics · occupancy</div>
+  <h2>How much space, and how anisotropic</h2>
+  <p class="sub">Each scalar reads against an <span class="accent">isotropic reference</span> — the value an even cloud of the same dimension would give — never a fixed threshold.</p>
+  <div class="mgrid">
+    <div class="met"><div class="nm">Mean random-pair cosine <span class="tag">anisotropy</span></div><div class="ds">The anisotropy fingerprint: the average cosine of unrelated pairs. <span class="hv">&asymp; 0 is healthy</span>; mass shifted toward 1 is a <span class="pa">cone</span>. For iid points on a unit d-sphere the reference is &asymp; N(0, 1/d).</div></div>
+    <div class="met"><div class="nm">IsoScore <span class="tag">utilization</span></div><div class="ds">How uniformly variance fills the space, in [0,1]. <span class="hv">&rarr; 1 means the space is fully used</span>; low means most of the nominal capacity sits idle.</div></div>
+    <div class="met"><div class="nm">Effective rank / participation ratio <span class="tag">collapse</span></div><div class="ds">Continuous effective dimensionality from the covariance spectrum. <span class="pa">Far below the nominal dimension &rarr; dimensional collapse</span> — the cloud lives on a thin subspace.</div></div>
+    <div class="met"><div class="nm">Uniformity <span class="tag">spread</span></div><div class="ds">Wang–Isola spread on the hypersphere, a single label-free scalar — <span class="hv">more negative = more uniform</span>. It reports spread only; it makes no claim about whether the right things ended up together.</div></div>
+  </div>
+  <div class="note" style="max-width:1120px;"><strong>Unsupervised by design.</strong> ambit reports <b>uniformity</b>, not <em>alignment</em>: uniformity is readable from the embeddings alone, while alignment needs known positive pairs. No labels, no gold pairs.</div>
+</section>
+
+<!-- ============================= 9 · METRICS II — resolution & retrieval ============================= -->
+<section class="slide method">
+  <div class="kick">the metrics · resolution</div>
+  <h2>How distinct, item by item</h2>
+  <p class="sub">Occupancy describes the whole cloud; these describe how well it resolves a single neighborhood — the currency retrieval actually spends.</p>
+  <div class="mgrid">
+    <div class="met"><div class="nm">NN cosine margin <span class="tag">within-neighborhood</span></div><div class="ds">Per item, cos(top-1) − cos(top-2): how much the best match beats the runner-up. <span class="pa">A thin margin</span> means the ranking is fragile even when the neighbors are all on-topic.</div></div>
+    <div class="met"><div class="nm">Hubness (k-occurrence skew) <span class="tag">retrieval</span></div><div class="ds">How lopsided the "is somebody's neighbor" count is. <span class="pa">High skew</span> = a few hubs absorb most queries while anti-hubs are nobody's neighbor — the retrieval-side fingerprint of crowding.</div></div>
+    <div class="met"><div class="nm">Separability <span class="tag">partition</span></div><div class="ds">Does a partition occupy distinct regions? Centroid-cosine matrix + kNN purity + silhouette / Fisher. Works on <b>provided labels</b> <em>or</em> ambit's own discovered clusters — for which it adds <b>stability</b> and a <b>modal count</b>.</div></div>
+    <div class="met"><div class="nm">Local density field <span class="tag">multiscale</span></div><div class="ds">Per item, how concentrated its neighborhood is, read at several scales. Localizes <b>crowded pockets</b> a global scalar hides — one mode near the reference is roomy; a separated high mode is a pocket.</div></div>
+  </div>
+  <div class="note" style="max-width:1120px;"><strong>Local, not just global.</strong> A single global number is <span class="acc">non-collapsible</span> over clusters — a globally even cloud can be a union of locally collapsed cones. The density field localizes <em>which</em> neighborhoods are crammed.</div>
+</section>
+
+<!-- ============================= 10 · LOCAL vs GLOBAL (the same fact at several scales) ============================= -->
+<section class="slide split">
+  <div class="col-text">
+    <div class="kick">local vs global</div>
+    <h2>A globally even cloud can hide local cones</h2>
+    <div class="body">
+      <p>Anisotropy is often a <em>global</em> artifact masking <em>local</em> structure: a space can be roomy overall and crammed inside a sub-population. A single global scalar is <b>non-collapsible</b> over clusters — average the parts and the pocket disappears.</p>
+      <p>So ambit reads the <em>distribution</em> of local concentration at several scales, calibrated against a density-matched isotropic reference. The dandelion is globally a sphere; some of its tufts are tight cones.</p>
+    </div>
+    <div class="note"><strong>Read both scales.</strong> "Crowded globally" and "useful locally" can coexist — and the reverse. A trustworthy diagnostic localizes the pocket instead of scoring the whole space at once.</div>
+  </div>
+  <div class="col-fig">
+    <figure class="dg">
+      <svg viewBox="0 0 440 420" role="img" aria-label="A round, evenly filled cloud whose interior hides three tight sub-clusters drawn as small cones. The whole is isotropic; the parts are not.">
+        <circle cx="220" cy="200" r="170" fill="none" stroke="var(--rule)" stroke-dasharray="2 5"/>
+        <!-- scattered roomy points -->
+        <g fill="var(--ink-faint)" opacity="0.55">
+          <circle cx="120" cy="120" r="2.4"/><circle cx="300" cy="110" r="2.4"/><circle cx="350" cy="220" r="2.4"/><circle cx="100" cy="250" r="2.4"/><circle cx="160" cy="330" r="2.4"/><circle cx="300" cy="320" r="2.4"/><circle cx="240" cy="90" r="2.4"/><circle cx="80" cy="190" r="2.4"/><circle cx="360" cy="160" r="2.4"/><circle cx="200" cy="360" r="2.4"/><circle cx="135" cy="290" r="2.4"/><circle cx="330" cy="270" r="2.4"/>
+        </g>
+        <!-- three crowded pockets, drawn dense + ringed -->
+        <g>
+          <circle cx="160" cy="180" r="26" fill="var(--bad)" fill-opacity="0.12" stroke="var(--bad)" stroke-width="1.2"/>
+          <g fill="var(--bad)"><circle cx="156" cy="176" r="2"/><circle cx="164" cy="178" r="2"/><circle cx="160" cy="184" r="2"/><circle cx="168" cy="186" r="2"/><circle cx="153" cy="184" r="2"/><circle cx="162" cy="172" r="2"/></g>
+        </g>
+        <g>
+          <circle cx="280" cy="230" r="24" fill="var(--bad)" fill-opacity="0.12" stroke="var(--bad)" stroke-width="1.2"/>
+          <g fill="var(--bad)"><circle cx="276" cy="226" r="2"/><circle cx="284" cy="228" r="2"/><circle cx="280" cy="234" r="2"/><circle cx="288" cy="234" r="2"/><circle cx="273" cy="232" r="2"/></g>
+        </g>
+        <g>
+          <circle cx="225" cy="290" r="20" fill="var(--bad)" fill-opacity="0.12" stroke="var(--bad)" stroke-width="1.2"/>
+          <g fill="var(--bad)"><circle cx="221" cy="286" r="2"/><circle cx="229" cy="288" r="2"/><circle cx="225" cy="294" r="2"/><circle cx="231" cy="293" r="2"/></g>
+        </g>
+        <text x="220" y="34" font-size="12.5" fill="var(--ink-soft)" text-anchor="middle">globally isotropic — the bulk fills the envelope</text>
+        <text x="220" y="404" font-size="12.5" fill="var(--bad)" text-anchor="middle">locally crowded — pockets a global average erases</text>
+      </svg>
+      <figcaption>Average the whole and it reads healthy. The density field reads each scale, so the three pockets light up instead of washing out.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= 11 · COMPARING TWO EMBEDDINGS (the same items, two ways) ============================= -->
+<section class="slide split">
+  <div class="col-text">
+    <div class="kick">comparison · the same items, two ways</div>
+    <h2>Local neighbor-overlap <span class="faint">vs</span> global <span class="accent">CKA</span></h2>
+    <div class="body">
+      <p>A second, relational question: take <b>one dataset embedded two ways</b> — two encoders, or two configurations of one model, aligned by id — and ask how much, and <em>where</em>, the two representations differ. This compares <em>geometries</em>, not coordinates: the two spaces need not even share a dimensionality.</p>
+    </div>
+    <div class="compare">
+      <div class="box"><div class="t acc">Local — neighbor overlap</div>Per item, the fraction of its top-k neighbors shared between the two graphs. <b>Retrieval-relevant</b> and <b>dimension-agnostic</b>: it compares neighbor <em>sets</em>, and lights up exactly the items whose neighborhoods were rewritten.</div>
+      <div class="box"><div class="t acc">Global — CKA</div>One similarity over the centered second-moment structure of <em>all</em> pairs. Invariant to <b>rotation, scale, and permutation</b> — it asks whether the two spaces encoded the same overall structure, but is blind to <em>which</em> items moved.</div>
+    </div>
+    <div class="note">They can disagree informatively: <span class="acc">high CKA + low overlap</span> is a re-skin that preserves gross structure while reshuffling fine neighborhoods. ambit pairs them with <b>MMD</b>, <b>Procrustes</b>, a drift field, and a distance-distribution shift.</div>
+  </div>
+  <div class="col-fig">
+    <figure class="dg">
+      <svg viewBox="0 0 440 420" role="img" aria-label="The same five labelled items in two spaces, A and B. A global rotation arrow shows CKA reads them as similar; meanwhile lines tracking each item's neighbors show one item's neighborhood has been reshuffled while the rest hold.">
+        <text x="80" y="26" font-size="13" fill="var(--ink-soft)" text-anchor="middle">space A</text>
+        <text x="360" y="26" font-size="13" fill="var(--ink-soft)" text-anchor="middle">space B</text>
+        <!-- A cluster -->
+        <g>
+          <circle cx="60" cy="120" r="5" fill="var(--accent)"/><text x="60" y="106" font-size="10" fill="var(--ink-faint)" text-anchor="middle">1</text>
+          <circle cx="96" cy="140" r="5" fill="var(--ink-faint)"/><text x="96" y="126" font-size="10" fill="var(--ink-faint)" text-anchor="middle">2</text>
+          <circle cx="74" cy="172" r="5" fill="var(--ink-faint)"/><text x="58" y="178" font-size="10" fill="var(--ink-faint)" text-anchor="middle">3</text>
+          <circle cx="120" cy="200" r="5" fill="var(--ink-faint)"/><text x="120" y="220" font-size="10" fill="var(--ink-faint)" text-anchor="middle">4</text>
+          <circle cx="64" cy="240" r="5" fill="var(--bad)"/><text x="48" y="244" font-size="10" fill="var(--ink-faint)" text-anchor="middle">5</text>
+        </g>
+        <!-- B cluster: rotated, but item 5 has wandered into the pack -->
+        <g>
+          <circle cx="356" cy="150" r="5" fill="var(--accent)"/><text x="356" y="136" font-size="10" fill="var(--ink-faint)" text-anchor="middle">1</text>
+          <circle cx="332" cy="178" r="5" fill="var(--ink-faint)"/><text x="316" y="182" font-size="10" fill="var(--ink-faint)" text-anchor="middle">2</text>
+          <circle cx="372" cy="186" r="5" fill="var(--ink-faint)"/><text x="386" y="190" font-size="10" fill="var(--ink-faint)" text-anchor="middle">3</text>
+          <circle cx="348" cy="214" r="5" fill="var(--ink-faint)"/><text x="348" y="234" font-size="10" fill="var(--ink-faint)" text-anchor="middle">4</text>
+          <circle cx="356" cy="186" r="5.5" fill="var(--bad)"/><text x="372" y="172" font-size="10" fill="var(--bad)" text-anchor="middle">5</text>
+        </g>
+        <!-- global similarity arrow -->
+        <path d="M150,300 C 220,330 280,330 320,300" fill="none" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#cka)"/>
+        <defs><marker id="cka" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--accent)"/></marker></defs>
+        <text x="235" y="296" font-size="12" fill="var(--accent)" text-anchor="middle">CKA: high — same overall shape</text>
+        <!-- item-5 drift call-out -->
+        <path d="M70,250 C 160,360 300,360 350,196" fill="none" stroke="var(--bad)" stroke-width="1.4" stroke-dasharray="4 4"/>
+        <text x="220" y="384" font-size="12" fill="var(--bad)" text-anchor="middle">overlap: item 5's neighborhood was rewritten</text>
+      </svg>
+      <figcaption>Global structure agrees; one item's neighbors did not. The two scales answer different questions — and ambit reads both.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= 12 · HUBNESS & RECIPROCAL kNN ============================= -->
+<section class="slide split">
+  <div class="col-text">
+    <div class="kick">hubness · reciprocal kNN</div>
+    <h2>Suppress the hubs, read the real structure</h2>
+    <div class="body">
+      <p>In crowded high-dimensional spaces a few points become the nearest neighbor of disproportionately many queries — <b>hubs</b> — while others are nobody's neighbor — <b>anti-hubs</b>. Hubness degrades kNN retrieval and is a practical fingerprint of poor resolution. ambit reports the <b>k-occurrence skew</b>.</p>
+      <p><code>--mutual-knn</code> recomputes every neighbor view on the <span class="acc">reciprocal (mutual)</span> graph — keeping only edges both points agree on. A hub's surplus one-sided connections drop away, so genuine local structure is read apart from the hubness artifact.</p>
+    </div>
+    <div class="note"><strong>One switch, every view.</strong> The reciprocal filter applies to the kNN graph that the density field, separability, and the comparison all read — so the whole report is told without the hub.</div>
+  </div>
+  <div class="col-fig">
+    <figure class="dg">
+      <svg viewBox="0 0 460 380" role="img" aria-label="Two neighbor graphs. On the left, one central hub node has incoming arrows from many points it does not point back to. On the right, after keeping only mutual edges, the hub's one-sided arrows are gone and small balanced neighborhoods remain.">
+        <text x="115" y="24" font-size="13" fill="var(--bad)" text-anchor="middle">all kNN edges</text>
+        <text x="345" y="24" font-size="13" fill="var(--good)" text-anchor="middle">mutual (reciprocal) only</text>
+        <!-- LEFT: hub with one-sided incoming -->
+        <g>
+          <circle cx="115" cy="190" r="9" fill="var(--bad)"/>
+          <g stroke="var(--ink-faint)" stroke-width="1" marker-end="url(#hb)">
+            <line x1="40" y1="110" x2="106" y2="182"/>
+            <line x1="190" y1="110" x2="124" y2="182"/>
+            <line x1="36" y1="200" x2="105" y2="192"/>
+            <line x1="50" y1="280" x2="108" y2="200"/>
+            <line x1="190" y1="270" x2="124" y2="198"/>
+            <line x1="200" y1="190" x2="125" y2="190"/>
+            <line x1="80" y1="320" x2="112" y2="200"/>
+            <line x1="160" y1="320" x2="120" y2="200"/>
+          </g>
+          <defs><marker id="hb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--ink-faint)"/></marker></defs>
+          <g fill="var(--ink-faint)"><circle cx="40" cy="110" r="4"/><circle cx="190" cy="110" r="4"/><circle cx="36" cy="200" r="4"/><circle cx="50" cy="280" r="4"/><circle cx="190" cy="270" r="4"/><circle cx="200" cy="190" r="4"/><circle cx="80" cy="320" r="4"/><circle cx="160" cy="320" r="4"/></g>
+          <text x="115" y="356" font-size="10.5" fill="var(--bad)" text-anchor="middle">one hub absorbs the graph</text>
+        </g>
+        <!-- divider -->
+        <line x1="230" y1="50" x2="230" y2="340" stroke="var(--rule)" stroke-dasharray="3 4"/>
+        <!-- RIGHT: balanced mutual neighborhoods -->
+        <g>
+          <circle cx="345" cy="190" r="7" fill="var(--ink-faint)"/>
+          <g stroke="var(--good)" stroke-width="1.4">
+            <line x1="300" y1="130" x2="338" y2="180"/>
+            <line x1="392" y1="135" x2="352" y2="182"/>
+            <line x1="300" y1="250" x2="338" y2="200"/>
+            <line x1="392" y1="250" x2="352" y2="200"/>
+          </g>
+          <g fill="var(--ink-faint)"><circle cx="300" cy="130" r="4"/><circle cx="392" cy="135" r="4"/><circle cx="300" cy="250" r="4"/><circle cx="392" cy="250" r="4"/></g>
+          <!-- a separate small mutual pair -->
+          <g stroke="var(--good)" stroke-width="1.4"><line x1="410" y1="310" x2="372" y2="300"/></g>
+          <g fill="var(--ink-faint)"><circle cx="410" cy="310" r="4"/><circle cx="372" cy="300" r="4"/></g>
+          <text x="345" y="356" font-size="10.5" fill="var(--good)" text-anchor="middle">balanced local neighborhoods</text>
+        </g>
+      </svg>
+      <figcaption>Keeping only edges both points agree on drops a hub's surplus one-sided links — the local structure underneath becomes legible.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= 13 · THE REPORT FAMILIES ============================= -->
+<section class="slide method">
+  <div class="kick">the output · report families</div>
+  <h2>One question per family</h2>
+  <p class="sub">The report groups its figures by the question each answers — from <em>where it concentrates</em> to <em>how the two embeddings differ</em>.</p>
+  <div class="fam-grid">
+    <div class="fam"><span class="code">MAP · DEN</span><div class="ttl">Where it concentrates</div><div class="desc">The projected density cloud and the density relief — hotspots, peaks, and the pockets where items pile up.</div><div class="q">"Where does the mass go?"</div></div>
+    <div class="fam"><span class="code">COV · 3D</span><div class="ttl">How much space, what shape</div><div class="desc">Coverage and voids, the sparsity field, and a live 3D view of the occupied volume and its anisotropy — collapse you can rotate.</div><div class="q">"How much is filled, how much wasted?"</div></div>
+    <div class="fam"><span class="code">RES</span><div class="ttl">How distinct</div><div class="desc">Resolution &amp; isotropy, global and local: random-pair cosine, the eigenvalue scree, NN margin, separability, uniformity, and the local density field.</div><div class="q">"Can it tell items apart?"</div></div>
+    <div class="fam"><span class="code">CMP</span><div class="ttl">The same items, two ways</div><div class="desc">With <code>--compare</code>: neighbor-overlap drift and CKA, plus the drift field and distance-distribution shift — local and global change side by side.</div><div class="q">"How, and where, do they differ?"</div></div>
+    <div class="fam" style="grid-column:span 2;background:var(--panel-2);"><span class="code">the through-line</span><div class="ttl" style="margin-bottom:6px;">A hotspot and a pile of random-pair cosines are the same fact, told two ways</div><div class="desc">The density and coverage views are the <em>picture</em> of crowding; the resolution diagnostics are its <em>measurement</em>; the 3D view lets you see the anisotropy directly. The report puts the picture and the number in front of you at once — so "the embeddings look fine" can become "here is exactly how much resolution this dataset has, and where it is spent."</div></div>
+  </div>
+</section>
+
+<!-- ============================= 14 · DESIGN PHILOSOPHY ============================= -->
+<section class="slide method">
+  <div class="kick">design philosophy</div>
+  <h2>Direction, not hue. Reference, not threshold.</h2>
+  <p class="sub">Four commitments that hold across every figure in the report.</p>
+  <div class="pipeline" style="gap:14px;">
+    <div class="step">
+      <figure class="dg">
+        <svg viewBox="0 0 150 96" role="img" aria-label="An axis: bad on the left, good on the right, the meaning carried by position not colour.">
+          <line x1="14" y1="60" x2="136" y2="60" stroke="var(--rule)" stroke-width="1.4"/>
+          <polygon points="14,60 28,53 28,67" fill="var(--bad)"/>
+          <polygon points="136,60 122,53 122,67" fill="var(--good)"/>
+          <text x="20" y="44" font-size="10" fill="var(--bad)">crowded</text>
+          <text x="130" y="44" font-size="10" fill="var(--good)" text-anchor="end">resolved</text>
+          <circle cx="60" cy="60" r="4" fill="var(--accent)"/>
+          <text x="60" y="82" font-size="9" fill="var(--ink-faint)" text-anchor="middle">value</text>
+        </svg>
+      </figure>
+      <div class="cap"><b>Good/bad by direction</b><p>Meaning lives in <em>which way</em> along an axis, not in a colour. The accent is one hue; "good" and "bad" are positions.</p></div>
+    </div>
+    <div class="step">
+      <figure class="dg">
+        <svg viewBox="0 0 150 96" role="img" aria-label="A dataset cosine distribution read against a faint isotropic reference distribution, not a fixed line.">
+          <path d="M16,76 C 40,76 50,40 70,40 C 90,40 100,76 134,76" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+          <path d="M16,76 C 44,76 54,54 74,54 C 94,54 104,76 134,76" fill="none" stroke="var(--ink-faint)" stroke-width="1.2" stroke-dasharray="3 3"/>
+          <text x="74" y="22" font-size="9" fill="var(--accent)" text-anchor="middle">dataset</text>
+          <text x="120" y="92" font-size="8.5" fill="var(--ink-faint)" text-anchor="end">isotropic ref</text>
+        </svg>
+      </figure>
+      <div class="cap"><b>Read against a reference</b><p>Cosine is judged against the isotropic distribution of the same dimension — never an absolute threshold, because absolute cosine is not self-interpreting.</p></div>
+    </div>
+    <div class="step">
+      <figure class="dg">
+        <svg viewBox="0 0 150 96" role="img" aria-label="No labels required: a cloud with question-mark tags, measured by spread alone.">
+          <circle cx="40" cy="48" r="3" fill="var(--ink-faint)"/><circle cx="64" cy="36" r="3" fill="var(--ink-faint)"/><circle cx="88" cy="56" r="3" fill="var(--ink-faint)"/><circle cx="110" cy="40" r="3" fill="var(--ink-faint)"/><circle cx="74" cy="64" r="3" fill="var(--ink-faint)"/>
+          <text x="40" y="34" font-size="11" fill="var(--accent)">?</text>
+          <text x="110" y="28" font-size="11" fill="var(--accent)">?</text>
+          <text x="75" y="86" font-size="9" fill="var(--ink-faint)" text-anchor="middle">uniformity, not alignment</text>
+        </svg>
+      </figure>
+      <div class="cap"><b>Unsupervised</b><p>No labels, no gold pairs. ambit measures spread (uniformity), which the embeddings carry on their own; alignment, the supervised half, is out of scope.</p></div>
+    </div>
+    <div class="step">
+      <figure class="dg">
+        <svg viewBox="0 0 150 96" role="img" aria-label="One HTML file with a stack of theme swatches, all colours flowing from tokens.">
+          <rect x="30" y="30" width="90" height="44" rx="5" fill="none" stroke="var(--ink)" stroke-width="1.4"/>
+          <g><rect x="40" y="40" width="14" height="24" fill="var(--paper)" stroke="var(--rule)"/><rect x="56" y="40" width="14" height="24" fill="var(--accent)"/><rect x="72" y="40" width="14" height="24" fill="var(--good)"/><rect x="88" y="40" width="14" height="24" fill="var(--bad)"/></g>
+          <text x="75" y="88" font-size="9" fill="var(--ink-faint)" text-anchor="middle">16 themes · one file</text>
+        </svg>
+      </figure>
+      <div class="cap"><b>Self-contained &amp; theme-adaptive</b><p>One HTML file, no external requests. Every colour is a token, so any of 16 themes re-skins the whole report with no re-render.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= 15 · CLOSING ============================= -->
+<section class="slide title split">
+  <div class="col-text">
+    <div class="kick">the through-line</div>
+    <h2 style="font-size:40px;line-height:1.14;">Make occupancy <span class="accent">legible</span></h2>
+    <div class="body" style="max-width:560px;">
+      <p>Crowding is lost resolution. ambit measures how a dataset <b>occupies</b> its embedding space — globally and in the pockets a single number can't see — and reads every value against an <span class="acc">isotropic reference</span>.</p>
+      <p>One streaming pass, one shared context, a report whose meaning rides on direction, not hue. Now the report can be read.</p>
+    </div>
+  </div>
+  <div class="col-fig">
+    <figure class="dg">
+      <svg viewBox="0 0 360 360" role="img" aria-label="A single line-art dandelion seed lifting away on the wind in the accent colour — the bookend image, one item finally given room.">
+        <circle cx="180" cy="180" r="120" fill="none" stroke="var(--rule)" stroke-dasharray="2 6" opacity="0.5"/>
+        <g stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" fill="none">
+          <line x1="180" y1="180" x2="180" y2="120"/>
+          <g id="seedtuft"></g>
+        </g>
+        <circle cx="180" cy="180" r="2.6" fill="var(--accent)"/>
+        <path d="M180,180 C 176,230 196,280 188,348" fill="none" stroke="var(--ink-faint)" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+      </svg>
+      <figcaption style="text-align:center;">one item, given room</figcaption>
+    </figure>
+  </div>
+</section>
+
+</div><!-- /stage -->
+
+<div class="progress" id="prog"></div>
+<div class="hint">&#8592; &#8594; or click to navigate &middot; drag the 3D</div>
+
+<!-- ===================== generated line-art (seed-head spokes / tufts) ===================== -->
+<script>
+(function(){
+  // dandelion seed-head: radiating spokes each ending in a small pappus tuft
+  function spokes(host, cx, cy, r0, r1, n, tuft){
+    if(!host) return; var s='';
+    for(var i=0;i<n;i++){
+      var a=(i/n)*Math.PI*2, x0=cx+Math.cos(a)*r0, y0=cy+Math.sin(a)*r0,
+          x1=cx+Math.cos(a)*r1, y1=cy+Math.sin(a)*r1;
+      s+='<line x1="'+x0.toFixed(1)+'" y1="'+y0.toFixed(1)+'" x2="'+x1.toFixed(1)+'" y2="'+y1.toFixed(1)+'"/>';
+      if(tuft){ for(var k=-1;k<=1;k++){ var ta=a+k*0.16, tx=x1+Math.cos(ta)*tuft, ty=y1+Math.sin(ta)*tuft;
+        s+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+tx.toFixed(1)+'" y2="'+ty.toFixed(1)+'"/>'; } }
+    }
+    host.innerHTML=s;
+  }
+  spokes(document.getElementById('seedhead'),220,180,8,118,40,8);
+  spokes(document.getElementById('seedtuft'),180,120,0,16,11,4);
+})();
+</script>
+
+<!-- ===================== the cv3d vanilla-canvas 3D component ===================== -->
+<script>
+(function(){
+  // two point clouds generated once: an isotropic sphere, and a thin cone.
+  function rng(seed){ return function(){ seed=(seed*1664525+1013904223)>>>0; return seed/4294967296; }; }
+  function sphere(n,seed){ var r=rng(seed),out=[]; for(var i=0;i<n;i++){
+      var u=r()*2-1, t=r()*6.2832, s=Math.sqrt(1-u*u);
+      out.push([s*Math.cos(t), s*Math.sin(t), u, (i%6)]); } return out; }
+  function cone(n,seed){ var r=rng(seed),out=[]; for(var i=0;i<n;i++){
+      // tight spread around +z: small transverse radius, all sharing the z direction
+      var t=r()*6.2832, rad=Math.pow(r(),0.5)*0.26, z=0.55+r()*0.42;
+      var x=rad*Math.cos(t), y=rad*Math.sin(t);
+      var L=Math.sqrt(x*x+y*y+z*z); out.push([x/L,y/L,z/L,(i%6)]); } return out; }
+  var CLOUDS={ sphere: sphere(150,7), cone: cone(150,11) };
+
+  function toks(){var c=getComputedStyle(document.documentElement),g=function(n){return c.getPropertyValue(n).trim();};
+    return {pal:[g('--ink-faint'),g('--accent'),g('--good'),g('--bad'),g('--caution'),g('--ink-soft')],rule:g('--rule')};}
+  function mount(host){
+    var names=(host.dataset.cloud||'').split(',').filter(Boolean), Hh=+(host.dataset.h||300), cur=0;
+    var cv=document.createElement('canvas'); cv.className='cv3d-canvas';
+    if(names.length>1){var tabs=document.createElement('div'); tabs.className='cv3d-tabs';
+      names.forEach(function(nm,i){var b=document.createElement('button'); b.type='button'; b.textContent=nm;
+        b.className='cv3d-tab'+(i===0?' on':'');
+        b.onclick=function(ev){ev.stopPropagation();cur=i;[].forEach.call(tabs.children,function(x,k){x.classList.toggle('on',k===i);});};
+        tabs.appendChild(b);}); host.appendChild(tabs);}
+    host.appendChild(cv);
+    var ctx=cv.getContext('2d'), rx=0.45, ry=0.7, drag=false, lx=0, ly=0, hov=false,
+        spin=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function size(){var w=host.clientWidth||600, dpr=Math.min(window.devicePixelRatio||1,2);
+      cv.width=w*dpr; cv.height=Hh*dpr; cv.style.width=w+'px'; cv.style.height=Hh+'px'; ctx.setTransform(dpr,0,0,dpr,0,0);}
+    function gc(proj,t,a,bb){ctx.beginPath();
+      for(var k=0;k<=72;k++){var th=k/72*6.2832,
+        p=[Math.cos(th)*a[0]+Math.sin(th)*bb[0],Math.cos(th)*a[1]+Math.sin(th)*bb[1],Math.cos(th)*a[2]+Math.sin(th)*bb[2]],
+        q=proj(p); if(k===0)ctx.moveTo(q[0],q[1]); else ctx.lineTo(q[0],q[1]);}
+      ctx.strokeStyle=t.rule; ctx.globalAlpha=0.4; ctx.lineWidth=1; ctx.stroke(); ctx.globalAlpha=1;}
+    function draw(){
+      var t=toks(), w=cv.clientWidth||600, h=Hh, cx=w/2, cy=h/2, R=Math.min(w,h)*0.42;
+      ctx.clearRect(0,0,w,h);
+      var ca=Math.cos(rx),sa=Math.sin(rx),cb=Math.cos(ry),sb=Math.sin(ry);
+      function proj(p){var x=p[0],y=p[1],z=p[2], x1=x*cb+z*sb, z1=-x*sb+z*cb, y2=y*ca-z1*sa, z2=y*sa+z1*ca;
+        return [cx+x1*R, cy-y2*R, z2];}
+      gc(proj,t,[1,0,0],[0,0,1]); gc(proj,t,[1,0,0],[0,1,0]); gc(proj,t,[0,1,0],[0,0,1]);
+      var pts=CLOUDS[names[cur]]||[], arr=pts.map(function(p){var q=proj(p); return [q[0],q[1],q[2],p[3]];});
+      arr.sort(function(a,b){return a[2]-b[2];});
+      for(var i=0;i<arr.length;i++){var a=arr[i], dep=(a[2]+1)/2; ctx.globalAlpha=0.3+0.65*dep;
+        ctx.fillStyle=t.pal[a[3]%t.pal.length]; ctx.beginPath(); ctx.arc(a[0],a[1],1.3+2.1*dep,0,6.2832); ctx.fill();}
+      ctx.globalAlpha=1;}
+    function loop(){ if(spin&&!drag&&!hov) ry+=0.0035; draw(); requestAnimationFrame(loop);}
+    cv.addEventListener('pointerdown',function(e){drag=true;lx=e.clientX;ly=e.clientY; if(cv.setPointerCapture)cv.setPointerCapture(e.pointerId);});
+    cv.addEventListener('pointermove',function(e){if(!drag)return; ry+=(e.clientX-lx)*0.01; rx+=(e.clientY-ly)*0.01;
+      rx=Math.max(-1.4,Math.min(1.4,rx)); lx=e.clientX; ly=e.clientY;});
+    window.addEventListener('pointerup',function(){drag=false;});
+    cv.addEventListener('pointerenter',function(){hov=true;}); cv.addEventListener('pointerleave',function(){hov=false;});
+    if(window.ResizeObserver) new ResizeObserver(function(){size();draw();}).observe(host);
+    new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+    size(); requestAnimationFrame(loop);
+  }
+  document.querySelectorAll('.cv3d').forEach(mount);
+})();
+</script>
+
+<!-- ===================== Console colour-scheme picker — 16 themes ===================== -->
+<script>
+const THEMES=[
+  ["monokai","monokai",["#1e1f1c","#272822","#f8f8f2","#a6e22e","#f92672","#66d9ef"]],
+  ["solarized-dark","solarized dark",["#04222B","#0A2D38","#93A1A1","#8BB80E","#E0483C","#2AA198"]],
+  ["solarized-light","solarized light",["#FDF6E3","#FBF1D6","#586E75","#6B9B0B","#DC322F","#268BD2"]],
+  ["google-light","google light",["#FFFFFF","#F4F4F4","#474A4E","#34A853","#EA4335","#1B9CB8"]],
+  ["google-dark","google dark",["#202124","#2C2D30","#FFFFFF","#34A853","#EA4335","#24C1E0"]],
+  ["lunaria-light","lunaria light",["#EBE4E1","#E2DCD9","#363434","#497D46","#783C1F","#3778A9"]],
+  ["lunaria-eclipse","lunaria eclipse",["#323F46","#3B484F","#DFE2ED","#BEDBC1","#BA9088","#C8429F"]],
+  ["belafonte-day","belafonte day",["#D5CCBA","#CCC3B2","#34292D","#6e6a4e","#BE100E","#426A79"]],
+  ["belafonte-night","belafonte night",["#20111B","#271821","#D5CCBA","#a6a07a","#d6403e","#6F8E97"]],
+  ["paper","paper",["#F2EEDE","#E6E2D3","#1A1A1A","#216609","#CC3E28","#1E6FCC"]],
+  ["zenburn","zenburn",["#3A3A3A","#424241","#DCDCCC","#8FB28F","#CC9393","#8CD0D3"]],
+  ["selenized-black","selenized black",["#181818","#202020","#DEDEDE","#83C746","#FF5E56","#56D8C9"]],
+  ["relaxed","relaxed",["#353A44","#3D424B","#F7F7F7","#A0AC77","#BC5653","#7EAAC7"]],
+  ["espresso","espresso",["#323232","#3A3A3A","#FFFFFF","#A5C261","#D25252","#6C99BB"]],
+  ["dracula","dracula",["#282A36","#343746","#F8F8F2","#50FA7B","#FF5555","#BD93F9"]],
+  ["ubuntu","ubuntu",["#300A24","#3D1530","#EEEEEC","#8AE234","#CC0000","#34E2E2"]],
+];
+const DEFAULT_THEME = "monokai";
+const THEME_IDS = THEMES.map(t => t[0]);
+function strip(swatches, sm) {
+  return `<span class="dt-swatch-strip${sm?' dt-swatch-strip-sm':''}" aria-hidden="true">` +
+    swatches.map(c => `<span class="dt-swatch" style="background:${c}"></span>`).join('') + `</span>`;
+}
+function mountThemePicker(hostId) {
+  const host = document.getElementById(hostId);
+  let value = DEFAULT_THEME, open = false, activeIdx = THEME_IDS.indexOf(value);
+  const byId = new Map(THEMES.map(t => [t[0], t]));
+  host.innerHTML =
+    `<div class="dt-cd" role="group" aria-label="Colour theme">
+      <button class="dt-cd-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Colour theme" title="Colour theme">
+        <span class="dt-cd-trig-strip"></span><span class="dt-cd-name dt-cd-trig-name"></span>
+        <span class="dt-cd-caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="dt-cd-list" role="listbox" aria-label="Colour theme">
+        ${THEMES.map(([id,label,sw]) =>
+          `<div class="dt-cd-option" role="option" data-theme="${id}" aria-selected="${id===value}" tabindex="-1" title="colour: ${label}">
+             ${strip(sw)}<span class="dt-cd-name">${label}</span>
+           </div>`).join('')}
+      </div>
+    </div>`;
+  const cd = host.querySelector('.dt-cd');
+  const trigger = host.querySelector('.dt-cd-trigger');
+  const trigStrip = host.querySelector('.dt-cd-trig-strip');
+  const trigName = host.querySelector('.dt-cd-trig-name');
+  const list = host.querySelector('.dt-cd-list');
+  const options = Array.from(host.querySelectorAll('.dt-cd-option'));
+  function applyTheme(id) {
+    value = THEME_IDS.includes(id) ? id : DEFAULT_THEME;
+    document.documentElement.setAttribute('data-theme', value);
+    const def = byId.get(value);
+    trigStrip.className = 'dt-cd-trig-strip dt-swatch-strip dt-swatch-strip-sm';
+    trigStrip.setAttribute('aria-hidden', 'true');
+    trigStrip.innerHTML = def[2].map(c => `<span class="dt-swatch" style="background:${c}"></span>`).join('');
+    trigName.textContent = def[1];
+    options.forEach(o => o.setAttribute('aria-selected', String(o.getAttribute('data-theme') === value)));
+  }
+  function setActive(i) {
+    activeIdx = (i + options.length) % options.length;
+    options.forEach((o,k) => o.classList.toggle('dt-cd-active', k === activeIdx));
+  }
+  function setOpen(next) {
+    open = next; cd.classList.toggle('dt-cd-open', open);
+    trigger.setAttribute('aria-expanded', String(open));
+    if (open) setActive(Math.max(0, THEME_IDS.indexOf(value)));
+  }
+  function choose(id) { applyTheme(id); setOpen(false); }
+  options.forEach(o => o.addEventListener('click', (ev) => { ev.stopPropagation(); choose(o.getAttribute('data-theme')); }));
+  trigger.addEventListener('click', (ev) => { ev.stopPropagation(); setOpen(!open); });
+  trigger.addEventListener('keydown', ev => {
+    if (['ArrowDown','Enter',' ','Spacebar'].includes(ev.key)) { ev.preventDefault(); setOpen(true); list.focus?.(); }
+  });
+  list.setAttribute('tabindex','-1');
+  list.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape') { ev.preventDefault(); setOpen(false); trigger.focus(); }
+    else if (ev.key === 'ArrowDown') { ev.preventDefault(); setActive(activeIdx+1); }
+    else if (ev.key === 'ArrowUp') { ev.preventDefault(); setActive(activeIdx-1); }
+    else if (['Enter',' ','Spacebar'].includes(ev.key)) {
+      ev.preventDefault();
+      const id = options[activeIdx]?.getAttribute('data-theme'); if (id) choose(id);
+    }
+  });
+  document.addEventListener('click', ev => {
+    if (!open) return; let n = ev.target; while (n) { if (n === cd) return; n = n.parentNode; } setOpen(false);
+  });
+  applyTheme(DEFAULT_THEME);
+}
+mountThemePicker('theme-picker');
+</script>
+
+<!-- ===================== slide navigation: scale-to-fit + keyboard / click / hash ===================== -->
+<script>
+var stage=document.getElementById('stage');
+function fit(){var top=44,availH=window.innerHeight-top;
+ var s=Math.min(window.innerWidth/1280,availH/800),w=1280*s,h=800*s;
+ stage.style.transform='scale('+s+')';
+ stage.style.left=((window.innerWidth-w)/2)+'px';
+ stage.style.top=(top+(availH-h)/2)+'px';}
+window.addEventListener('resize',fit);fit();
+var slides=[].slice.call(document.querySelectorAll('.slide'));
+var counter=document.getElementById('count'),prog=document.getElementById('prog');var i=0;
+function show(n){i=Math.max(0,Math.min(slides.length-1,n));
+ slides.forEach(function(s,k){s.classList.toggle('active',k===i);});
+ counter.textContent=(i+1)+' / '+slides.length;prog.style.width=((i+1)/slides.length*100)+'%';
+ history.replaceState(null,'','#'+(i+1));}
+document.addEventListener('keydown',function(e){
+ if(['ArrowRight',' ','PageDown'].indexOf(e.key)>=0){e.preventDefault();show(i+1);}
+ else if(['ArrowLeft','PageUp'].indexOf(e.key)>=0){e.preventDefault();show(i-1);}
+ else if(e.key==='Home'){show(0);}else if(e.key==='End'){show(slides.length-1);}});
+document.addEventListener('click',function(e){
+ if(e.target.closest('.topbar')||e.target.closest('.cv3d')||e.target.closest('.dt-cd'))return; /* let the 3D drag + picker work */
+ show(e.clientX<window.innerWidth*0.32?i-1:i+1);});
+var hh=parseInt((location.hash||'#1').slice(1),10);show(isNaN(hh)?0:hh-1);
+</script>
+</body></html>
