@@ -252,6 +252,40 @@ the isotropic reference in **RES 08** (below). This is the *uniformity* half of 
 alignment/uniformity pair; the *alignment* half needs positive pairs (supervision) and
 is outside ambit's unsupervised scope.
 
+### occupancy z
+
+**What:** the **Stolarsky occupancy discrepancy** — the mean pairwise chord
+distance between entities, as a z-score against the uniform-sphere null with a
+matched pair-sample size. By Stolarsky's invariance principle (1973), the mean
+pair distance *is* (up to constants) the spherical-cap L2 discrepancy integrated
+over **every cap position and every cap radius** — "all bins at all scales" as a
+single number, with no lattice to choose.
+
+**How computed:** `occupancy.stolarsky_z` — mean chord from the header's cosine
+sample, against 24 replicates of the analytic uniform null (pair cosines drawn
+directly via a Beta transform; no vectors materialized).
+
+**How read — DIRECTION:** near **0** is healthy; **strongly negative** is crowded.
+The null is razor-thin in high dimension, so real crowding produces very large
+negative values; treat the magnitude as detection strength, not as a graded scale.
+
+### resolution bandwidth
+
+**What:** **σ\*** — the largest query-noise scale at which the corpus stays under
+one expected retrieval collision per entity, under the Gaussian query channel
+q = x + σ·g. This is the occupancy story in operational units: *how much query
+perturbation can this corpus absorb before entities become interchangeable?*
+
+**How computed:** `occupancy.sigma_star` — the exact pairwise confusion law
+Φ(−‖x−y‖/2σ) integrated over the pair-cosine sample (union-bound conservative
+under any competitor correlation), inverted by bisection at tolerance 1.
+
+**How read — DIRECTION:** higher is better. Compare across corpora or embeddings
+of the same corpus; a drop in σ\* means the space now confuses entities at noise
+levels it previously tolerated. Scope: intra-corpus confusability (dedup,
+clustering, corpus-as-queries retrieval) — extrapolation to an external query
+workload is an assumption, not a measurement.
+
 ### effective rank
 
 **What:** the continuous effective dimensionality, printed as `erank / dim`
@@ -340,6 +374,123 @@ Notice these two can have *similar* mean pair cosine yet very different spectra 
 which is exactly why ambit shows the spectrum several ways.
 
 ---
+
+### RES 09 — Crowding curve
+
+*Leads the resolution block. Source: `figures/res_kcurve.py`. Theory:
+`docs/concepts/continuous-occupancy.md`.*
+
+#### What it answers
+
+At **what scale** does crowding begin, and how much of it does the anisotropy cone
+explain? This is the continuous replacement for every binned occupancy count: the
+fraction of random pairs at least as similar as each cosine scale — an exact CDF
+(sort + lookup; no bin width, no lattice origin), read against two nulls.
+
+#### How it's computed
+
+`occupancy.exceedance` over the header's pair-cosine sample, on a log scale.
+Two references with matched sample size: the **uniform-sphere envelope** (19
+replicates of the analytic null — dashed; its pointwise max is the graphical
+bound) and the **anisotropy-matched reference** (angular central Gaussian built
+from the corpus's own covariance spectrum — the corpus's cone without its
+clustering). The footer carries the *occupancy z* and *resolution bandwidth σ\**
+scalars (see the facts row).
+
+#### How to read it
+
+- **Data hugging the ACG reference** → the corpus is cone-shaped but not clustered
+  beyond it; the usual anisotropy story, no local pathology.
+- **Data lifting above the ACG curve** → clustering the cone cannot explain.
+- **Data above the uniform envelope at high cosine** (the marked "crowding begins"
+  scale) → excess close pairs; in high dimension the null is exactly zero there,
+  so *any* mass is a detection.
+- The **shaded region** is the excess close-pair mass — the pairs a retrieval
+  neighborhood of that size will confuse.
+
+#### What to look for
+
+The **liftoff scale**: near cos 1.0 = near-duplicates; at moderate cosine = topic
+clumping; no liftoff = healthy. Compare the gap between the two nulls (cone cost)
+with the gap between data and ACG (clustering beyond the cone).
+
+#### Caveats
+
+The curve is a *mean* over pairs — it does not name entities (RES 10 does) or
+count pockets (RES 11 does). The envelope is pointwise, a display device; treat
+marginal grazing of it as inconclusive.
+
+### RES 10 — Per-entity crowding field
+
+*Source: `figures/res_dtm.py`.*
+
+#### What it answers
+
+**Which entities** are crowded, by name — the per-entity layer the binned figures
+could never provide (a cell count can't say who is in the cell).
+
+#### How it's computed
+
+Each entity's **distance to a measure** (`crowding.dtm`): the root-mean-square
+chord distance to its nearest 2% of the reservoir — "the radius of the ball this
+entity needs to gather a fixed share of the corpus." The figure draws the exact
+CDF of the field, with the **uniform reference band** (1st–99th percentile of the
+same field for a uniform corpus of matched size and dimension) shaded, the most
+crowded entities listed by id in the left panel, and the most isolated (voids) below
+them. DTM is provably stable: a small perturbation of the corpus moves every score
+by a provably small amount (Wasserstein-Lipschitz) — the guarantee bin counts lack.
+Above ~6,000 reservoir points the field runs on a seeded subsample.
+
+#### How to read it
+
+- **Curve inside the band** → entities spread as a uniform corpus would.
+- **Low-tail spike escaping left of the band** → crowded entities, individually
+  named and ranked; these are the retrieval collisions in waiting.
+- **Right tail far beyond the band** → isolated entities / coverage voids (the
+  continuous replacement for the void-grid figure).
+
+#### Caveats
+
+The 2% mass fraction is the one knob: pockets much smaller than 2% of the
+reservoir blur (lower it to hunt smaller clumps). Scores are radii in chord
+units — compare within a report or between reports of the same dimension.
+
+### RES 11 — Crowding pockets
+
+*Source: `figures/res_pockets.py`.*
+
+#### What it answers
+
+**How many** over-tight pockets exist, how tight each is, which entities belong to
+each, and at what scale each detaches from the bulk — with no flat clustering
+threshold chosen anywhere.
+
+#### How it's computed
+
+The merge tree of the reservoir (`crowding.pockets`): single linkage on the
+mutual-reachability metric — the construction inside the default clustering
+backend, **surfaced instead of flattened** — condensed with a minimum pocket size
+of 8 and selected by excess-of-mass stability. Each bar spans a pocket's **birth**
+(the scale at which its first members hold together) to its **death** (the scale
+at which it merges into the bulk); bar length is its **prominence**. Sample member
+ids are printed at each bar.
+
+#### How to read it
+
+- **Long bars born near zero** → near-duplicate pockets: entities that are almost
+  interchangeable among themselves yet far from everything else — the crowding
+  that hurts retrieval most. The listed ids make the finding actionable.
+- **Short bars born late** → loose associations barely distinct from the bulk;
+  usually benign.
+- **"No prominent tight pockets"** → the corpus merges as one bulk; whatever
+  crowding exists is diffuse (read RES 09/10 for it).
+
+#### Caveats
+
+Runs on a ≤4,096-point seeded subsample of the reservoir, so pocket **sizes are
+shares of the sample**, not absolute corpus counts (scale by corpus/sample). The
+minimum pocket size of 8 is a floor on what can be *reported*, not a density
+threshold — smaller duplicate groups appear in RES 10's low tail instead.
 
 ### RES 01 — Random-pair cosine distribution
 

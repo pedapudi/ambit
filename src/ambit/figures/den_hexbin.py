@@ -62,9 +62,32 @@ def fig_den_hexbin(ctx):
     cx = L + hw * (ci + 0.5) + (hw / 2.0) * (cj & 1)
     cy = T + vstep * (cj + 0.5)
 
-    cmax = int(counts.max())
-    cmin = int(counts.min())
-    peak = int(np.argmax(counts))
+    # ---- averaged-shifted lattice (ASH, Scott 1985) ------------------------
+    # A single lattice's count depends on the lattice's placement (the zonation
+    # half of the MAUP): shifting the same lattice half a cell moves the peak by
+    # ~±15% on identical data. Averaging the count over shifted lattices removes
+    # the placement dependence and recovers kernel-estimator convergence. The
+    # drawn geometry keeps the base lattice; each drawn cell's *value* is the
+    # mean, over 3×3 sub-cell shifts, of the count of the shifted cell that
+    # contains its center.
+    def _assign(px, py):
+        jj = np.clip(((py - T) / vstep - 0.5).round().astype(int), 0, nrow - 1)
+        ii = np.clip(((px - L) / hw - 0.5 - 0.5 * (jj & 1)).round().astype(int), 0, ncol - 1)
+        return jj * (ncol + 2) + ii
+
+    ash = np.zeros(len(uk))
+    offs = [(a * hw / 3.0, b * vstep / 3.0) for a in range(3) for b in range(3)]
+    for ox_o, oy_o in offs:
+        kk = _assign(Px - ox_o, Py - oy_o)
+        u2, c2 = np.unique(kk, return_counts=True)
+        lut = dict(zip(u2.tolist(), c2.tolist()))
+        ck = _assign(cx - ox_o, cy - oy_o)
+        ash += np.array([lut.get(int(v), 0) for v in ck], float)
+    ash /= len(offs)
+
+    cmax = float(ash.max())
+    cmin = float(ash.min())
+    peak = int(np.argmax(ash))
 
     # ---- pointy-top hex polygon vertices (apex up/down) ----
     # for pointy-top, vertices at angles 30,90,...; width sqrt3*r, height 2r
@@ -81,13 +104,13 @@ def fig_den_hexbin(ctx):
     rng = max(hi - lo, 1e-9)
 
     def tint(c):
-        t = (np.log1p(c) - lo) / rng           # 0..1, dense->1
+        t = float(np.clip((np.log1p(c) - lo) / rng, 0.0, 1.0))   # 0..1, dense->1
         pct = int(round(8 + 92 * t))           # keep a floor so sparse cells read
         return f"color-mix(in srgb, var(--bad) {pct}%, var(--accent))"
 
     hexes = []
     for u in range(len(uk)):
-        x, y, c = float(cx[u]), float(cy[u]), int(counts[u])
+        x, y, c = float(cx[u]), float(cy[u]), float(ash[u])
         hexes.append(
             f'<polygon points="{hexpts(x, y)}" fill="{tint(c)}" '
             f'stroke="var(--rule-soft)" stroke-width="0.5" vector-effect="non-scaling-stroke"/>')
@@ -98,7 +121,7 @@ def fig_den_hexbin(ctx):
                  f'stroke-width="2.2" vector-effect="non-scaling-stroke"/>')
     peak_lbl = (f'<text x="{px:.1f}" y="{py + 3.5:.1f}" fill="var(--paper)" font-size="10" '
                 f'font-weight="700" text-anchor="middle" '
-                f'style="font-variant-numeric:tabular-nums">{cmax}</text>')
+                f'style="font-variant-numeric:tabular-nums">{cmax:.0f}</text>')
 
     # ---- fine axes: ticks + mono labels along left (proj-y) and bottom (proj-x) ----
     ax = []
@@ -127,9 +150,9 @@ def fig_den_hexbin(ctx):
     total = int(counts.sum())
     head = (
         f'<text x="{L + 10}" y="34" fill="var(--ink-soft)" font-size="11">'
-        f'hexbin occupancy · per-cell point count · sparse→dense = accent→bad</text>'
+        f'hexbin occupancy · lattice-averaged count (mean over shifted lattices) · sparse→dense = accent→bad</text>'
         f'<text x="{R}" y="34" fill="var(--accent)" font-size="11" font-weight="700" '
-        f'text-anchor="end">peak cell n={cmax} · {occ} occupied / {ncol}×{nrow} lattice</text>')
+        f'text-anchor="end">peak cell n≈{cmax:.0f} · {occ} occupied / {ncol}×{nrow} lattice</text>')
 
     # ---- discrete count-ramp legend (top-right column), numbered breakpoints ----
     # breakpoints span min..max on the same log ramp the cells use.
@@ -139,8 +162,9 @@ def fig_den_hexbin(ctx):
     leg.append('<text x="%.1f" y="69.0" fill="var(--ink-faint)" font-size="7.5">per cell · ◇=peak</text>' % (lx + 12))
 
     # numbered breakpoints: peak, then descending round-ish steps, down to min, plus a void '0'.
-    bps = sorted({cmax, max(int(cmax * 0.66), 1), max(int(cmax * 0.4), 1),
-                  max(int(cmax * 0.2), 1), max(int(cmax * 0.08), 1), cmin}, reverse=True)
+    bps = sorted({round(v, 1) for v in
+                  (cmax, max(cmax * 0.66, 1.0), max(cmax * 0.4, 1.0),
+                   max(cmax * 0.2, 1.0), max(cmax * 0.08, 1.0), cmin)}, reverse=True)
     aL = np.sqrt(3.0) / 2.0 * 7.0
     y = ly0
     for bi, c in enumerate(bps):
@@ -157,7 +181,7 @@ def fig_den_hexbin(ctx):
             leg.append(f'<polygon points="{ring}" fill="none" stroke="var(--accent)" '
                        f'stroke-width="1.6" vector-effect="non-scaling-stroke"/>')
         leg.append(f'<text x="{cxs + 16:.1f}" y="{cys + 3.5:.1f}" fill="var(--ink)" font-size="8.5" '
-                   f'style="font-variant-numeric:tabular-nums">{c}</text>')
+                   f'style="font-variant-numeric:tabular-nums">{c:.0f}</text>')
         y += 19.5
     # void swatch (bare paper, dashed) — empty hexes are not drawn in-plot
     cys = y
@@ -178,14 +202,18 @@ def fig_den_hexbin(ctx):
         + '<g aria-hidden="true" font-family="inherit">' + "".join(leg) + '</g>')
 
     aria = (f"Hexbin occupancy of the projected reservoir: a honeycomb of {occ} occupied "
-            f"pointy-top cells over {total} points, each tinted by its point count "
-            f"(sparse to dense, accent to bad); the peak cell n={cmax} carries an accent "
-            f"outline; empty cells are left as bare paper.")
+            f"pointy-top cells over {total} points, each tinted by its lattice-averaged count "
+            f"(mean over shifted lattices, so the value does not depend on lattice placement); "
+            f"the peak cell n approximately {cmax:.0f} carries an accent outline; empty cells "
+            f"are left as bare paper.")
 
     return {
         "num": "DEN 03", "order": 3, "name": "Hexbin occupancy", "tech": "hexbin",
         "why": ("The projected reservoir aggregated into hexagonal bins; each occupied cell tints by "
-                "its point count so concentration reads as heat and empty space stays paper-bare."),
+                "its lattice-averaged count (the mean over shifted lattices — an averaged shifted "
+                "histogram, so the heat does not depend on where the lattice happens to sit) and empty "
+                "space stays paper-bare. A display view; the measurement lives in the native-space "
+                "figures."),
         "svg": _svg(W, H, aria, body),
         "legend": ('<span><i class="a"></i> dense cell (accent→bad ramp)</span>'
                    '<span><i class="f"></i> sparse cell</span>'

@@ -109,7 +109,10 @@ def fig_res_uniformity(ctx):
                   '<span><i class="dash"></i> isotropic reference</span>'
                   '<span><i class="r"></i> uniformity gap</span>',
         "reveal": "<b>Reveals:</b> occupancy of the whole sphere as a single number — how far the "
-                  "dataset sits from a perfectly uniform spread. In compare mode the trajectory shows "
-                  "which embedding is more uniform (further right is more uniform).",
+                  "dataset sits from a perfectly uniform spread. It also carries an operational reading: "
+                  "exp(U) at t=2 is a Chernoff bound on the mean retrieval-collision rate under query "
+                  "noise σ = 1/√(8t) = 0.25, so t is not arbitrary — it is a query-noise scale. In "
+                  "compare mode the trajectory shows which embedding is more uniform (further right is "
+                  "more uniform).",
         "cls": "fig-mid",
     }

@@ -20,7 +20,10 @@ version: 1.0.0
 > views are the *picture* of this; the resolution diagnostics are its *measurement*.
 
 The canonical reference, with full academic citations, is
-`docs/concepts/anisotropy-and-resolution.md`. This skill is the working distillation.
+`docs/concepts/anisotropy-and-resolution.md`. The theory of the occupancy
+*measurement* itself — why binned counts are fragile and what the continuous
+foundation looks like — is `docs/concepts/continuous-occupancy.md`. This skill is
+the working distillation.
 
 ## The core idea
 

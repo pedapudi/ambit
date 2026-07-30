@@ -111,12 +111,15 @@ _DISPLAY_ORDER = [
     "cmp_scorecard",   # CMP 12 · representational drift (GLOBAL CKA & distances)
     "cmp_drift",       # CMP 13 · drift field
     "cmp_shift",       # CMP 14 · distance-distribution shift
+    "res_kcurve",  # RES 09 · crowding curve (the canonical global occupancy figure)
     "res_cmap",    # RES 07 · local crowding cloud
     "d3_trip",     # 3D 02 · orthographic triptych
+    "res_dtm",     # RES 10 · per-entity crowding field (global → local hand-off)
     "res_field",   # RES 06 · local concentration field
     "res_margin",  # RES 04 · nearest-neighbor cosine margin
     "res_wb",      # RES 05 · within- vs between-cluster cosine
     "res_separability",  # RES 05b · label-aware separability panel
+    "res_pockets", # RES 11 · crowding pockets (merge-tree prominence)
     "cos_hist",    # RES 01 · random-pair cosine distribution
     "res_cumvar",  # RES 02b · cumulative variance
     "res_uniformity",  # RES 08 · uniformity on the hypersphere
@@ -467,6 +470,27 @@ def fig_scree(ctx):
 
 
 # ---------------------------------------------------------------- report
+def _occupancy_z(ctx) -> str:
+    """Stolarsky occupancy-discrepancy z (mean pair chord vs the matched uniform
+    null). Strongly negative = crowded beyond what sampling noise allows."""
+    from . import occupancy as occ
+    try:
+        _, z = occ.stolarsky_z(ctx.cos, int(ctx.scan.dim), reps=24, seed=0)
+        return f"{z:+,.0f}"
+    except Exception:
+        return "–"
+
+
+def _sigma_star(ctx) -> str:
+    """Resolution bandwidth σ*: the query-noise scale at which the corpus reaches one
+    expected retrieval collision per entity (Gaussian query channel; conservative)."""
+    from . import occupancy as occ
+    try:
+        return f"{occ.sigma_star(ctx.cos, int(ctx.scan.n), tol=1.0):.3f}"
+    except Exception:
+        return "–"
+
+
 def _facts(ctx):
     items = f"{ctx.scan.n:,} × {ctx.scan.dim}"
     if getattr(ctx.scan, "approximate", False):
@@ -477,6 +501,8 @@ def _facts(ctx):
         ("mean pair cosine", f"{ctx.cos.mean():+.3f}"),
         ("isoscore", f"{metrics.isoscore(ctx.eigs):.3f}"),
         ("uniformity", f"{metrics.uniformity_from_cos(ctx.cos):.3f}"),
+        ("occupancy z", _occupancy_z(ctx)),
+        ("resolution bandwidth", _sigma_star(ctx)),
         ("effective rank", f"{metrics.effective_rank(ctx.eigs):.1f} / {ctx.scan.dim}"),
         ("dims for 90% var", f"{metrics.dims_for_variance(ctx.eigs, 0.9)} / {ctx.scan.dim}"),
     ]

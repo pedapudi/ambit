@@ -6,6 +6,9 @@
 > modes it causes downstream, and how **ambit** makes it visible. It is the
 > conceptual companion to the
 > [embedding-space occupancy study](../design/embedding-occupancy-study/).
+> How the *measurement itself* should be built — why binned occupancy is fragile
+> and what the continuous replacement looks like — is developed in
+> [Continuous Occupancy](./continuous-occupancy.md).
 >
 > Citations are linked inline; full entries with arXiv IDs / DOIs are collected in
 > [§10 References](#10-references).

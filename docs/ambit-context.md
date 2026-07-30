@@ -4,6 +4,9 @@
 > uses, the method it runs, the report it produces, and the design philosophy behind
 > it. Read this to understand ambit from scratch. The science is developed at length
 > in [Anisotropy, Resolution, and What ambit Measures](./concepts/anisotropy-and-resolution.md);
+> the theory of the occupancy measurement itself — the geometric intuition, the case
+> against binned counts, and the continuous foundation — is in
+> [Continuous Occupancy](./concepts/continuous-occupancy.md);
 > how to read a generated report is in [the report guide](./guide/interpreting-the-report.md).
 > The reference list in [§9](#9-references) is the union of the citations behind the
 > claims here.

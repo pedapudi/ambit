@@ -469,9 +469,7 @@
   </div>
 </section>
 
-<!-- ============================= 6 · THE PIPELINE (method) ============================= -->
-<!-- ============================= 7 · RESERVOIR & SCALE ============================= -->
-<!-- ============================= 8 · METRICS I — occupancy & collapse ============================= -->
+<!-- ============================= 6 · METRICS I — occupancy & collapse ============================= -->
 <section class="slide method">
   <div class="kick">the metrics · occupancy</div>
   <h2>How much space, and how anisotropic</h2>
@@ -485,7 +483,7 @@
   <div class="note" style="max-width:1120px;"><strong>Unsupervised by design.</strong> ambit reports <b>uniformity</b>, not <em>alignment</em>: uniformity is readable from the embeddings alone, while alignment needs known positive pairs. No labels, no gold pairs.</div>
 </section>
 
-<!-- ============================= 9 · METRICS II — resolution & retrieval ============================= -->
+<!-- ============================= 7 · METRICS II — resolution & retrieval ============================= -->
 <section class="slide method">
   <div class="kick">the metrics · resolution</div>
   <h2>How distinct, item by item</h2>
@@ -499,7 +497,7 @@
   <div class="note" style="max-width:1120px;"><strong>Local, not just global.</strong> A single global number is <span class="acc">non-collapsible</span> over clusters — a globally even cloud can be a union of locally collapsed cones. The density field localizes <em>which</em> neighborhoods are crammed.</div>
 </section>
 
-<!-- ============================= 10 · LOCAL vs GLOBAL (the same fact at several scales) ============================= -->
+<!-- ============================= 8 · LOCAL vs GLOBAL (the same fact at several scales) ============================= -->
 <section class="slide split">
   <div class="col-text">
     <div class="kick">local vs global</div>
@@ -539,7 +537,7 @@
   </div>
 </section>
 
-<!-- ============================= 11 · COMPARING TWO EMBEDDINGS (the same items, two ways) ============================= -->
+<!-- ============================= 9 · COMPARING TWO EMBEDDINGS (the same items, two ways) ============================= -->
 <section class="slide split">
   <div class="col-text">
     <div class="kick">comparison · the same items, two ways</div>
@@ -587,7 +585,7 @@
   </div>
 </section>
 
-<!-- ============================= 12 · HUBNESS & RECIPROCAL kNN ============================= -->
+<!-- ============================= 10 · HUBNESS & RECIPROCAL kNN ============================= -->
 <section class="slide split">
   <div class="col-text">
     <div class="kick">hubness · reciprocal kNN</div>
@@ -643,7 +641,7 @@
   </div>
 </section>
 
-<!-- ============================= 13 · THE REPORT FAMILIES ============================= -->
+<!-- ============================= 11 · THE REPORT FAMILIES ============================= -->
 <section class="slide method">
   <div class="kick">the output · report families</div>
   <h2>One question per family</h2>
@@ -657,7 +655,7 @@
   </div>
 </section>
 
-<!-- ============================= 14 · DESIGN PHILOSOPHY ============================= -->
+<!-- ============================= 12 · DESIGN PHILOSOPHY ============================= -->
 <section class="slide method">
   <div class="kick">design philosophy</div>
   <h2>Direction, not hue. Reference, not threshold.</h2>
@@ -712,7 +710,283 @@
   </div>
 </section>
 
-<!-- ============================= 15 · CLOSING ============================= -->
+<!-- ============================= 13 · COUNTING IN BOXES ============================= -->
+<section class="slide split">
+  <div class="col-text">
+    <div class="kick">measuring occupancy &middot; counting</div>
+    <h2>Counting in <span class="bad">boxes</span></h2>
+    <div class="body">
+      <p>Occupancy is usually measured by laying a lattice over the space and counting what falls in each cell. Shift the lattice half a cell &mdash; same cells, same data &mdash; and the peak count moves by <b>30%</b>.</p>
+    </div>
+    <div class="note"><strong>The answer belongs to the lattice, not the data.</strong> Cell size and placement are both arbitrary, and both change the number &mdash; the <span class="acc">modifiable-areal-unit problem</span>, which no clever grid escapes.</div>
+  </div>
+  <div class="col-fig">
+    <figure class="dg">
+      <svg viewBox="0 0 420 296" role="img" aria-label="The same scatter of points shown twice, side by side, each under a square lattice of identical cell size. On the left the lattice sits as placed and its densest cell holds a peak of 310. On the right the same lattice is shifted half a cell and its densest cell, in a different location, holds 403.">
+        <defs><g id="latdots"><circle cx="110.3" cy="77.2" r="2.4"/><circle cx="91.9" cy="29.2" r="2.4"/><circle cx="72.7" cy="80.2" r="2.4"/><circle cx="61.6" cy="70.7" r="2.4"/><circle cx="66.1" cy="30.4" r="2.4"/><circle cx="78.8" cy="75.0" r="2.4"/><circle cx="64.2" cy="91.8" r="2.4"/><circle cx="58.6" cy="84.9" r="2.4"/><circle cx="79.1" cy="68.3" r="2.4"/><circle cx="71.7" cy="57.3" r="2.4"/><circle cx="103.7" cy="49.9" r="2.4"/><circle cx="64.8" cy="90.2" r="2.4"/><circle cx="83.6" cy="79.5" r="2.4"/><circle cx="83.2" cy="65.7" r="2.4"/><circle cx="70.8" cy="80.5" r="2.4"/><circle cx="105.9" cy="81.4" r="2.4"/><circle cx="68.3" cy="65.0" r="2.4"/><circle cx="101.9" cy="52.5" r="2.4"/><circle cx="101.3" cy="57.6" r="2.4"/><circle cx="88.8" cy="38.6" r="2.4"/><circle cx="102.3" cy="79.4" r="2.4"/><circle cx="78.9" cy="87.8" r="2.4"/><circle cx="79.0" cy="89.4" r="2.4"/><circle cx="89.0" cy="91.8" r="2.4"/><circle cx="76.9" cy="73.4" r="2.4"/><circle cx="69.6" cy="92.0" r="2.4"/><circle cx="83.1" cy="60.8" r="2.4"/><circle cx="71.8" cy="59.0" r="2.4"/><circle cx="59.4" cy="87.4" r="2.4"/><circle cx="59.6" cy="84.9" r="2.4"/><circle cx="73.6" cy="95.5" r="2.4"/><circle cx="66.0" cy="99.8" r="2.4"/><circle cx="73.2" cy="75.8" r="2.4"/><circle cx="81.0" cy="73.9" r="2.4"/><circle cx="130.7" cy="149.4" r="2.4"/><circle cx="121.4" cy="144.2" r="2.4"/><circle cx="125.8" cy="141.7" r="2.4"/><circle cx="115.5" cy="128.5" r="2.4"/><circle cx="125.7" cy="123.2" r="2.4"/><circle cx="127.9" cy="142.5" r="2.4"/><circle cx="152.7" cy="152.2" r="2.4"/><circle cx="112.4" cy="137.0" r="2.4"/><circle cx="138.0" cy="133.4" r="2.4"/><circle cx="112.6" cy="129.7" r="2.4"/><circle cx="124.4" cy="129.0" r="2.4"/><circle cx="132.6" cy="144.0" r="2.4"/><circle cx="129.0" cy="119.6" r="2.4"/><circle cx="138.7" cy="124.8" r="2.4"/><circle cx="139.4" cy="131.1" r="2.4"/><circle cx="125.4" cy="125.6" r="2.4"/><circle cx="115.8" cy="123.3" r="2.4"/><circle cx="126.5" cy="128.0" r="2.4"/><circle cx="136.1" cy="134.7" r="2.4"/><circle cx="133.1" cy="130.6" r="2.4"/><circle cx="127.9" cy="147.7" r="2.4"/><circle cx="134.8" cy="121.3" r="2.4"/><circle cx="113.2" cy="126.6" r="2.4"/><circle cx="116.0" cy="120.0" r="2.4"/><circle cx="118.9" cy="140.7" r="2.4"/><circle cx="133.4" cy="131.5" r="2.4"/><circle cx="29.1" cy="136.6" r="2.4"/><circle cx="35.5" cy="147.0" r="2.4"/><circle cx="38.6" cy="153.4" r="2.4"/><circle cx="30.7" cy="140.6" r="2.4"/><circle cx="29.5" cy="116.6" r="2.4"/><circle cx="57.9" cy="123.5" r="2.4"/><circle cx="46.1" cy="131.9" r="2.4"/><circle cx="69.0" cy="145.7" r="2.4"/><circle cx="26.1" cy="127.4" r="2.4"/><circle cx="47.0" cy="155.0" r="2.4"/><circle cx="46.9" cy="127.1" r="2.4"/><circle cx="44.8" cy="134.4" r="2.4"/><circle cx="39.2" cy="140.9" r="2.4"/><circle cx="46.8" cy="150.3" r="2.4"/><circle cx="100.7" cy="26.0" r="2.4"/><circle cx="6.9" cy="122.7" r="2.4"/><circle cx="50.1" cy="119.5" r="2.4"/><circle cx="63.3" cy="61.2" r="2.4"/><circle cx="120.5" cy="146.8" r="2.4"/><circle cx="116.0" cy="90.1" r="2.4"/><circle cx="99.9" cy="166.5" r="2.4"/><circle cx="41.1" cy="120.7" r="2.4"/></g></defs>
+        <text x="100" y="40" font-size="12" fill="var(--accent)" text-anchor="middle">lattice as placed</text>
+        <text x="320" y="40" font-size="12" fill="var(--bad)" text-anchor="middle">shifted half a cell</text>
+        <!-- LEFT panel: lattice origin on the box corner -->
+        <g transform="translate(10,52)">
+          <rect x="0" y="0" width="180" height="180" fill="none" stroke="var(--rule)" stroke-width="1"/>
+          <g stroke="var(--rule)" stroke-width="1">
+            <line x1="45" y1="0" x2="45" y2="180"/><line x1="90" y1="0" x2="90" y2="180"/><line x1="135" y1="0" x2="135" y2="180"/>
+            <line x1="0" y1="45" x2="180" y2="45"/><line x1="0" y1="90" x2="180" y2="90"/><line x1="0" y1="135" x2="180" y2="135"/>
+          </g>
+          <rect x="45" y="45" width="45" height="45" fill="var(--accent)" fill-opacity="0.17" stroke="var(--accent)" stroke-width="1.7"/>
+          <g fill="var(--ink-faint)"><use href="#latdots"/></g>
+        </g>
+        <!-- RIGHT panel: identical points, lattice origin moved by half a cell -->
+        <g transform="translate(230,52)">
+          <rect x="0" y="0" width="180" height="180" fill="none" stroke="var(--rule)" stroke-width="1"/>
+          <g stroke="var(--ink-faint)" stroke-width="1" stroke-dasharray="3 3" opacity="0.85">
+            <line x1="22.5" y1="0" x2="22.5" y2="180"/><line x1="67.5" y1="0" x2="67.5" y2="180"/><line x1="112.5" y1="0" x2="112.5" y2="180"/><line x1="157.5" y1="0" x2="157.5" y2="180"/>
+            <line x1="0" y1="22.5" x2="180" y2="22.5"/><line x1="0" y1="67.5" x2="180" y2="67.5"/><line x1="0" y1="112.5" x2="180" y2="112.5"/><line x1="0" y1="157.5" x2="180" y2="157.5"/>
+          </g>
+          <rect x="112.5" y="112.5" width="45" height="45" fill="var(--bad)" fill-opacity="0.17" stroke="var(--bad)" stroke-width="1.7" stroke-dasharray="4 3"/>
+          <g fill="var(--ink-faint)"><use href="#latdots"/></g>
+        </g>
+        <text x="100" y="256" font-size="11" fill="var(--ink-faint)" text-anchor="middle">densest cell</text>
+        <text x="100" y="280" font-size="17" font-weight="700" fill="var(--accent)" text-anchor="middle">peak = 310</text>
+        <text x="320" y="256" font-size="11" fill="var(--ink-faint)" text-anchor="middle">densest cell</text>
+        <text x="320" y="280" font-size="17" font-weight="700" fill="var(--bad)" text-anchor="middle">peak = 403</text>
+      </svg>
+      <figcaption>Same data, lattice shifted half a cell. Not only the value changes &mdash; so does <em>which</em> cell is the peak.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= 14 · EVERY BOX, EVERY SCALE ============================= -->
+<section class="slide split">
+  <div class="col-text">
+    <div class="kick">measuring occupancy &middot; all boxes at once</div>
+    <h2>Every box, at <span class="accent">every scale</span></h2>
+    <div class="body">
+      <p>So stop picking one. For a <b>cap</b> &mdash; a direction plus a size &mdash; score the gap between the count inside and what an even spread would put there. Do it for every cap, at every size, and average. That average has a closed form:</p>
+      <div class="eq">avg<sub>caps</sub> (count &minus; expected)<sup>2</sup> <span class="op">=</span> <span class="v">c &minus; mean &#8214;x<sub>i</sub> &minus; x<sub>j</sub>&#8214;</span></div>
+      <p>the <b>mean pairwise distance</b> between points &mdash; Stolarsky's invariance principle, 1973.</p>
+    </div>
+    <div class="note">All boxes at all scales, as <span class="acc">one number</span>, with no lattice left to choose.</div>
+  </div>
+  <div class="col-fig">
+    <figure class="dg">
+      <svg viewBox="0 0 460 400" role="img" aria-label="A circle standing for the sphere seen side-on, with five spherical caps drawn on it as lightly shaded circular segments of different sizes at different positions. One large cap has its two bounding radii drawn from the centre with the opening angle marked, showing that a cap is a direction plus a size.">
+        <text x="235" y="32" font-size="12" fill="var(--ink-faint)" text-anchor="middle">the sphere, seen side-on</text>
+        <circle cx="235" cy="210" r="150" fill="none" stroke="var(--ink-faint)" stroke-width="1.2" opacity="0.7"/>
+        <!-- the opening angle of the large cap: two radii + an arc that sits on them -->
+        <g stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.7" fill="none">
+          <line x1="235" y1="210" x2="291.19" y2="349.08"/>
+          <line x1="235" y1="210" x2="86.46" y2="230.88"/>
+          <path d="M250.73,248.94 A42,42 0 0 1 193.41,215.85"/>
+        </g>
+        <text x="204" y="263.7" font-size="11" fill="var(--ink-faint)" text-anchor="middle">2&alpha;</text>
+        <!-- five caps: circular segments, chord + minor arc -->
+        <g fill="var(--accent)" fill-opacity="0.15" stroke="var(--accent)" stroke-width="1.4">
+          <path d="M188.65,67.34 A150,150 0 0 1 291.19,70.92 Z"/>
+          <path d="M298.39,74.05 A150,150 0 0 1 379.89,248.82 Z"/>
+          <path d="M375.95,261.3 A150,150 0 0 1 331.42,324.91 Z"/>
+          <path d="M291.19,349.08 A150,150 0 0 1 86.46,230.88 Z"/>
+          <path d="M90.81,168.65 A150,150 0 0 1 178.81,70.92 Z"/>
+        </g>
+        <circle cx="235" cy="210" r="2.6" fill="var(--ink-faint)"/>
+        <!-- radial leader, landing exactly on the small cap's arc -->
+        <line x1="379.17" y1="310.95" x2="357.87" y2="296.04" stroke="var(--accent)" stroke-width="1"/>
+        <text x="386" y="322" font-size="11" fill="var(--accent)">one cap</text>
+        <text x="235" y="386" font-size="12" fill="var(--ink-soft)" text-anchor="middle">every position, every size &mdash; averaged</text>
+      </svg>
+      <figcaption>Drawn side-on, a cap is a circular segment. Score all of them and the average collapses to a single distance &mdash; exactly, not approximately.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= 15 · THE CROWDING CURVE ============================= -->
+<section class="slide split">
+  <div class="col-text">
+    <div class="kick">measuring occupancy &middot; the curve</div>
+    <h2>The crowding <span class="accent">curve</span></h2>
+    <div class="body">
+      <p>Take every pair's distance and plot the fraction closer than &theta;. No bins &mdash; it is an exact <b>ECDF</b>, defined at every scale at once.</p>
+      <p>On the unit sphere the well-spread reference is exact and <b>razor-thin</b>: its spread shrinks like <code>1/&radic;d</code>, so in high dimension even a small excess of close pairs is unmistakable.</p>
+    </div>
+    <div class="note">Where the curve lifts above the reference is the <span class="acc">scale</span> at which crowding lives &mdash; read off, not assumed.</div>
+  </div>
+  <div class="col-fig">
+    <figure class="dg">
+      <svg viewBox="0 0 470 404" role="img" aria-label="A plot whose horizontal axis is pair distance theta and whose vertical axis is the fraction of pairs closer than theta. The well-spread reference rises as one near-vertical step at the square root of two. The corpus curve lifts off far earlier and holds a shelf above it; the gap between the two curves is shaded, marking an excess of close pairs.">
+        <line x1="56" y1="348" x2="452" y2="348" stroke="var(--rule)" stroke-width="1"/>
+        <line x1="56" y1="348" x2="56" y2="56" stroke="var(--rule)" stroke-width="1"/>
+        <line x1="52" y1="68" x2="56" y2="68" stroke="var(--rule)" stroke-width="1"/>
+        <text x="48" y="72" font-size="11" fill="var(--ink-faint)" text-anchor="end">1</text>
+        <text x="48" y="352" font-size="11" fill="var(--ink-faint)" text-anchor="end">0</text>
+        <text x="26" y="200" font-size="11" fill="var(--ink-faint)" text-anchor="middle" transform="rotate(-90 26 200)">fraction of pairs closer than &theta;</text>
+        <text x="254" y="390" font-size="11" fill="var(--ink-faint)" text-anchor="middle">scale &theta; &mdash; pair distance</text>
+        <line x1="384.1" y1="348" x2="384.1" y2="354" stroke="var(--rule)" stroke-width="1"/>
+        <text x="384.1" y="368" font-size="11" fill="var(--ink-faint)" text-anchor="middle">&radic;2</text>
+        <path d="M79.66,347.97 L80.98,347.96 L82.29,347.95 L83.61,347.95 L84.92,347.93 L86.24,347.92 L87.55,347.91 L88.87,347.89 L90.18,347.87 L91.5,347.84 L92.81,347.81 L94.13,347.78 L95.44,347.74 L96.75,347.69 L98.07,347.64 L99.38,347.58 L100.7,347.52 L102.01,347.44 L103.33,347.35 L104.64,347.26 L105.96,347.15 L107.27,347.02 L108.59,346.88 L109.9,346.73 L111.22,346.56 L112.53,346.37 L113.85,346.15 L115.16,345.92 L116.47,345.67 L117.79,345.39 L119.1,345.08 L120.42,344.75 L121.73,344.39 L123.05,344.01 L124.36,343.59 L125.68,343.14 L126.99,342.66 L128.31,342.15 L129.62,341.6 L130.94,341.03 L132.25,340.42 L133.57,339.78 L134.88,339.1 L136.19,338.4 L137.51,337.66 L138.82,336.9 L140.14,336.11 L141.45,335.29 L142.77,334.44 L144.08,333.58 L145.4,332.69 L146.71,331.79 L148.03,330.87 L149.34,329.94 L150.66,329.01 L151.97,328.06 L153.29,327.11 L154.6,326.16 L155.91,325.22 L157.23,324.28 L158.54,323.34 L159.86,322.42 L161.17,321.52 L162.49,320.63 L163.8,319.76 L165.12,318.91 L166.43,318.09 L167.75,317.29 L169.06,316.52 L170.38,315.77 L171.69,315.06 L173.01,314.38 L174.32,313.73 L175.63,313.11 L176.95,312.53 L178.26,311.98 L179.58,311.46 L180.89,310.97 L182.21,310.51 L183.52,310.09 L184.84,309.69 L186.15,309.33 L187.47,308.99 L188.78,308.68 L190.1,308.4 L191.41,308.14 L192.73,307.9 L194.04,307.68 L195.35,307.49 L196.67,307.31 L197.98,307.15 L199.3,307.01 L200.61,306.88 L201.93,306.77 L203.24,306.67 L204.56,306.58 L205.87,306.5 L207.19,306.43 L208.5,306.37 L209.82,306.32 L211.13,306.27 L212.45,306.23 L213.76,306.2 L215.07,306.17 L216.39,306.14 L217.7,306.12 L219.02,306.1 L220.33,306.08 L221.65,306.07 L222.96,306.06 L224.28,306.05 L225.59,306.04 L226.91,306.03 L228.22,306.03 L229.54,306.02 L230.85,306.02 L232.17,306.01 L233.48,306.01 L234.79,306.01 L236.11,306.01 L237.42,306.01 L238.74,306 L240.05,306 L241.37,306 L242.68,306 L244,306 L245.31,306 L246.63,306 L247.94,306 L249.26,306 L250.57,306 L251.89,306 L253.2,306 L254.51,306 L255.83,306 L257.14,306 L258.46,306 L259.77,306 L261.09,306 L262.4,306 L263.72,306 L265.03,306 L266.35,306 L267.66,306 L268.98,306 L270.29,306 L271.61,306 L272.92,306 L274.23,306 L275.55,306 L276.86,306 L278.18,306 L279.49,306 L280.81,306 L282.12,306 L283.44,306 L284.75,306 L286.07,306 L287.38,306 L288.7,306 L290.01,306 L291.33,306 L292.64,306 L293.95,306 L295.27,306 L296.58,306 L297.9,306 L299.21,306 L300.53,306 L301.84,306 L303.16,306 L304.47,306 L305.79,306 L307.1,306 L308.42,306 L309.73,306 L311.05,306 L312.36,306 L313.67,306 L314.99,306 L316.3,306 L317.62,306 L318.93,306 L320.25,306 L321.56,306 L322.88,306 L324.19,306 L325.51,306 L326.82,306 L328.14,306 L329.45,306 L330.77,306 L332.08,306 L333.39,306 L334.71,306 L336.02,306 L337.34,306 L338.65,306 L339.97,306 L341.28,306 L342.6,305.99 L343.91,305.99 L345.23,305.98 L346.54,305.96 L347.86,305.94 L349.17,305.9 L350.49,305.85 L351.8,305.76 L353.11,305.64 L354.43,305.47 L355.74,305.21 L357.06,304.86 L358.37,304.37 L359.69,303.69 L361,302.79 L362.32,301.6 L363.63,300.05 L364.95,298.07 L366.26,295.58 L367.58,292.49 L368.89,288.72 L370.21,284.19 L371.52,278.83 L372.83,272.6 L374.15,265.46 L375.46,257.42 L376.78,248.49 L378.09,238.74 L379.41,228.26 L380.72,217.17 L382.04,205.62 L383.35,193.77 L384.67,181.83 L385.98,169.96 L387.3,158.36 L387.3,158.42 L385.98,178.13 L384.67,198.88 L383.35,219.94 L382.04,240.59 L380.72,260.12 L379.41,277.94 L378.09,293.64 L376.78,306.98 L375.46,317.93 L374.15,326.59 L372.83,333.21 L371.52,338.1 L370.21,341.57 L368.89,343.95 L367.58,345.54 L366.26,346.55 L364.95,347.17 L363.63,347.54 L362.32,347.75 L361,347.87 L359.69,347.94 L358.37,347.97 L357.06,347.99 L355.74,347.99 L354.43,348 L353.11,348 L351.8,348 L350.49,348 L349.17,348 L347.86,348 L346.54,348 L345.23,348 L343.91,348 L342.6,348 L341.28,348 L339.97,348 L338.65,348 L337.34,348 L336.02,348 L334.71,348 L333.39,348 L332.08,348 L330.77,348 L329.45,348 L328.14,348 L326.82,348 L325.51,348 L324.19,348 L322.88,348 L321.56,348 L320.25,348 L318.93,348 L317.62,348 L316.3,348 L314.99,348 L313.67,348 L312.36,348 L311.05,348 L309.73,348 L308.42,348 L307.1,348 L305.79,348 L304.47,348 L303.16,348 L301.84,348 L300.53,348 L299.21,348 L297.9,348 L296.58,348 L295.27,348 L293.95,348 L292.64,348 L291.33,348 L290.01,348 L288.7,348 L287.38,348 L286.07,348 L284.75,348 L283.44,348 L282.12,348 L280.81,348 L279.49,348 L278.18,348 L276.86,348 L275.55,348 L274.23,348 L272.92,348 L271.61,348 L270.29,348 L268.98,348 L267.66,348 L266.35,348 L265.03,348 L263.72,348 L262.4,348 L261.09,348 L259.77,348 L258.46,348 L257.14,348 L255.83,348 L254.51,348 L253.2,348 L251.89,348 L250.57,348 L249.26,348 L247.94,348 L246.63,348 L245.31,348 L244,348 L242.68,348 L241.37,348 L240.05,348 L238.74,348 L237.42,348 L236.11,348 L234.79,348 L233.48,348 L232.17,348 L230.85,348 L229.54,348 L228.22,348 L226.91,348 L225.59,348 L224.28,348 L222.96,348 L221.65,348 L220.33,348 L219.02,348 L217.7,348 L216.39,348 L215.07,348 L213.76,348 L212.45,348 L211.13,348 L209.82,348 L208.5,348 L207.19,348 L205.87,348 L204.56,348 L203.24,348 L201.93,348 L200.61,348 L199.3,348 L197.98,348 L196.67,348 L195.35,348 L194.04,348 L192.73,348 L191.41,348 L190.1,348 L188.78,348 L187.47,348 L186.15,348 L184.84,348 L183.52,348 L182.21,348 L180.89,348 L179.58,348 L178.26,348 L176.95,348 L175.63,348 L174.32,348 L173.01,348 L171.69,348 L170.38,348 L169.06,348 L167.75,348 L166.43,348 L165.12,348 L163.8,348 L162.49,348 L161.17,348 L159.86,348 L158.54,348 L157.23,348 L155.91,348 L154.6,348 L153.29,348 L151.97,348 L150.66,348 L149.34,348 L148.03,348 L146.71,348 L145.4,348 L144.08,348 L142.77,348 L141.45,348 L140.14,348 L138.82,348 L137.51,348 L136.19,348 L134.88,348 L133.57,348 L132.25,348 L130.94,348 L129.62,348 L128.31,348 L126.99,348 L125.68,348 L124.36,348 L123.05,348 L121.73,348 L120.42,348 L119.1,348 L117.79,348 L116.47,348 L115.16,348 L113.85,348 L112.53,348 L111.22,348 L109.9,348 L108.59,348 L107.27,348 L105.96,348 L104.64,348 L103.33,348 L102.01,348 L100.7,348 L99.38,348 L98.07,348 L96.75,348 L95.44,348 L94.13,348 L92.81,348 L91.5,348 L90.18,348 L88.87,348 L87.55,348 L86.24,348 L84.92,348 L83.61,348 L82.29,348 L80.98,348 L79.66,348 Z" fill="var(--bad)" fill-opacity="0.2" stroke="none"/>
+        <polyline points="56,348 57.31,348 58.63,348 59.94,348 61.26,348 62.57,348 63.89,348 65.2,348 66.52,348 67.83,348 69.15,348 70.46,348 71.78,348 73.09,348 74.41,348 75.72,348 77.03,348 78.35,348 79.66,348 80.98,348 82.29,348 83.61,348 84.92,348 86.24,348 87.55,348 88.87,348 90.18,348 91.5,348 92.81,348 94.13,348 95.44,348 96.75,348 98.07,348 99.38,348 100.7,348 102.01,348 103.33,348 104.64,348 105.96,348 107.27,348 108.59,348 109.9,348 111.22,348 112.53,348 113.85,348 115.16,348 116.47,348 117.79,348 119.1,348 120.42,348 121.73,348 123.05,348 124.36,348 125.68,348 126.99,348 128.31,348 129.62,348 130.94,348 132.25,348 133.57,348 134.88,348 136.19,348 137.51,348 138.82,348 140.14,348 141.45,348 142.77,348 144.08,348 145.4,348 146.71,348 148.03,348 149.34,348 150.66,348 151.97,348 153.29,348 154.6,348 155.91,348 157.23,348 158.54,348 159.86,348 161.17,348 162.49,348 163.8,348 165.12,348 166.43,348 167.75,348 169.06,348 170.38,348 171.69,348 173.01,348 174.32,348 175.63,348 176.95,348 178.26,348 179.58,348 180.89,348 182.21,348 183.52,348 184.84,348 186.15,348 187.47,348 188.78,348 190.1,348 191.41,348 192.73,348 194.04,348 195.35,348 196.67,348 197.98,348 199.3,348 200.61,348 201.93,348 203.24,348 204.56,348 205.87,348 207.19,348 208.5,348 209.82,348 211.13,348 212.45,348 213.76,348 215.07,348 216.39,348 217.7,348 219.02,348 220.33,348 221.65,348 222.96,348 224.28,348 225.59,348 226.91,348 228.22,348 229.54,348 230.85,348 232.17,348 233.48,348 234.79,348 236.11,348 237.42,348 238.74,348 240.05,348 241.37,348 242.68,348 244,348 245.31,348 246.63,348 247.94,348 249.26,348 250.57,348 251.89,348 253.2,348 254.51,348 255.83,348 257.14,348 258.46,348 259.77,348 261.09,348 262.4,348 263.72,348 265.03,348 266.35,348 267.66,348 268.98,348 270.29,348 271.61,348 272.92,348 274.23,348 275.55,348 276.86,348 278.18,348 279.49,348 280.81,348 282.12,348 283.44,348 284.75,348 286.07,348 287.38,348 288.7,348 290.01,348 291.33,348 292.64,348 293.95,348 295.27,348 296.58,348 297.9,348 299.21,348 300.53,348 301.84,348 303.16,348 304.47,348 305.79,348 307.1,348 308.42,348 309.73,348 311.05,348 312.36,348 313.67,348 314.99,348 316.3,348 317.62,348 318.93,348 320.25,348 321.56,348 322.88,348 324.19,348 325.51,348 326.82,348 328.14,348 329.45,348 330.77,348 332.08,348 333.39,348 334.71,348 336.02,348 337.34,348 338.65,348 339.97,348 341.28,348 342.6,348 343.91,348 345.23,348 346.54,348 347.86,348 349.17,348 350.49,348 351.8,348 353.11,348 354.43,348 355.74,347.99 357.06,347.99 358.37,347.97 359.69,347.94 361,347.87 362.32,347.75 363.63,347.54 364.95,347.17 366.26,346.55 367.58,345.54 368.89,343.95 370.21,341.57 371.52,338.1 372.83,333.21 374.15,326.59 375.46,317.93 376.78,306.98 378.09,293.64 379.41,277.94 380.72,260.12 382.04,240.59 383.35,219.94 384.67,198.88 385.98,178.13 387.3,158.42 388.61,140.34 389.93,124.34 391.24,110.67 392.55,99.41 393.87,90.44 395.18,83.57 396.5,78.47 397.81,74.83 399.13,72.31 400.44,70.64 401.76,69.56 403.07,68.9 404.39,68.5 405.7,68.27 407.02,68.14 408.33,68.07 409.65,68.03 410.96,68.02 412.27,68.01 413.59,68 414.9,68 416.22,68 417.53,68 418.85,68 420.16,68 421.48,68 422.79,68 424.11,68 425.42,68 426.74,68 428.05,68 429.37,68 430.68,68 431.99,68 433.31,68 434.62,68 435.94,68 437.25,68 438.57,68 439.88,68 441.2,68 442.51,68 443.83,68 445.14,68 446.46,68 447.77,68 449.09,68 450.4,68" fill="none" stroke="var(--ink-faint)" stroke-width="1.3" stroke-dasharray="4 3"/>
+        <polyline points="56,348 57.31,348 58.63,348 59.94,348 61.26,348 62.57,348 63.89,348 65.2,348 66.52,348 67.83,348 69.15,347.99 70.46,347.99 71.78,347.99 73.09,347.99 74.41,347.99 75.72,347.98 77.03,347.98 78.35,347.97 79.66,347.97 80.98,347.96 82.29,347.95 83.61,347.95 84.92,347.93 86.24,347.92 87.55,347.91 88.87,347.89 90.18,347.87 91.5,347.84 92.81,347.81 94.13,347.78 95.44,347.74 96.75,347.69 98.07,347.64 99.38,347.58 100.7,347.52 102.01,347.44 103.33,347.35 104.64,347.26 105.96,347.15 107.27,347.02 108.59,346.88 109.9,346.73 111.22,346.56 112.53,346.37 113.85,346.15 115.16,345.92 116.47,345.67 117.79,345.39 119.1,345.08 120.42,344.75 121.73,344.39 123.05,344.01 124.36,343.59 125.68,343.14 126.99,342.66 128.31,342.15 129.62,341.6 130.94,341.03 132.25,340.42 133.57,339.78 134.88,339.1 136.19,338.4 137.51,337.66 138.82,336.9 140.14,336.11 141.45,335.29 142.77,334.44 144.08,333.58 145.4,332.69 146.71,331.79 148.03,330.87 149.34,329.94 150.66,329.01 151.97,328.06 153.29,327.11 154.6,326.16 155.91,325.22 157.23,324.28 158.54,323.34 159.86,322.42 161.17,321.52 162.49,320.63 163.8,319.76 165.12,318.91 166.43,318.09 167.75,317.29 169.06,316.52 170.38,315.77 171.69,315.06 173.01,314.38 174.32,313.73 175.63,313.11 176.95,312.53 178.26,311.98 179.58,311.46 180.89,310.97 182.21,310.51 183.52,310.09 184.84,309.69 186.15,309.33 187.47,308.99 188.78,308.68 190.1,308.4 191.41,308.14 192.73,307.9 194.04,307.68 195.35,307.49 196.67,307.31 197.98,307.15 199.3,307.01 200.61,306.88 201.93,306.77 203.24,306.67 204.56,306.58 205.87,306.5 207.19,306.43 208.5,306.37 209.82,306.32 211.13,306.27 212.45,306.23 213.76,306.2 215.07,306.17 216.39,306.14 217.7,306.12 219.02,306.1 220.33,306.08 221.65,306.07 222.96,306.06 224.28,306.05 225.59,306.04 226.91,306.03 228.22,306.03 229.54,306.02 230.85,306.02 232.17,306.01 233.48,306.01 234.79,306.01 236.11,306.01 237.42,306.01 238.74,306 240.05,306 241.37,306 242.68,306 244,306 245.31,306 246.63,306 247.94,306 249.26,306 250.57,306 251.89,306 253.2,306 254.51,306 255.83,306 257.14,306 258.46,306 259.77,306 261.09,306 262.4,306 263.72,306 265.03,306 266.35,306 267.66,306 268.98,306 270.29,306 271.61,306 272.92,306 274.23,306 275.55,306 276.86,306 278.18,306 279.49,306 280.81,306 282.12,306 283.44,306 284.75,306 286.07,306 287.38,306 288.7,306 290.01,306 291.33,306 292.64,306 293.95,306 295.27,306 296.58,306 297.9,306 299.21,306 300.53,306 301.84,306 303.16,306 304.47,306 305.79,306 307.1,306 308.42,306 309.73,306 311.05,306 312.36,306 313.67,306 314.99,306 316.3,306 317.62,306 318.93,306 320.25,306 321.56,306 322.88,306 324.19,306 325.51,306 326.82,306 328.14,306 329.45,306 330.77,306 332.08,306 333.39,306 334.71,306 336.02,306 337.34,306 338.65,306 339.97,306 341.28,306 342.6,305.99 343.91,305.99 345.23,305.98 346.54,305.96 347.86,305.94 349.17,305.9 350.49,305.85 351.8,305.76 353.11,305.64 354.43,305.47 355.74,305.21 357.06,304.86 358.37,304.37 359.69,303.69 361,302.79 362.32,301.6 363.63,300.05 364.95,298.07 366.26,295.58 367.58,292.49 368.89,288.72 370.21,284.19 371.52,278.83 372.83,272.6 374.15,265.46 375.46,257.42 376.78,248.49 378.09,238.74 379.41,228.26 380.72,217.17 382.04,205.62 383.35,193.77 384.67,181.83 385.98,169.96 387.3,158.36 388.61,147.2 389.93,136.63 391.24,126.77 392.55,117.73 393.87,109.56 395.18,102.3 396.5,95.95 397.81,90.48 399.13,85.84 400.44,81.97 401.76,78.8 403.07,76.23 404.39,74.18 405.7,72.58 407.02,71.35 408.33,70.41 409.65,69.71 410.96,69.2 412.27,68.83 413.59,68.56 414.9,68.38 416.22,68.25 417.53,68.16 418.85,68.1 420.16,68.07 421.48,68.04 422.79,68.03 424.11,68.02 425.42,68.01 426.74,68.01 428.05,68 429.37,68 430.68,68 431.99,68 433.31,68 434.62,68 435.94,68 437.25,68 438.57,68 439.88,68 441.2,68 442.51,68 443.83,68 445.14,68 446.46,68 447.77,68 449.09,68 450.4,68" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        <text x="284.5" y="322" font-size="10.5" fill="var(--bad)" text-anchor="middle">excess close pairs</text>
+        <text x="284.5" y="337" font-size="10.5" fill="var(--bad)" text-anchor="middle">crowding lives here</text>
+        <text x="150" y="316" font-size="11" fill="var(--accent)" text-anchor="end">corpus</text>
+        <line x1="153" y1="317" x2="162.49" y2="320.63" stroke="var(--accent)" stroke-width="0.9"/>
+        <line x1="400" y1="288" x2="384.67" y2="198.88" stroke="var(--ink-faint)" stroke-width="0.9"/>
+        <text x="462" y="300" font-size="11" fill="var(--ink-faint)" text-anchor="end">well-spread</text>
+        <text x="462" y="315" font-size="11" fill="var(--ink-faint)" text-anchor="end">reference</text>
+      </svg>
+      <figcaption>The shaded lift is the excess of close pairs; where it sits on &theta; is the scale that is crowded. The reference is a step because distances concentrate.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= 16 · A RULER AT EVERY ENTITY ============================= -->
+<section class="slide split">
+  <div class="col-text">
+    <div class="kick">measuring occupancy &middot; the ruler</div>
+    <h2>A ruler at <span class="accent">every entity</span></h2>
+    <div class="body">
+      <p><b>Distance-to-measure:</b> for each entity, the radius it needs to gather a fixed share of the corpus. Small means crowded, large means isolated.</p>
+      <p>Continuous, and <em>per entity</em> &mdash; it names <b>which items</b> are crowded, not which cell is full.</p>
+    </div>
+    <div class="note"><strong>And provably stable:</strong> nudge the data a little and the score moves a little. A bin count offers no such <span class="acc">guarantee</span> &mdash; one point crossing one edge moves it by a whole unit.</div>
+  </div>
+  <div class="col-fig">
+    <figure class="dg">
+      <svg viewBox="0 0 470 364" role="img" aria-label="A scatter of one hundred points with two entities highlighted. The one inside a dense clump needs only a small circle to gather five percent of the corpus; the one out in a sparse region needs a circle four times wider to gather the same five percent.">
+        <g fill="var(--ink-faint)" opacity="0.55"><circle cx="161.11" cy="164.86" r="2.5"/><circle cx="112.91" cy="199.66" r="2.5"/><circle cx="177.2" cy="193.01" r="2.5"/><circle cx="134.81" cy="208.59" r="2.5"/><circle cx="114.75" cy="210.37" r="2.5"/><circle cx="163.69" cy="171.13" r="2.5"/><circle cx="87.4" cy="154.12" r="2.5"/><circle cx="140.78" cy="222.61" r="2.5"/><circle cx="156.17" cy="196.05" r="2.5"/><circle cx="152.17" cy="164.17" r="2.5"/><circle cx="117.78" cy="153.88" r="2.5"/><circle cx="119.32" cy="207.38" r="2.5"/><circle cx="118.5" cy="157.87" r="2.5"/><circle cx="104.47" cy="157.46" r="2.5"/><circle cx="108.4" cy="147.49" r="2.5"/><circle cx="157.77" cy="156.8" r="2.5"/><circle cx="157.48" cy="162.64" r="2.5"/><circle cx="69.04" cy="188.96" r="2.5"/><circle cx="112.49" cy="181.88" r="2.5"/><circle cx="96.72" cy="156.03" r="2.5"/><circle cx="139.81" cy="216.93" r="2.5"/><circle cx="201.07" cy="281.44" r="2.5"/><circle cx="269.26" cy="239.8" r="2.5"/><circle cx="273.99" cy="297.85" r="2.5"/><circle cx="290.39" cy="278.43" r="2.5"/><circle cx="196.99" cy="264.01" r="2.5"/><circle cx="269.47" cy="264.77" r="2.5"/><circle cx="187.29" cy="278.21" r="2.5"/><circle cx="241.91" cy="280.04" r="2.5"/><circle cx="163.42" cy="262.66" r="2.5"/><circle cx="234.03" cy="260.16" r="2.5"/><circle cx="274.49" cy="246.78" r="2.5"/><circle cx="217.95" cy="203.45" r="2.5"/><circle cx="290.12" cy="254.68" r="2.5"/><circle cx="202.74" cy="288.75" r="2.5"/><circle cx="196.8" cy="244.04" r="2.5"/><circle cx="237.48" cy="276.61" r="2.5"/><circle cx="194.17" cy="239.86" r="2.5"/><circle cx="291.86" cy="261.31" r="2.5"/><circle cx="188.61" cy="265.19" r="2.5"/><circle cx="310.33" cy="245.04" r="2.5"/><circle cx="197.81" cy="86.66" r="2.5"/><circle cx="418.53" cy="285.66" r="2.5"/><circle cx="201.65" cy="282.05" r="2.5"/><circle cx="380.99" cy="224.6" r="2.5"/><circle cx="182.59" cy="179.95" r="2.5"/><circle cx="395.15" cy="281.31" r="2.5"/><circle cx="281.97" cy="272.34" r="2.5"/><circle cx="101.52" cy="106.07" r="2.5"/><circle cx="304.22" cy="289.46" r="2.5"/><circle cx="264.16" cy="272.69" r="2.5"/><circle cx="226.69" cy="292.35" r="2.5"/><circle cx="61.88" cy="282.59" r="2.5"/><circle cx="212.24" cy="295.42" r="2.5"/><circle cx="127.09" cy="78.8" r="2.5"/><circle cx="97.04" cy="144.05" r="2.5"/><circle cx="396.51" cy="119.64" r="2.5"/><circle cx="406.63" cy="287.67" r="2.5"/><circle cx="53.45" cy="71.03" r="2.5"/><circle cx="214.44" cy="199.33" r="2.5"/><circle cx="396.53" cy="290.99" r="2.5"/><circle cx="378.93" cy="81.03" r="2.5"/><circle cx="304.75" cy="243.1" r="2.5"/><circle cx="340.21" cy="230.92" r="2.5"/><circle cx="234.19" cy="215.15" r="2.5"/><circle cx="267.76" cy="56.02" r="2.5"/><circle cx="215.36" cy="174.87" r="2.5"/><circle cx="178.3" cy="258.29" r="2.5"/><circle cx="118.47" cy="239.12" r="2.5"/><circle cx="120.08" cy="207.64" r="2.5"/><circle cx="396.43" cy="265.06" r="2.5"/><circle cx="223.78" cy="235.03" r="2.5"/><circle cx="238.05" cy="244.03" r="2.5"/><circle cx="106.16" cy="204.06" r="2.5"/><circle cx="116.39" cy="146.22" r="2.5"/><circle cx="186.93" cy="105.37" r="2.5"/><circle cx="365.53" cy="54.91" r="2.5"/><circle cx="182.22" cy="189.77" r="2.5"/><circle cx="222.3" cy="81.84" r="2.5"/><circle cx="207.11" cy="189.38" r="2.5"/><circle cx="94.96" cy="126.66" r="2.5"/><circle cx="387.12" cy="264.38" r="2.5"/><circle cx="308.36" cy="258.07" r="2.5"/><circle cx="166.42" cy="272.68" r="2.5"/><circle cx="148.72" cy="109.58" r="2.5"/><circle cx="421.78" cy="135.87" r="2.5"/><circle cx="157.47" cy="66.17" r="2.5"/><circle cx="400.15" cy="132.05" r="2.5"/></g>
+        <!-- the isolated entity: a wide ring for the same share -->
+        <circle cx="311.52" cy="149.79" r="76.14" fill="var(--good)" fill-opacity="0.09" stroke="var(--good)" stroke-width="1.5"/>
+        <line x1="311.52" y1="149.79" x2="376.1" y2="109.44" stroke="var(--good)" stroke-width="1" stroke-dasharray="3 3"/>
+        <g fill="var(--good)" opacity="0.9"><circle cx="283.36" cy="113.42" r="2.9"/><circle cx="287.25" cy="132.15" r="2.9"/><circle cx="323.16" cy="76.8" r="2.9"/><circle cx="270.49" cy="213.92" r="2.9"/><circle cx="300.43" cy="193.9" r="2.9"/></g>
+        <circle cx="311.52" cy="149.79" r="4.6" fill="var(--good)"/>
+        <!-- the crowded entity: a tight ring for the same share -->
+        <circle cx="131.38" cy="175.35" r="19.17" fill="var(--bad)" fill-opacity="0.13" stroke="var(--bad)" stroke-width="1.5"/>
+        <line x1="131.38" y1="175.35" x2="146.07" y2="163.03" stroke="var(--bad)" stroke-width="1" stroke-dasharray="3 3"/>
+        <g fill="var(--bad)" opacity="0.9"><circle cx="120.63" cy="159.48" r="2.9"/><circle cx="135.58" cy="163.79" r="2.9"/><circle cx="115" cy="184.32" r="2.9"/><circle cx="141.56" cy="181.54" r="2.9"/><circle cx="144.61" cy="185.59" r="2.9"/></g>
+        <circle cx="131.38" cy="175.35" r="4.6" fill="var(--bad)"/>
+        <text x="131.38" y="334" font-size="11" fill="var(--bad)" text-anchor="middle">radius small</text>
+        <text x="131.38" y="349" font-size="11" fill="var(--bad)" text-anchor="middle">= crowded</text>
+        <text x="311.52" y="334" font-size="11" fill="var(--good)" text-anchor="middle">radius large</text>
+        <text x="311.52" y="349" font-size="11" fill="var(--good)" text-anchor="middle">= isolated</text>
+      </svg>
+      <figcaption>Both rings hold the same <b>5%</b> of the corpus. The radius each entity needs to get there <em>is</em> its crowding score &mdash; here they differ four-fold.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= 17 · THE FAMILY TREE OF CROWDING ============================= -->
+<section class="slide split">
+  <div class="col-text">
+    <div class="kick">measuring occupancy &middot; the tree</div>
+    <h2>The <span class="accent">family tree</span> of crowding</h2>
+    <div class="body">
+      <p>Join entities by their shortest bridges &mdash; a <b>minimum spanning tree</b> &mdash; and watch groups merge as the scale grows.</p>
+      <p>Every tight group gets a <b>birth</b> and a <b>merge</b>. The span between them is its <span class="accent">prominence</span>, and no threshold was chosen to get it.</p>
+    </div>
+    <div class="note">The tree answers <strong>how many</strong> over-tight pockets exist, <strong>how tight</strong> each one is, and <strong>which entities</strong> belong to each.</div>
+  </div>
+  <div class="col-fig">
+    <figure class="dg">
+      <svg viewBox="0 0 480 410" role="img" aria-label="A merge tree. Three groups of points are sketched along the bottom, each with its shortest connecting bridges drawn. Above them, three branches rise on a scale axis: the leftmost group is born very low and does not merge until high up, giving it a tall prominence; the middle group is born late and merges almost immediately, a shallow one.">
+        <defs><marker id="eup" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--rule)"/></marker><marker id="espan" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0,0 L7,3.5 L0,7 z" fill="var(--bad)"/></marker><marker id="espanf" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0,0 L7,3.5 L0,7 z" fill="var(--ink-faint)"/></marker></defs>
+        <!-- scale axis + the h = 0 baseline -->
+        <line x1="54" y1="350" x2="54" y2="66" stroke="var(--rule)" stroke-width="1" marker-end="url(#eup)"/>
+        <line x1="54" y1="350" x2="400" y2="350" stroke="var(--rule)" stroke-width="1"/>
+        <text x="26" y="210" font-size="11" fill="var(--ink-faint)" text-anchor="middle" transform="rotate(-90 26 210)">scale (merge height)</text>
+        <!-- stems from the h = 0 baseline up to each birth -->
+        <g stroke="var(--ink-faint)" stroke-width="1" stroke-dasharray="2 4" opacity="0.75">
+          <line x1="118" y1="350" x2="118" y2="326"/>
+          <line x1="232" y1="350" x2="232" y2="230"/>
+          <line x1="366" y1="350" x2="366" y2="286"/>
+        </g>
+        <!-- the tall branch: born at 0.06, does not merge until 0.62 -->
+        <line x1="118" y1="326" x2="118" y2="102" stroke="var(--bad)" stroke-width="2"/>
+        <!-- the other two branches, and the merges -->
+        <g stroke="var(--ink-faint)" stroke-width="1.5" fill="none">
+          <line x1="232" y1="230" x2="232" y2="190"/>
+          <line x1="366" y1="286" x2="366" y2="190"/>
+          <line x1="232" y1="190" x2="366" y2="190"/>
+          <line x1="299" y1="190" x2="299" y2="102"/>
+          <line x1="118" y1="102" x2="299" y2="102"/>
+          <line x1="208.5" y1="102" x2="208.5" y2="80"/>
+        </g>
+        <!-- births -->
+        <circle cx="118" cy="326" r="3.2" fill="var(--bad)"/>
+        <circle cx="232" cy="230" r="3.2" fill="var(--ink-faint)"/>
+        <circle cx="366" cy="286" r="3.2" fill="var(--ink-faint)"/>
+        <text x="112" y="336" font-size="11" fill="var(--ink-faint)" text-anchor="end">birth</text>
+        <!-- prominence bracket on the tall branch: ticks seated on the stem -->
+        <g stroke="var(--bad)" stroke-width="1.1" fill="none">
+          <line x1="136" y1="326" x2="136" y2="102" marker-start="url(#espan)" marker-end="url(#espan)"/>
+          <line x1="118" y1="326" x2="136" y2="326" stroke-width="0.8" opacity="0.7"/>
+          <line x1="118" y1="102" x2="136" y2="102" stroke-width="0.8" opacity="0.7"/>
+        </g>
+        <text x="144" y="160" font-size="11" fill="var(--bad)">prominence</text>
+        <text x="144" y="175" font-size="11" fill="var(--bad)">= a tight pocket</text>
+        <!-- the shallow one -->
+        <g stroke="var(--ink-faint)" stroke-width="1.1" fill="none">
+          <line x1="250" y1="230" x2="250" y2="190" marker-start="url(#espanf)" marker-end="url(#espanf)"/>
+          <line x1="232" y1="230" x2="250" y2="230" stroke-width="0.8" opacity="0.7"/>
+          <line x1="232" y1="190" x2="250" y2="190" stroke-width="0.8" opacity="0.7"/>
+        </g>
+        <text x="258" y="212" font-size="11" fill="var(--ink-faint)">shallow</text>
+        <text x="258" y="227" font-size="11" fill="var(--ink-faint)">&mdash; just texture</text>
+        <text x="208.5" y="70" font-size="11" fill="var(--ink-faint)" text-anchor="middle">everything joined</text>
+        <!-- the groups below, with their shortest bridges -->
+        <text x="50" y="378" font-size="11" fill="var(--ink-faint)" text-anchor="end">points</text>
+        <g stroke="var(--bad)" stroke-width="1" opacity="0.8"><line x1="115.83" y1="375.04" x2="110.09" y2="370.73"/><line x1="110.09" y1="370.73" x2="103.84" y2="377.09"/><line x1="115.83" y1="375.04" x2="122.43" y2="368.18"/><line x1="122.43" y1="368.18" x2="127.45" y2="374.52"/><line x1="110.09" y1="370.73" x2="103.62" y2="361.62"/></g>
+        <g fill="var(--bad)"><circle cx="115.83" cy="375.04" r="2.8"/><circle cx="110.09" cy="370.73" r="2.8"/><circle cx="127.45" cy="374.52" r="2.8"/><circle cx="103.84" cy="377.09" r="2.8"/><circle cx="103.62" cy="361.62" r="2.8"/><circle cx="122.43" cy="368.18" r="2.8"/></g>
+        <g stroke="var(--ink-faint)" stroke-width="1" opacity="0.8"><line x1="238.79" y1="378.07" x2="245.91" y2="375.83"/><line x1="238.79" y1="378.07" x2="244.25" y2="390.43"/><line x1="238.79" y1="378.07" x2="224.43" y2="370.36"/><line x1="224.43" y1="370.36" x2="218.35" y2="360.61"/><line x1="244.25" y1="390.43" x2="217.45" y2="398.45"/></g>
+        <g fill="var(--ink-faint)"><circle cx="238.79" cy="378.07" r="2.8"/><circle cx="217.45" cy="398.45" r="2.8"/><circle cx="244.25" cy="390.43" r="2.8"/><circle cx="218.35" cy="360.61" r="2.8"/><circle cx="224.43" cy="370.36" r="2.8"/><circle cx="245.91" cy="375.83" r="2.8"/></g>
+        <g stroke="var(--ink-faint)" stroke-width="1" opacity="0.8"><line x1="359.29" y1="361.95" x2="353.88" y2="374.57"/><line x1="353.88" y1="374.57" x2="358.19" y2="384.82"/><line x1="358.19" y1="384.82" x2="366.73" y2="385.72"/><line x1="359.29" y1="361.95" x2="372.4" y2="356.36"/></g>
+        <g fill="var(--ink-faint)"><circle cx="359.29" cy="361.95" r="2.8"/><circle cx="358.19" cy="384.82" r="2.8"/><circle cx="353.88" cy="374.57" r="2.8"/><circle cx="372.4" cy="356.36" r="2.8"/><circle cx="366.73" cy="385.72" r="2.8"/></g>
+      </svg>
+      <figcaption>A branch that stays separate far up the scale is a real pocket; one that merges the moment it forms is texture. The tree tells them apart without a cut-off.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= 18 · WHY RETRIEVAL CARES ============================= -->
+<section class="slide split">
+  <div class="col-text">
+    <div class="kick">measuring occupancy &middot; what it buys</div>
+    <h2>Why <span class="accent">retrieval</span> cares</h2>
+    <div class="body">
+      <p>A retrieval neighborhood <em>is</em> a cap on the sphere. Two items inside the same small cap are a <b class="bad">future collision</b> &mdash; a query cannot tell them apart.</p>
+      <p>So the geometry and the failure are the same object, measured two ways.</p>
+    </div>
+    <div class="note">The <span class="acc">curve</span> gives the scale of the collisions, the <span class="acc">ruler</span> names the entities at risk, and the <span class="acc">tree</span> says whether the crowding is one broad pile or many tight duplicate pockets.</div>
+  </div>
+  <div class="col-fig">
+    <figure class="dg">
+      <svg viewBox="0 0 470 380" role="img" aria-label="A circle standing for the sphere seen side-on. An arrow runs from the centre out to a shaded cap, standing for a query direction and the neighborhood it retrieves. Seven items sit inside the cap; two of them are so close together that they are ringed as a collision a query could not separate.">
+        <defs><marker id="qa" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--ink-soft)"/></marker></defs>
+        <circle cx="212" cy="212" r="146" fill="none" stroke="var(--ink-faint)" stroke-width="1.2" opacity="0.7"/>
+        <g fill="var(--ink-faint)" opacity="0.75"><circle cx="281.54" cy="195.91" r="2.5"/><circle cx="180.4" cy="257.96" r="2.5"/><circle cx="287.5" cy="156.89" r="2.5"/><circle cx="86.23" cy="187.92" r="2.5"/><circle cx="144.01" cy="218.93" r="2.5"/><circle cx="173.15" cy="120.7" r="2.5"/><circle cx="196.13" cy="324.02" r="2.5"/><circle cx="267.55" cy="173.75" r="2.5"/><circle cx="152.8" cy="203.59" r="2.5"/><circle cx="211.39" cy="337.64" r="2.5"/><circle cx="206.66" cy="253.01" r="2.5"/><circle cx="182.5" cy="293.36" r="2.5"/><circle cx="321.15" cy="220.39" r="2.5"/><circle cx="98.4" cy="279.52" r="2.5"/><circle cx="107.28" cy="245.91" r="2.5"/><circle cx="271.5" cy="226.44" r="2.5"/><circle cx="253.01" cy="290.14" r="2.5"/><circle cx="299.05" cy="265.81" r="2.5"/><circle cx="334.52" cy="182.94" r="2.5"/><circle cx="114.91" cy="118.56" r="2.5"/><circle cx="197.43" cy="104.68" r="2.5"/><circle cx="174.37" cy="222.34" r="2.5"/><circle cx="343.68" cy="225.51" r="2.5"/><circle cx="147.82" cy="241.71" r="2.5"/></g>
+        <!-- the query neighborhood: a cap -->
+        <path d="M191.68,67.42 A146,146 0 0 1 350.85,166.88 Z" fill="var(--accent)" fill-opacity="0.14" stroke="var(--accent)" stroke-width="1.5"/>
+        <!-- the query direction, its tip landing on the cap's chord -->
+        <line x1="212" y1="212" x2="270" y2="119.21" stroke="var(--ink-soft)" stroke-width="1.6" marker-end="url(#qa)"/>
+        <circle cx="212" cy="212" r="2.8" fill="var(--ink-soft)"/>
+        <text x="200" y="164" font-size="11" fill="var(--ink-soft)" text-anchor="end">query</text>
+        <text x="200" y="179" font-size="11" fill="var(--ink-soft)" text-anchor="end">direction</text>
+        <!-- what the query retrieves -->
+        <g fill="var(--accent)"><circle cx="262.18" cy="98.82" r="3.2"/><circle cx="233.88" cy="78.26" r="3.2"/><circle cx="291.8" cy="107.25" r="3.2"/><circle cx="251.16" cy="82.55" r="3.2"/><circle cx="329.5" cy="142.43" r="3.2"/></g>
+        <!-- the collision: two items inside one small cap -->
+        <circle cx="312.35" cy="127.79" r="9.5" fill="none" stroke="var(--bad)" stroke-width="1.5"/>
+        <g fill="var(--bad)"><circle cx="309.78" cy="124.73" r="3.4"/><circle cx="314.92" cy="130.86" r="3.4"/></g>
+        <line x1="346.82" y1="98.87" x2="319.63" y2="121.69" stroke="var(--bad)" stroke-width="0.9"/>
+        <text x="352" y="92" font-size="11" fill="var(--bad)">same small cap</text>
+        <text x="352" y="107" font-size="11" fill="var(--bad)">= a collision</text>
+        <!-- what the cap is -->
+        <line x1="303.15" y1="66.14" x2="289.37" y2="88.18" stroke="var(--accent)" stroke-width="0.9"/>
+        <text x="309" y="62" font-size="11" fill="var(--accent)">a query's neighborhood</text>
+      </svg>
+      <figcaption>The cap is not a metaphor for the neighborhood &mdash; it is the neighborhood. Pairs that share a small one are the items retrieval will confuse.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= 19 · CLOSING ============================= -->
 <section class="slide title split">
   <div class="col-text">
     <div class="kick">the through-line</div>
