@@ -547,9 +547,9 @@
     </div>
     <div class="compare">
       <div class="box"><div class="t acc">Local — neighbor overlap</div>Per item, the fraction of its top-k neighbors shared between the two graphs. <b>Retrieval-relevant</b> and <b>dimension-agnostic</b>: it compares neighbor <em>sets</em>, and lights up exactly the items whose neighborhoods were rewritten.</div>
-      <div class="box"><div class="t acc">Global — CKA</div>One similarity over the centered second-moment structure of <em>all</em> pairs. Invariant to <b>rotation, scale, and permutation</b> — it asks whether the two spaces encoded the same overall structure, but is blind to <em>which</em> items moved.</div>
+      <div class="box"><div class="t acc">Global — CKA (centered kernel alignment)</div>Build, for each space, the full item-&#215;-item similarity table &#8212; every entry says how similar one pair is, with the dataset average removed. <b>CKA is the correlation between the two tables</b>: one 0&#8211;1 score for &#8220;do the two spaces agree on <em>who is similar to whom</em>?&#8221; Comparing tables (not coordinates) makes it invariant to <b>rotation, scale, and permutation</b> &#8212; but it is owned by the largest structures and blind to <em>which</em> items moved.</div>
     </div>
-    <div class="note">They can disagree informatively: <span class="acc">high CKA + low overlap</span> is a re-skin that preserves gross structure while reshuffling fine neighborhoods. ambit pairs them with <b>MMD</b>, <b>Procrustes</b>, a drift field, and a distance-distribution shift.</div>
+    <div class="note">They can disagree informatively: <span class="acc">high CKA + low overlap</span> is a re-skin that preserves gross structure while reshuffling fine neighborhoods. ambit pairs them with <b>MMD</b> (a kernel distance between the two point distributions), <b>Procrustes</b> (the residual after the best rigid alignment), a drift field, and a distance-distribution shift.</div>
   </div>
   <div class="col-fig">
     <figure class="dg">
