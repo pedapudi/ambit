@@ -66,10 +66,10 @@ def fig_res_kcurve(ctx):
                 f'stroke-width="{width}"{d} vector-effect="non-scaling-stroke"/>')
 
     body = []
-    body.append(f'<text x="{L}" y="34" fill="var(--ink-soft)" font-size="12">'
-                f'crowding curve · fraction of pairs with cosine ≥ scale (exact CDF, no bins) · log scale</text>')
-    body.append(f'<text x="{R}" y="34" fill="var(--ink-faint)" font-size="11" text-anchor="end">'
-                f'{n_pairs:,} sampled pairs · {dim}-d</text>')
+    body.append(f'<text x="{L}" y="28" fill="var(--ink-soft)" font-size="12">'
+                f'crowding curve · fraction of pairs at least this similar</text>')
+    body.append(f'<text x="{L}" y="46" fill="var(--ink-faint)" font-size="10">'
+                f'exact CDF — no bins, no lattice · log scale · {n_pairs:,} sampled pairs · {dim}-d</text>')
 
     # axes + log gridlines
     body.append(f'<line x1="{L}" y1="{B}" x2="{R}" y2="{B}" stroke="var(--rule)" stroke-width="1"/>')
@@ -116,20 +116,21 @@ def fig_res_kcurve(ctx):
         anchor = "end" if xx > (L + R) / 2 else "start"
         dx = -6 if anchor == "end" else 6
         body.append(f'<text x="{xx+dx:.1f}" y="{T+14}" fill="var(--bad)" font-size="10.5" font-weight="700" '
-                    f'text-anchor="{anchor}">crowding begins ≈ cos {lift_cos:+.2f}</text>')
+                    f'text-anchor="{anchor}" style="paint-order:stroke" stroke="var(--paper)" '
+                    f'stroke-width="3">crowding begins ≈ cos {lift_cos:+.2f}</text>')
         verdict = f"exceeds the uniform envelope from cos {lift_cos:+.2f}"
     else:
         body.append(f'<text x="{R}" y="{T+14}" fill="var(--good)" font-size="10.5" font-weight="700" '
                     f'text-anchor="end">no excess over the uniform envelope</text>')
         verdict = "never exceeds the uniform envelope"
 
-    # footer scalars
-    body.append(f'<text x="{L}" y="{H-22}" fill="var(--ink-soft)" font-size="10.5" '
+    # footer scalars — two stacked lines so they can never collide
+    body.append(f'<text x="{L}" y="{H-34}" fill="var(--ink-soft)" font-size="10.5" '
                 f'style="font-variant-numeric:tabular-nums">occupancy discrepancy (Stolarsky): mean chord '
                 f'{s_scalar:.4f} · z = {s_z:+,.0f} vs uniform null</text>')
-    body.append(f'<text x="{R}" y="{H-22}" fill="var(--ink-soft)" font-size="10.5" text-anchor="end" '
+    body.append(f'<text x="{L}" y="{H-16}" fill="var(--ink-soft)" font-size="10.5" '
                 f'style="font-variant-numeric:tabular-nums">resolution bandwidth σ* = {sig:.3f} '
-                f'(query noise at ≤1 expected collision)</text>')
+                f'— query noise at ≤1 expected collision</text>')
 
     aria = (f"Crowding curve: the fraction of random pairs above each cosine, on a log scale, "
             f"for the dataset against a uniform-sphere null envelope and an anisotropy-matched "

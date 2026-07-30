@@ -42,10 +42,11 @@ def fig_res_pockets(ctx):
     all_ids = np.asarray(es.ids) if es.ids is not None else np.arange(len(X))
 
     body = []
-    body.append(f'<text x="{L}" y="34" fill="var(--ink-soft)" font-size="12">'
-                f'crowding pockets · merge-tree prominence (birth → merge into the bulk) · no threshold chosen</text>')
-    body.append(f'<text x="{W-40}" y="34" fill="var(--ink-faint)" font-size="11" text-anchor="end">'
-                f'{min(len(X), 4096):,} entities · cosine distance</text>')
+    body.append(f'<text x="{L}" y="28" fill="var(--ink-soft)" font-size="12">'
+                f'crowding pockets · merge-tree prominence (birth → merge into the bulk)</text>')
+    body.append(f'<text x="{L}" y="46" fill="var(--ink-faint)" font-size="10">'
+                f'no threshold chosen · {min(len(X), 4096):,} entities · cosine distance · '
+                f'labels list size, scales, and sample member ids</text>')
 
     if not pk:
         body.append(f'<text x="{(L+R)/2:.0f}" y="{(T+B)/2:.0f}" fill="var(--good)" font-size="13" '
@@ -93,9 +94,16 @@ def fig_res_pockets(ctx):
         body.append(f'<line x1="{x0:.1f}" y1="{y-2:.1f}" x2="{x0:.1f}" y2="{y+row_h*0.46+2:.1f}" '
                     f'stroke="{col}" stroke-width="1.6"/>')
         sample = " · ".join(_idstr(all_ids[m]) for m in p["members"][:3])
-        body.append(f'<text x="{x1+8:.1f}" y="{y+row_h*0.36:.1f}" fill="var(--ink)" font-size="9.5" '
-                    f'style="font-variant-numeric:tabular-nums">n={p["size"]} · forms at {p["birth"]:.2f} '
-                    f'· holds for {p["prominence"]:.2f} · {sample}</text>')
+        txt = (f'n={p["size"]} · forms at {p["birth"]:.2f} '
+               f'· holds for {p["prominence"]:.2f} · {sample}')
+        # flip the label to the left of the bar when it would run off the card
+        if x1 + 8 + 6.2 * len(txt) > W - 14:
+            lx, anchor = x0 - 8, "end"
+        else:
+            lx, anchor = x1 + 8, "start"
+        body.append(f'<text x="{lx:.1f}" y="{y+row_h*0.36:.1f}" fill="var(--ink)" font-size="9.5" '
+                    f'text-anchor="{anchor}" style="font-variant-numeric:tabular-nums;paint-order:stroke" '
+                    f'stroke="var(--paper)" stroke-width="3">{txt}</text>')
 
     top = pk[0]
     aria = (f"Crowding pockets from the merge tree: {n} prominent tight pockets ranked by prominence; "

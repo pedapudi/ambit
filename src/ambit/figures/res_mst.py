@@ -38,6 +38,7 @@ def fig_res_mst(ctx):
     edges, idx = cr.spanning_edges(X, max_n=4096, seed=0)
     pk, pk_idx = cr.pockets(X, min_size=8, max_n=4096, seed=0)
     P = _box(np.asarray(xy, float)[idx], W, PLOT_B + PAD, pad=PAD)
+    P[:, 1] += 16                                       # clear the two-line header
 
     w = np.array([e[0] for e in edges])
     lo, hi = float(np.quantile(w, 0.02)), float(np.quantile(w, 0.98))
@@ -77,15 +78,17 @@ def fig_res_mst(ctx):
                          f'stroke="var(--bad)" stroke-width="0.9" stroke-opacity="0.85"/>')
         cx = float(np.mean([P[k, 0] for k in pts]))
         cy = float(np.mean([P[k, 1] for k in pts]))
-        labels.append(f'<text x="{cx:.1f}" y="{cy - 12:.1f}" fill="var(--bad)" font-size="10.5" '
-                      f'font-weight="700" text-anchor="middle" style="paint-order:stroke" '
-                      f'stroke="var(--paper)" stroke-width="3">pocket · n={p["size"]}</text>')
+        # stagger by rank so labels of overlapping pockets never collide
+        labels.append(f'<text x="{cx:.1f}" y="{cy - 12 - 15 * rank:.1f}" fill="var(--bad)" '
+                      f'font-size="10.5" font-weight="700" text-anchor="middle" '
+                      f'style="paint-order:stroke" stroke="var(--paper)" stroke-width="3">'
+                      f'pocket · n={p["size"]}</text>')
 
-    head = (f'<text x="{PAD}" y="26" fill="var(--ink-soft)" font-size="12">crowding skeleton · every entity '
-            f'joined by its shortest bridges (native-space MST) · edge tint = native length</text>'
-            f'<text x="{W-PAD}" y="26" fill="var(--ink-faint)" font-size="11" text-anchor="end" '
-            f'style="font-variant-numeric:tabular-nums">{len(P):,} entities · median bridge {med:.2f} · '
-            f'tightest decile ≤ {q10:.2f} (1−cos)</text>')
+    head = (f'<text x="{PAD}" y="24" fill="var(--ink-soft)" font-size="12">crowding skeleton · every '
+            f'entity joined by its shortest native-space bridges</text>'
+            f'<text x="{PAD}" y="42" fill="var(--ink-faint)" font-size="10" '
+            f'style="font-variant-numeric:tabular-nums">edge tint = native length · {len(P):,} entities · '
+            f'median bridge {med:.2f} · tightest decile ≤ {q10:.2f} (1−cos)</text>')
     foot = (f'<text x="{PAD}" y="{H-18}" fill="var(--ink-faint)" font-size="10">edges are native-space links '
             f'drawn on a projection — a long-looking hot edge is a tight bridge whose endpoints the '
             f'projection separated</text>')

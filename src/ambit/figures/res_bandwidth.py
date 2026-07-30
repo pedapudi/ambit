@@ -60,10 +60,10 @@ def fig_res_bandwidth(ctx):
                 f'vector-effect="non-scaling-stroke"/>')
 
     body = []
-    body.append(f'<text x="{L}" y="32" fill="var(--ink-soft)" font-size="12">resolution bandwidth · expected '
-                f'competitors out-scoring the target, per entity, vs query-noise scale σ</text>')
-    body.append(f'<text x="{R}" y="32" fill="var(--ink-faint)" font-size="11" text-anchor="end">'
-                f'{n_items:,} items · exact pairwise law, union bound</text>')
+    body.append(f'<text x="{L}" y="26" fill="var(--ink-soft)" font-size="12">resolution bandwidth · expected '
+                f'competitors out-scoring the target, per entity</text>')
+    body.append(f'<text x="{L}" y="44" fill="var(--ink-faint)" font-size="10">'
+                f'vs query-noise scale σ · exact pairwise law, union bound · {n_items:,} items</text>')
 
     # axes: log-log
     body.append(f'<line x1="{L}" y1="{B}" x2="{R}" y2="{B}" stroke="var(--rule)" stroke-width="1"/>')
@@ -101,16 +101,17 @@ def fig_res_bandwidth(ctx):
     body.append(poly(c_null, "var(--ink-faint)", 1.2, dash="4 3"))
     body.append(poly(c_data, "var(--accent)", 2.2))
 
-    # crossings
-    for sv, col, lab, anchor in ((s_star, "var(--accent)", f"σ* = {s_star:.3f}", "end"),
-                                 (s_null, "var(--ink-faint)", f"uniform σ* = {s_null:.3f}", "start")):
+    # crossings — labels vertically staggered so close crossings can never collide
+    for sv, col, lab, anchor, dy in ((s_star, "var(--accent)", f"σ* = {s_star:.3f}", "end", 16),
+                                     (s_null, "var(--ink-faint)", f"uniform σ* = {s_null:.3f}", "start", 32)):
         xx = Xc(sv)
         body.append(f'<line x1="{xx:.1f}" y1="{y1v:.1f}" x2="{xx:.1f}" y2="{B}" stroke="{col}" '
                     f'stroke-width="1.3" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>')
         body.append(f'<circle cx="{xx:.1f}" cy="{y1v:.1f}" r="3.4" fill="{col}"/>')
         dx = -7 if anchor == "end" else 7
-        body.append(f'<text x="{xx+dx:.1f}" y="{y1v+16:.1f}" fill="{col}" font-size="10.5" font-weight="700" '
-                    f'text-anchor="{anchor}" style="font-variant-numeric:tabular-nums">{lab}</text>')
+        body.append(f'<text x="{xx+dx:.1f}" y="{y1v+dy:.1f}" fill="{col}" font-size="10.5" font-weight="700" '
+                    f'text-anchor="{anchor}" style="font-variant-numeric:tabular-nums;paint-order:stroke" '
+                    f'stroke="var(--paper)" stroke-width="3">{lab}</text>')
 
     frac = s_star / s_null if s_null > 0 else 1.0
     aria = (f"Resolution bandwidth: expected collisions per entity as a function of query-noise scale, "

@@ -64,10 +64,22 @@ def fig_res_separability(ctx):
     hs = cell * g
     body = []
 
-    # ---- header subtitle + (unsupervised) badge ---------------------------------
+    # display names: strip a shared prefix (dataset labels often share one, and it
+    # eats the whole truncation budget), then truncate
+    import os as _os
+    pref = _os.path.commonprefix([str(x) for x in groups]) if g > 1 else ""
+    pref = pref if len(pref) >= 6 else ""
+    disp = [str(x)[len(pref):] or str(x) for x in groups]
+
+    # ---- header subtitle + provenance + (unsupervised) badge --------------------
     body.append(f'<text x="{hx0}" y="26" fill="var(--ink-soft)" font-size="12">'
                 f'{g}{"+" if capped else ""} groups · {src} · separability'
                 f'{" (top 14 shown)" if capped else ""}</text>')
+    prov = ("groups = the dataset’s own label column" if supervised
+            else f"groups = clusters ambit discovered in the geometry ({src})")
+    if pref:
+        prov += f' · shared prefix “{_trunc(pref, 22)}” stripped from names'
+    body.append(f'<text x="{hx0}" y="44" fill="var(--ink-faint)" font-size="10">{prov}</text>')
     if not supervised:
         stab = "—" if S.stability is None else f"{S.stability:.2f}"
         modes = "—" if S.n_modes is None else f"{S.n_modes}"
@@ -79,7 +91,7 @@ def fig_res_separability(ctx):
 
     # ---- centroid-cosine heatmap (accent ramp; diagonal blanked) ----------------
     body.append(f'<text x="{hx0}" y="{hy0-22}" fill="var(--ink-faint)" font-size="10">'
-                f'centroid cosine — deeper = two groups share a direction (entangled)</text>')
+                f'centroid cosine · deeper = groups share a direction</text>')
     show_text = cell >= 26 and g <= 8
     maxoff, mi, mj = -2.0, 0, 0
     for i in range(g):
@@ -114,7 +126,7 @@ def fig_res_separability(ctx):
     bx0, bx1 = 474, 724
     track = bx1 - bx0
     body.append(f'<text x="{bx0}" y="{hy0-22}" fill="var(--ink-faint)" font-size="10">'
-                f'kNN purity per group — share of each item\'s neighbors with its own label</text>')
+                f'kNN purity · neighbors from own group</text>')
     if pur is None:
         body.append(f'<text x="{(bx0+bx1)/2:.0f}" y="{hy0+hs/2:.0f}" text-anchor="middle" '
                     f'font-size="11" fill="var(--ink-faint)">purity needs a kNN backend</text>')
@@ -131,13 +143,14 @@ def fig_res_separability(ctx):
             cy = hy0 + (i + 0.5) * cell
             val = float(pur[i])
             body.append(f'<text x="{bx0-8:.1f}" y="{cy+3:.1f}" fill="var(--ink-soft)" font-size="9" '
-                        f'text-anchor="end">[{i}] {_trunc(groups[i])}</text>')
+                        f'text-anchor="end">[{i}] {_trunc(disp[i])}</text>')
             body.append(f'<rect x="{bx0:.1f}" y="{cy-bh/2:.1f}" width="{track}" height="{bh:.1f}" '
                         f'fill="var(--rule-soft)" opacity="0.5"/>')
             body.append(f'<rect x="{bx0:.1f}" y="{cy-bh/2:.1f}" width="{max(1.0,val*track):.1f}" '
                         f'height="{bh:.1f}" fill="var(--accent)"/>')
             body.append(f'<text x="{bx0+val*track+5:.1f}" y="{cy+3:.1f}" fill="var(--ink-faint)" '
-                        f'font-size="8.5" style="font-variant-numeric:tabular-nums">{val:.2f}</text>')
+                        f'font-size="8.5" style="font-variant-numeric:tabular-nums;paint-order:stroke" '
+                        f'stroke="var(--paper)" stroke-width="3">{val:.2f}</text>')
 
     # ---- scorecard line ---------------------------------------------------------
     sy = hy0 + hs + 44

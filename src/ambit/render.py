@@ -195,6 +195,71 @@ _INTERP = {
         "limit made visible.</p>"
         '<div class="hc-foot">Color is relative rank — in a globally dense space the green dots are still '
         "cramped, just less than the median. The local concentration field shows the absolute level.</div>"),
+    "res_kcurve": ("Crowding curve", "the scale at which the space confuses items",
+        "<p>Sort every sampled pair by similarity and read the result as a curve: at each cosine, "
+        "the fraction of pairs at least that similar. An exact CDF — no bin widths, no lattice, "
+        "nothing to tune.</p>"
+        "<p>Two references, drawn at the same sample size. <span class='hc-look'>Dashed</span> is the "
+        "uniform-sphere envelope (19 simulated well-spread corpora — the curve a corpus with no "
+        "structure at all would trace). <span class='hc-look'>Solid green</span> is the corpus's own "
+        "anisotropy cone <em>without</em> its clustering: a reference cloud stretched exactly like this "
+        "dataset (same covariance) but otherwise unstructured.</p>"
+        "<p>So: data hugging the green curve = the usual cone, no local pathology. Data <b>above</b> "
+        "green = clustering the cone cannot explain. Data above the dashed envelope at high cosine = "
+        "excess close pairs — the marked scale is where that begins, and the shaded area is the pair "
+        "mass a retrieval neighborhood of that size would confuse.</p>"
+        '<div class="hc-foot">Built from the same random-pair cosine sample as the header facts; the '
+        "envelope is a display band, not a formal test.</div>"),
+    "res_dtm": ("Per-entity crowding field", "who is crowded, and what it costs",
+        "<p>Each entity is scored by the <b>radius of the ball it needs to gather 2% of the corpus</b> "
+        "(the distance to a measure). Tiny radius = crowded; huge radius = isolated. The curve is the "
+        "exact CDF of those radii; the listed ids are the two tails.</p>"
+        "<p><span class='hc-look'>The green band is where a uniform corpus of the same size and "
+        "dimension lives.</span> In a strongly cone-shaped space the <em>whole</em> curve sits left of "
+        "the band — that is the anisotropy cone shortening every radius, not a local finding. The "
+        "finding is the shape of the low tail relative to the corpus's own bulk: a spike of much-"
+        "smaller radii is a duplicate pocket.</p>"
+        "<p>Each crowded id carries ≈ its expected collision count at the corpus's σ* — the radius says "
+        "how crowded, the count says what it costs a retrieval system.</p>"
+        '<div class="hc-foot">Runs on a seeded subsample above 6,000 reservoir points. Ids come from '
+        "your id column; without one they are reservoir row numbers.</div>"),
+    "res_pockets": ("Crowding pockets", "tight groups, read without a threshold",
+        "<p>Entities are linked by shortest bridges and watched as the connection scale grows (the "
+        "merge tree — the hierarchy inside the clustering backend, surfaced instead of flattened). "
+        "A pocket is <b>born</b> when its first 8 members hold together and <b>dies</b> when it merges "
+        "into the bulk; its bar spans birth → death, and the bar's length is its prominence.</p>"
+        "<p><b>Long bars born near 0</b> are near-duplicate pockets — items nearly interchangeable "
+        "among themselves yet far from everything else; the worst crowding for retrieval, and the ids "
+        "on the bar name its members. <b>Short bars born late</b> are loose associations, usually "
+        "benign. No flat cluster cut is chosen anywhere.</p>"
+        '<div class="hc-foot">Sizes are shares of a ≤4,096-point seeded subsample — scale by '
+        "corpus ÷ sample for absolute counts. Pockets smaller than 8 appear in the crowding field's "
+        "low tail instead.</div>"),
+    "res_mst": ("Crowding skeleton", "where the tight structure sits",
+        "<p>The same merge tree as the pockets figure, drawn as geometry: every entity joined into one "
+        "tree by its shortest <em>native-space</em> bridges. <span class='hc-bad'>Hot short edges</span> "
+        "are the crowding skeleton — the paths along which items blur into each other first; faint long "
+        "edges are the roomy background. Ringed points are the top pockets' members.</p>"
+        "<p><span class='hc-look'>The layout is a projection; the edges are not.</span> A hot edge "
+        "stretched across the plot is a tight native-space bridge whose endpoints the projection tore "
+        "apart — read connection from the edges, location only loosely from the layout.</p>"
+        '<div class="hc-foot">Same seeded subsample as the pockets figure, so rings and bars '
+        "cross-reference exactly.</div>"),
+    "res_separability": ("Separability panel", "are the groups geometrically distinct?",
+        "<p><b>Where the groups come from:</b> if the dataset has a label column, those labels are the "
+        "groups and the headline says <em>provided</em>. With no labels, ambit clusters the reservoir's "
+        "geometry itself (the headline names the method, e.g. k-means or hdbscan) — the panel then "
+        "describes structure ambit <em>discovered</em>, adds a stability score (does re-clustering "
+        "reproduce it?) and a mode estimate, and its verdicts are geometric, not semantic.</p>"
+        "<p><b>The matrix</b> is the cosine between group centroids: a deep off-diagonal cell means two "
+        "groups point the same way — entangled, hard to keep apart. <b>The bars</b> are kNN purity: the "
+        "share of each item's neighbors that belong to its own group (dashed rule = overall). Distinct "
+        "groups = light matrix, long bars.</p>"
+        "<p><b>The scalars:</b> silhouette (+1 tight and separated · 0 overlapping · negative mixed) "
+        "and the Fisher ratio (between-group vs within-group scatter, higher = more separable).</p>"
+        '<div class="hc-foot">Purity uses the same kNN graph as the margin and hubness readouts. Group '
+        "names drop any long shared prefix; the headline notes when only the largest groups are "
+        "shown.</div>"),
     "res_bandwidth": ("Resolution bandwidth σ*", "the corpus's query-noise budget",
         "<p>Model a query aimed at item <b>x</b> as that item plus noise: <b>q = x + σ·g</b>. "
         "σ is how far the query lands from what it means — paraphrase, vagueness, model quirk.</p>"

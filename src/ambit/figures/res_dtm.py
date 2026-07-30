@@ -73,10 +73,10 @@ def fig_res_dtm(ctx):
         return B - f * (B - T)
 
     body = []
-    body.append(f'<text x="{L}" y="34" fill="var(--ink-soft)" font-size="12">'
-                f'per-entity crowding field · DTM radius to hold {M_FRAC*100:.0f}% of the corpus '
-                f'(k={k_used}) · smaller = more crowded</text>')
-    body.append(f'<text x="{R}" y="34" fill="var(--ink-faint)" font-size="11" text-anchor="end">'
+    body.append(f'<text x="{L}" y="28" fill="var(--ink-soft)" font-size="12">'
+                f'per-entity crowding field · the radius to hold {M_FRAC*100:.0f}% of the corpus</text>')
+    body.append(f'<text x="{L}" y="46" fill="var(--ink-faint)" font-size="10">'
+                f'distance to a measure (k={k_used}) · smaller = more crowded · '
                 f'{len(Xs):,} entities · chord units</text>')
 
     # axes
@@ -137,10 +137,15 @@ def fig_res_dtm(ctx):
 
     p1 = float(np.percentile(field, 1))
     below = int((field < lo_null).sum())
+    if below >= int(0.95 * len(field)):
+        band_read = ("the entire field sits left of the uniform band — the anisotropy cone shortens "
+                     "every radius, so read the low tail against the corpus's own spread, not the band")
+    else:
+        band_read = f"{below} entities sit below the uniform band"
     aria = (f"Per-entity crowding field: the exact CDF of each entity's distance-to-measure radius "
             f"(share {M_FRAC*100:.0f}% of the corpus), against the uniform reference band "
-            f"[{lo_null:.2f}, {hi_null:.2f}]; 1st percentile {p1:.3f}; {below} entities sit left of "
-            f"the band; the most crowded and most isolated entities are listed by id.")
+            f"[{lo_null:.2f}, {hi_null:.2f}]; 1st percentile {p1:.3f}; {band_read}; the most crowded "
+            f"and most isolated entities are listed by id.")
     return {
         "num": "RES 10", "order": 90.6, "name": "Per-entity crowding field", "tech": "distance to a measure",
         "why": (f"Every entity scored by the radius it needs to gather {M_FRAC*100:.0f}% of the corpus "
@@ -151,9 +156,9 @@ def fig_res_dtm(ctx):
         "legend": ('<span><i class="a"></i> DTM field (CDF)</span>'
                    '<span><i class="g"></i> uniform reference band</span>'
                    '<span><i class="r"></i> most crowded entities</span>'),
-        "reveal": (f"<b>Reveals:</b> <b>which entities</b> are crowded, by name — {below} sit below the "
-                   f"uniform band — replacing per-cell heat with a per-entity, null-calibrated score. Each "
-                   f"listed entity also carries its expected collision count at the corpus's own σ*: the "
-                   f"radius says how crowded, the count says what it costs."),
+        "reveal": (f"<b>Reveals:</b> <b>which entities</b> are crowded, by name — {band_read} — replacing "
+                   f"per-cell heat with a per-entity, null-calibrated score. Each listed entity also "
+                   f"carries its expected collision count at the corpus's own σ*: the radius says how "
+                   f"crowded, the count says what it costs."),
         "cls": "",
     }
