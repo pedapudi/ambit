@@ -192,7 +192,7 @@ _INTERP = {
         "neighbors — they fan across the projection rather than staying local, which is the same projection "
         "limit made visible.</p>"
         '<div class="hc-foot">Color is relative rank — in a globally dense space the green dots are still '
-        "cramped, just less than the median. RES 06 shows the absolute level.</div>"),
+        "cramped, just less than the median. The local concentration field shows the absolute level.</div>"),
     "den_prom": ("Density-peak prominence", "where the data piles up",
         "<p>Hotspots in the projected cloud, scored by how far they rise above their surroundings.</p>"
         "<p>Tall, isolated peaks are genuine concentrations; a flat field is evenly spread. Prominence "
@@ -531,8 +531,7 @@ def build_report(ctx, *, out=None, title="ambit — embedding-space occupancy", 
         hc = _interpret_hc(f.get("_key", ""), f)
         cards.append(
             f'<section class="opt"><div class="opt-head">'
-            f'<span class="name">{f["name"]}</span>{hc}'
-            f'<span class="tech">{f["tech"]}</span></div>'
+            f'<span class="name">{f["name"]}</span>{hc}</div>'
             f'<div class="opt-body"><figure class="{f.get("cls","")}">{f["svg"]}</figure>'
             f'<div class="leg">{f["legend"]}</div><div class="reveal">{f["reveal"]}</div></div></section>')
     figscripts = "".join(f.get("script", "") for f in metas)

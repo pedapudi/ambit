@@ -190,13 +190,7 @@
     padding: 14px 20px; border-bottom: 1px solid var(--rule); background: var(--panel-2);
     flex-wrap: wrap;
   }
-  .opt-head .num {
-    font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--paper);
-    background: var(--accent); border-radius: 5px; padding: 3px 9px;
-  }
   .opt-head .name { font-size: 14px; font-weight: 700; color: var(--ink); }
-  .opt-head .tech { font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
-    color: var(--ink-faint); border: 1px solid var(--rule); border-radius: 999px; padding: 2px 8px; }
   .opt-head .why { font-size: 12px; color: var(--ink-soft); flex: 1 1 100%; margin-top: 2px; }
   .opt-body { padding: 20px; }
   figure { margin: 0; width: 100%; }
