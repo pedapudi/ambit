@@ -112,6 +112,7 @@ _DISPLAY_ORDER = [
     "cmp_drift",       # CMP 13 · drift field
     "cmp_shift",       # CMP 14 · distance-distribution shift
     "res_kcurve",  # RES 09 · crowding curve (the canonical global occupancy figure)
+    "res_bandwidth",  # RES 09b · resolution bandwidth (operational units of the same sample)
     "res_cmap",    # RES 07 · local crowding cloud
     "d3_trip",     # 3D 02 · orthographic triptych
     "res_dtm",     # RES 10 · per-entity crowding field (global → local hand-off)
@@ -120,6 +121,7 @@ _DISPLAY_ORDER = [
     "res_wb",      # RES 05 · within- vs between-cluster cosine
     "res_separability",  # RES 05b · label-aware separability panel
     "res_pockets", # RES 11 · crowding pockets (merge-tree prominence)
+    "res_mst",     # RES 12 · crowding skeleton (the same tree, drawn spatially)
     "cos_hist",    # RES 01 · random-pair cosine distribution
     "res_cumvar",  # RES 02b · cumulative variance
     "res_uniformity",  # RES 08 · uniformity on the hypersphere

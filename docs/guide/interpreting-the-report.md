@@ -420,6 +420,41 @@ The curve is a *mean* over pairs — it does not name entities (RES 10 does) or
 count pockets (RES 11 does). The envelope is pointwise, a display device; treat
 marginal grazing of it as inconclusive.
 
+### RES 09b — Resolution bandwidth
+
+*Renders after the crowding curve. Source: `figures/res_bandwidth.py`.*
+
+#### What it answers
+
+The occupancy story in **operational units**: how much query noise can this corpus
+absorb before entities become interchangeable — and how much of that budget has
+crowding already spent?
+
+#### How it's computed
+
+The same pair sample as the crowding curve, transformed by the exact confusion
+kernel Φ(−‖x−y‖/2σ): for each noise scale σ, the expected number of competitors
+that out-score an intended target (`occupancy.expected_collisions`; union-bound
+conservative under any competitor correlation). Log-log, against the uniform-null
+curve with matched size and dimension. The crossing of the one-collision tolerance
+line is **σ\*** — the same number printed in the header facts, shown here with its
+provenance; the shaded gap to the null's crossing is the budget crowding has spent.
+
+#### How to read it
+
+- **Data curve near the null curve** → the corpus tolerates nearly as much noise
+  as a well-spread corpus could; crowding is not yet operationally expensive.
+- **Data crossing far left of the null** → the noise budget is spent; small query
+  perturbations already produce collisions.
+- The curve's *slope* near σ\* says how abruptly resolution degrades as noise grows.
+
+#### Caveats
+
+Scope is intra-corpus confusability (dedup, clustering, corpus-as-queries); the
+isotropic-noise channel is a model, and extrapolation to a real external query
+workload is an assumption. The aggregate is conservative (an upper bound), so read
+σ\* as a guarantee, not a point estimate.
+
 ### RES 10 — Per-entity crowding field
 
 *Source: `figures/res_dtm.py`.*
@@ -491,6 +526,41 @@ Runs on a ≤4,096-point seeded subsample of the reservoir, so pocket **sizes ar
 shares of the sample**, not absolute corpus counts (scale by corpus/sample). The
 minimum pocket size of 8 is a floor on what can be *reported*, not a density
 threshold — smaller duplicate groups appear in RES 10's low tail instead.
+
+### RES 12 — Crowding skeleton
+
+*Renders after the pockets figure. Source: `figures/res_mst.py`.*
+
+#### What it answers
+
+**Where** the tight structure sits. The pockets figure deliberately discards
+location; this figure restores it — the same merge-tree object drawn as geometry
+instead of summarized as bars.
+
+#### How it's computed
+
+The minimum spanning tree of the reservoir under **native-space** cosine distance
+(`crowding.spanning_edges`, same seeded subsample as the pockets figure, so the
+two cross-reference exactly), drawn over the 2-D projection. Each edge is tinted
+by its native length: the shortest quartile ramps hot (the crowding skeleton),
+the rest fades with length. Members of the top pockets are ringed and labelled.
+
+#### How to read it
+
+- **Runs of hot edges** are the paths along which entities blur into each other
+  first as neighborhoods tighten — the corpus's fault lines.
+- **Ringed clusters of hot edges** are the pockets, now with a location: one
+  region or scattered across the map.
+- **Long faint edges** are the roomy background and the bridges between distant
+  structure.
+
+#### Caveats
+
+Edges are native-space relationships drawn on a projection: a hot edge that looks
+long is a tight bridge whose endpoints the projection separated — the same
+acknowledged limit as the kNN-edge overlay, stated in the figure's footer. The
+tree is one spanning structure, not the full neighbor graph; use the kNN overlay
+for local degree structure.
 
 ### RES 01 — Random-pair cosine distribution
 

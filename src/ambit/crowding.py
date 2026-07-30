@@ -98,6 +98,24 @@ def _mst_prim(D: np.ndarray):
     return edges
 
 
+def spanning_edges(Xn, *, max_n: int = 4096, seed: int = 0):
+    """(edges, index_map): the minimum spanning tree of the reservoir under plain
+    cosine distance — the corpus's shortest bridges, for display. Uses the same
+    seeded subsample as `pockets` (same seed ⇒ same rows), so pocket membership
+    and MST vertices align. Edges are (weight, i, j) with i/j indexing the
+    subsample; map to reservoir rows via index_map."""
+    Xn = np.ascontiguousarray(np.asarray(Xn), np.float32)
+    n0 = len(Xn)
+    rng = np.random.default_rng(seed)
+    idx_map = np.arange(n0)
+    if n0 > max_n:
+        idx_map = rng.choice(n0, max_n, replace=False)
+        Xn = Xn[idx_map]
+    D = np.clip(1.0 - (Xn @ Xn.T).astype(np.float64), 0.0, None)
+    np.fill_diagonal(D, 0.0)
+    return _mst_prim(D), idx_map
+
+
 def pockets(Xn, *, min_size: int = 8, k_core: int = None, max_n: int = 4096,
             max_pockets: int = 12, seed: int = 0):
     """Prominence-ranked tight pockets from the condensed merge tree.

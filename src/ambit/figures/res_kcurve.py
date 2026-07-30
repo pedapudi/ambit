@@ -91,7 +91,8 @@ def fig_res_kcurve(ctx):
         body.append(f'<text x="{xx:.1f}" y="{B+18}" fill="var(--ink-faint)" font-size="9" text-anchor="middle" '
                     f'style="font-variant-numeric:tabular-nums">{c:+.2f}</text>')
     body.append(f'<text x="{(L+R)/2:.1f}" y="{B+34}" fill="var(--ink-soft)" font-size="9.5" text-anchor="middle">'
-                f'pair cosine (similarity scale) → crowding lives to the right</text>')
+                f'pair cosine — the size of a retrieval neighborhood (a cap on the sphere) → '
+                f'crowding lives to the right</text>')
 
     # excess shading: where data exceeds the uniform envelope
     if lift.size:

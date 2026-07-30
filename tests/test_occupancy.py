@@ -145,6 +145,16 @@ def test_pockets_recovers_planted_clumps():
     assert all(p["prominence"] > 0.2 for p in pk[:2])
 
 
+def test_spanning_edges_align_with_pockets_subsample():
+    X = _clumped(5000, 48, k=100, seed=9)
+    edges, idx_e = cr.spanning_edges(X, max_n=2048, seed=0)
+    _, idx_p = cr.pockets(X, max_n=2048, seed=0)
+    assert np.array_equal(idx_e, idx_p)                     # same seed => same rows
+    assert len(edges) == 2048 - 1                           # a spanning tree
+    w = np.array([e[0] for e in edges])
+    assert (w >= 0).all() and np.quantile(w, 0.01) < 0.2    # clump makes short bridges
+
+
 def test_pockets_empty_on_uniform():
     pk, _ = cr.pockets(_uniform(1200, 64, seed=8), min_size=8, seed=0)
     assert all(p["prominence"] < 0.2 for p in pk)           # nothing detaches far from the bulk
@@ -158,7 +168,8 @@ def test_report_contains_new_figures_and_facts(tmp_path):
     p = tmp_path / "x.npz"
     np.savez(p, embeddings=X, ids=ids)
     html = ambit.report(str(p)).html
-    for card in ("Crowding curve", "Per-entity crowding field", "Crowding pockets"):
+    for card in ("Crowding curve", "Per-entity crowding field", "Crowding pockets",
+                 "Resolution bandwidth", "Crowding skeleton"):
         assert card in html
     assert "occupancy z" in html
     assert "resolution bandwidth" in html

@@ -15,6 +15,7 @@ import numpy as np
 
 from ..render import figure, _svg
 from .. import crowding as cr
+from .. import occupancy as occ
 
 
 def _idstr(v, width: int = 16) -> str:
@@ -50,6 +51,12 @@ def fig_res_dtm(ctx):
     field = cr.dtm(Xs, m_frac=M_FRAC)
     k_used = max(2, int(np.ceil(M_FRAC * len(Xs))))
     lo_null, hi_null = cr.dtm_null_band(len(Xs), dim, m_frac=M_FRAC, seed=0)
+
+    # expected collisions per entity at the corpus's own resolution bandwidth,
+    # scaled from the subsample to corpus size (uniform reservoir sampling)
+    n_corpus = int(getattr(ctx.scan, "n", len(Xs)) or len(Xs))
+    sig = occ.sigma_star(ctx.cos, n_corpus, tol=1.0)
+    coll = occ.collision_counts(Xs, sig) * max(n_corpus - 1, 1) / max(len(Xs) - 1, 1)
 
     order = np.argsort(field)
     xs = field[order]
@@ -104,23 +111,27 @@ def fig_res_dtm(ctx):
     body.append(f'<polyline points="{pts}" fill="none" stroke="var(--accent)" stroke-width="2.2" '
                 f'vector-effect="non-scaling-stroke"/>')
 
-    # crowded-entity callouts (low tail), left panel
+    # crowded-entity callouts (low tail), left panel: radius says how crowded,
+    # the collision count says what it costs at the corpus's own sigma*
     n_call = min(6, len(order))
     body.append(f'<text x="24" y="{T+6}" fill="var(--ink-soft)" font-size="10.5" font-weight="700">'
                 f'most crowded entities</text>')
+    body.append(f'<text x="24" y="{T+6+12}" fill="var(--ink-faint)" font-size="8.5">'
+                f'id · DTM radius · ≈collisions at σ*={sig:.2f}</text>')
     for r in range(n_call):
         i = order[r]
         v = field[i]
-        yy = T + 24 + r * 18
+        yy = T + 36 + r * 18
         body.append(f'<circle cx="{Xc(v):.1f}" cy="{Yc((r+1)/len(xs)):.1f}" r="3.0" fill="var(--bad)"/>')
         body.append(f'<text x="24" y="{yy:.1f}" fill="var(--ink)" font-size="9.5" '
-                    f'style="font-variant-numeric:tabular-nums">{_idstr(ids[i])} · {v:.3f}</text>')
+                    f'style="font-variant-numeric:tabular-nums">{_idstr(ids[i])} · {v:.3f} · '
+                    f'≈{coll[i]:,.0f}</text>')
     # isolated (void) side, bottom of the left panel
-    body.append(f'<text x="24" y="{T+24+n_call*18+16}" fill="var(--ink-soft)" font-size="10.5" '
+    body.append(f'<text x="24" y="{T+36+n_call*18+16}" fill="var(--ink-soft)" font-size="10.5" '
                 f'font-weight="700">most isolated (voids)</text>')
     for r in range(min(3, len(order))):
         i = order[-(r + 1)]
-        yy = T + 24 + n_call * 18 + 34 + r * 18
+        yy = T + 36 + n_call * 18 + 34 + r * 18
         body.append(f'<text x="24" y="{yy:.1f}" fill="var(--ink)" font-size="9.5" '
                     f'style="font-variant-numeric:tabular-nums">{_idstr(ids[i])} · {field[i]:.3f}</text>')
 
@@ -141,6 +152,8 @@ def fig_res_dtm(ctx):
                    '<span><i class="g"></i> uniform reference band</span>'
                    '<span><i class="r"></i> most crowded entities</span>'),
         "reveal": (f"<b>Reveals:</b> <b>which entities</b> are crowded, by name — {below} sit below the "
-                   f"uniform band — replacing per-cell heat with a per-entity, null-calibrated score."),
+                   f"uniform band — replacing per-cell heat with a per-entity, null-calibrated score. Each "
+                   f"listed entity also carries its expected collision count at the corpus's own σ*: the "
+                   f"radius says how crowded, the count says what it costs."),
         "cls": "",
     }
