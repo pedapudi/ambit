@@ -534,6 +534,92 @@ component above was cost-checked at reservoir scale (a few thousand points) in
 fractions of a second, with the kernel-spectrum eigendecomposition the most
 expensive at a few seconds.
 
+## 13. Addendum — confusion units: the mathematics of σ*
+
+*(Added after the main document: the operational-units layer that converts the
+pair-distance distribution of §5 into a retrieval guarantee. This section also
+records the negative results found while stress-testing it, so they are not
+re-derived.)*
+
+### 13.1 The exact pairwise law
+
+Model a query aimed at entity x as the entity plus noise, **q = x + σ·g** with g
+standard Gaussian — the simplest honest model of "the query means x but lands
+nearby." For a single competitor y, retrieval errs when ⟨q, y⟩ > ⟨q, x⟩. The
+discriminant q·(y−x) is *exactly* Gaussian with mean −‖y−x‖²/2 and standard
+deviation σ‖y−x‖, so the error probability is exact in any dimension:
+
+> **P(y beats x) = Φ(−‖x−y‖ / 2σ)**
+
+Geometrically: the decision boundary between x and y is the perpendicular
+bisector at distance r/2, and Φ(−(r/2)/σ) is the chance the noise crosses it.
+Two readings follow immediately: a competitor far relative to the noise is
+harmless, and a near-duplicate is a coin-flip **at any noise level** — the
+formal reason duplicate pockets are the worst crowding pathology. *Verified by
+simulation (d = 768, θ ∈ [0.1, 2.0], σ ∈ [0.05, 0.6]): maximum deviation 0.001,
+i.e. Monte-Carlo error only.*
+
+### 13.2 From pairs to the corpus: C(σ) and σ*
+
+Summing the pairwise law over competitors gives the **expected number of items
+that outrank the intended target**:
+
+> C(σ) = Σ_j Φ(−‖x−x_j‖ / 2σ)  — in aggregate, a functional of the
+> pair-distance distribution K alone (§5): C(σ) = (n−1)·∫ Φ(−r/2σ) dK(r).
+
+By Boole's inequality the sum bounds the probability of *any* error under any
+correlation structure between competitors, so C is conservative — a guarantee,
+not an estimate. Correlated competition (hubs) makes it loose, never wrong.
+
+**σ\*** — the *resolution bandwidth* — is the largest σ with C(σ) ≤ 1: the most
+noise queries can carry before, in expectation, one wrong item outranks the
+right one. It is monotone, so bisection inverts it. Read against the uniform
+null's σ\* with matched (n, d): the ratio is the fraction of the ideal noise
+budget the corpus retains, and the gap is the budget crowding has spent.
+
+**Feel for the units.** σ is per-coordinate noise; a query's cosine against its
+own target decays to ≈ 1/√(1+σ²d). σ\* therefore translates to "how faded a
+query can become against the document it means and still be expected to win" —
+e.g. σ\* = 0.19 at d = 384 is a query that has decayed to cosine ≈ 0.25.
+
+### 13.3 The identity with uniformity
+
+By the Chernoff bound Φ(−z) ≤ e^(−z²/2):
+
+> C(σ) ≤ (n−1) · exp(U_t) at t = 1/(8σ²),
+
+where U_t is the Wang–Isola uniformity ambit already reports. So the uniformity
+scalar is (the log of) a bound on the mean collision rate, and its bandwidth t
+is not arbitrary — it is a query-noise scale (t = 2 ⇔ σ = 0.25). An abstract
+aesthetic metric acquires operational units without changing a line of its
+computation.
+
+### 13.4 Negative results (recorded so they stay dead)
+
+- **C(σ) is not a new discriminative measurement.** Measured across eight corpus
+  types: correlation 0.978 with the uniformity sweep, 27/28 pairwise order
+  agreements. Its value is *semantic* — units, calibration, per-entity counts —
+  not new discrimination. The single order flip is itself informative: the
+  confusion kernel ranks a duplicate pocket as worse than diffuse subspace
+  collapse (operationally correct); the Gaussian kernel ranks them the other
+  way.
+- **The Wasserstein self-certificate is vacuous.** Composing DTM's stability
+  bound with a split-half empirical W₂ fails at embedding dimension: the
+  matching distance between independent halves is ≈ the data scale (≈1.35 on
+  S^767 at n = 2,000), giving error bars ~10× the field's range. Dimension-free
+  certificates would need a different metric with its own stability theorem —
+  an open question, not an engineering task.
+
+### 13.5 Scope, stated plainly
+
+Everything here treats the corpus as its own query population. That covers
+dedup, clustering, related-item retrieval, and corpus-as-queries search
+directly; extrapolating to an external query workload assumes that workload
+lands where the documents are. The noise model is isotropic; real query drift
+is structured. And the aggregate is an upper bound. Together: read σ\* as a
+conservative intra-corpus guarantee, strongest when used comparatively — the
+same corpus embedded two ways, or the same embedding over time.
+
 ## Appendix: the experiments
 
 Two controlled experiments ground the *measured* claims. Sketches suffice to

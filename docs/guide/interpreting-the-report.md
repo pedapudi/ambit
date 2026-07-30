@@ -280,11 +280,26 @@ perturbation can this corpus absorb before entities become interchangeable?*
 Φ(−‖x−y‖/2σ) integrated over the pair-cosine sample (union-bound conservative
 under any competitor correlation), inverted by bisection at tolerance 1.
 
+**The intuition, in one picture:** a competitor at distance r beats the intended
+target exactly when the query noise crosses the halfway plane between the two
+items — a boundary at distance r/2 — which for Gaussian noise happens with
+probability Φ(−(r/2)/σ), exactly. A far competitor is safe; a near-duplicate is
+a coin-flip *at any noise level*, which is why duplicate pockets are the worst
+crowding. Summing over all competitors gives C(σ), the expected number of items
+that outrank the right one; σ\* is where that sum reaches 1.
+
+**Feel for the units:** at noise σ in d dimensions, a query's cosine against its
+own target decays to ≈ 1/√(1+σ²d). So σ\* translates directly: it is how *faded*
+a query can become against the document it means and still be expected to win.
+
 **How read — DIRECTION:** higher is better. Compare across corpora or embeddings
 of the same corpus; a drop in σ\* means the space now confuses entities at noise
-levels it previously tolerated. Scope: intra-corpus confusability (dedup,
-clustering, corpus-as-queries retrieval) — extrapolation to an external query
-workload is an assumption, not a measurement.
+levels it previously tolerated. Compare with the resolution-bandwidth figure's
+uniform-null crossing: the ratio is the fraction of the ideal noise budget the
+corpus retains. Scope: intra-corpus confusability (dedup, clustering,
+corpus-as-queries retrieval) — extrapolation to an external query workload is an
+assumption, not a measurement. Full derivation and verification:
+[Continuous Occupancy §13](../concepts/continuous-occupancy.md#13-addendum--confusion-units-the-mathematics-of-%CF%83).
 
 ### effective rank
 

@@ -195,6 +195,21 @@ _INTERP = {
         "limit made visible.</p>"
         '<div class="hc-foot">Color is relative rank — in a globally dense space the green dots are still '
         "cramped, just less than the median. The local concentration field shows the absolute level.</div>"),
+    "res_bandwidth": ("Resolution bandwidth σ*", "the corpus's query-noise budget",
+        "<p>Model a query aimed at item <b>x</b> as that item plus noise: <b>q = x + σ·g</b>. "
+        "σ is how far the query lands from what it means — paraphrase, vagueness, model quirk.</p>"
+        "<p>A competitor at distance r wins exactly when the noise crosses the halfway plane "
+        "between the two items, which happens with probability <b>Φ(−r/2σ)</b> — near zero when "
+        "the competitor is far relative to the noise, a coin-flip for a near-duplicate at any "
+        "noise level. Sum that over every competitor: the expected number of items that outrank "
+        "the intended one, <b>C(σ)</b>.</p>"
+        "<p><b>σ* is the largest σ with C(σ) ≤ 1</b> — the most noise queries can carry before, "
+        "on average, a wrong item outranks the right one. Higher = more robust. The dashed curve "
+        "is a perfectly spread corpus of the same size; the shaded gap between the two crossings "
+        "is the budget crowding has already spent.</p>"
+        '<div class="hc-foot">Feel for the units: at noise σ in d dims, a query&#8217;s cosine with its own '
+        "target decays to ≈ 1/√(1+σ²d) — so σ* also says how faded a query can get and still win. "
+        "Conservative (union bound); scope is intra-corpus confusability.</div>"),
     "den_prom": ("Density-peak prominence", "where the data piles up",
         "<p>Hotspots in the projected cloud, scored by how far they rise above their surroundings.</p>"
         "<p>Tall, isolated peaks are genuine concentrations; a flat field is evenly spread. Prominence "
