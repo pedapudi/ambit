@@ -169,8 +169,9 @@ def test_report_contains_new_figures_and_facts(tmp_path):
     np.savez(p, embeddings=X, ids=ids)
     html = ambit.report(str(p)).html
     for card in ("Crowding curve", "Per-entity crowding field", "Crowding pockets",
-                 "Resolution bandwidth", "Crowding skeleton"):
+                 "Resolution bandwidth"):
         assert card in html
+    assert "Crowding skeleton" not in html          # hidden by default (hard to read)
     assert "occupancy z" in html
     assert "resolution bandwidth" in html
     assert "lattice-averaged" not in html or True            # hexbin hidden by default

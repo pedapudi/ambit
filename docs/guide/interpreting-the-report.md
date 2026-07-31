@@ -543,9 +543,12 @@ shares of the sample**, not absolute corpus counts (scale by corpus/sample). The
 minimum pocket size of 8 is a floor on what can be *reported*, not a density
 threshold — smaller duplicate groups appear in RES 10's low tail instead.
 
-### RES 12 — Crowding skeleton
+### RES 12 — Crowding skeleton *(hidden by default)*
 
-*Renders after the pockets figure. Source: `figures/res_mst.py`.*
+*Source: `figures/res_mst.py`. Hidden by default: even drawing only the
+tighter-than-bulk bridges, the projected-MST view stayed hard to read, and the
+pockets figure carries the same merge-tree object in a legible form. Enable with
+`"res_mst": true` in `--config` if the spatial view is wanted.*
 
 #### What it answers
 

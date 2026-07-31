@@ -33,9 +33,9 @@ DEFAULT_FIGURES = {
     "res_bandwidth": True,  # RES 09b · resolution bandwidth (expected collisions vs query noise)
     "res_dtm":      True,   # RES 10 · per-entity crowding field (distance to a measure)
     "res_pockets":  True,   # RES 11 · crowding pockets (merge-tree prominence, no threshold)
-    "res_mst":      True,   # RES 12 · crowding skeleton (native-space MST over the projection)
     # hidden (flip to True to show)
     "res_uniformity": False, # RES 08 · uniformity on the hypersphere (auto-on in --compare/series; header scalar always shown)
+    "res_mst":      False,  # RES 12 · crowding skeleton (MST over the projection — remained hard to read even drawing only tight bridges; the pockets figure carries the same object)
     "d3_live":      False,  # 3D · live · drag/zoom cloud by cluster — covered by RES 07 (crowding cloud + kNN edges)
     "cloud":        False,  # MAP 01 · projected density cloud
     "den_contour":  False,  # DEN 02 · isodensity contour relief
