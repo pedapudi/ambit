@@ -28,6 +28,29 @@ Every report answers the same three questions, stated in its own lede:
 3. **How distinct are its items?** — the resolution / isotropy views: whether
    cosine similarity can still tell two items apart, globally and locally.
 
+### The report reads top-to-bottom as a story
+
+The figures are ordered as five movements, each answering the question the
+previous one raises — you can walk the whole report before knowing any theory:
+
+1. **See it** — your corpus as a picture, crowding as color and shape (the
+   density cloud, then its 3-D silhouette).
+2. **How crowded, and at what scale?** — the pair-similarity fingerprint, then
+   the crowding curve (where the confusion begins), then what it costs in
+   query-noise terms (the resolution bandwidth σ\*).
+3. **Who is affected?** — per-item views that end in *names*: the density
+   field, the per-entity crowding field with ids and collision counts, the
+   nearest-neighbor margins.
+4. **What structure does it form?** — tight pockets with their member lists,
+   and whether your groups (given or discovered) are genuinely distinct.
+5. **Why is the space like this?** — the capacity mechanics underneath
+   (variance concentration, the eigenvalue spectrum), then texture views.
+
+Every figure card carries an ⓘ hovercard that re-teaches it in place — a small
+intuition diagram, plain-language reading rules, and the context that isn't on
+the figure (what the reference curves are, sample sizes, where ids come from).
+When in doubt, hover first; come back here for depth.
+
 These map onto the **facet families**. In the report each card is titled by its
 **name**; the short family codes like `RES 01` or `CMP 12` are this guide's own
 cross-reference shorthand — the report surfaces figures by name and does not print

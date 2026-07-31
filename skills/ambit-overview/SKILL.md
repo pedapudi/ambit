@@ -38,7 +38,20 @@ and where it is spent."*
   original high-dimensional vectors, not a 2-D projection).
 - The **3-D** views let you *rotate and see* the anisotropy directly.
 
-For the science and how to read the numbers, see **`ambit-concepts`**.
+The measurement layer is **continuous and null-calibrated** (the
+continuous-occupancy layer): global crowding is read off the exact
+pair-closeness curve at every scale (no bins or grid cells, whose size and
+placement change the answer), every number is judged against what a well-spread
+corpus of the same size and shape would show, and the local layer scores and
+**names individual entities** (distance-to-measure radii, expected retrieval
+collisions, merge-tree pockets with member ids). The headline scalar is
+**σ\***, the resolution bandwidth: how much query noise the corpus tolerates
+before wrong items start outranking right ones.
+
+For the science and how to read the numbers, see **`ambit-concepts`**; the
+theory is `docs/concepts/continuous-occupancy.md`. When the diagnosis says the
+model itself needs training, **`ambit-tuning`** is the protocol and
+`ambit.training` supplies measurement-driven losses and batch mining.
 
 ## The three facets of occupancy
 
@@ -111,5 +124,6 @@ sample) → `pipeline.build_ctx` (projections, eigenspectrum, kNN, clusters) →
 
 ## Status
 
-Early scaffolding (`0.0.1`). The core pipeline, CLI, diagnostics, and figure
-registry are in place; expect rough edges and rapid change.
+Research preview. The pipeline, CLI, continuous-occupancy diagnostics, figure
+registry, comparison mode, and training-time regularizers are in place and
+tested (report-level integration runs on million-row corpora).

@@ -186,6 +186,24 @@ against `config.py`/`render.py`, which are authoritative.)*
 | `res_field` | RES 06 | RES | local density field — k-NN density vs a density-matched uniform null | ✓ |
 | `res_cmap` | RES 07 | RES | local density cloud — 3-D projection recolored/reshaped by native local density | ✓ |
 | `res_uniformity` | RES 08 | RES | uniformity on the hypersphere vs isotropic ref; A-vs-B trajectory in compare mode | auto-on w/ `--compare` |
+| `res_kcurve` | RES 09 | RES | crowding curve — exact pair-closeness CDF vs uniform envelope + anisotropy-matched (ACG) reference; liftoff scale marked | ✓ |
+| `res_bandwidth` | RES 09b | RES | resolution bandwidth — expected collisions vs query noise; σ\* at the 1-collision tolerance vs the uniform crossing | ✓ |
+| `res_dtm` | RES 10 | RES | per-entity crowding field — DTM radius CDF vs uniform band; crowded/void entities named by id with collision counts | ✓ |
+| `res_pockets` | RES 11 | RES | crowding pockets — condensed merge-tree bars (birth → merge, prominence), member ids; content-sized card | ✓ |
+| `res_mst` | RES 12 | RES | crowding skeleton — tighter-than-bulk MST bridges over the projection (kept hidden: stayed hard to read; pockets carries the object) | — |
+
+**Display order is a story, not a family sort** — `render._DISPLAY_ORDER` runs
+five movements: *see it* (cloud, triptych) → *how crowded, at what scale*
+(cos hist, crowding curve, bandwidth) → *who is affected* (field, per-entity,
+margin) → *what structure* (pockets, within/between, separability) → *why*
+(cumvar, scree), with texture views last. New figures should slot into the
+movement they serve, not append.
+
+**Hovercards:** every curated figure has a "how to read" entry in
+`render._INTERP` — title, subtitle, an inline SVG intuition diagram
+(`class="hc-viz"`, theme tokens only), plain-language paragraphs, and an
+`hc-foot` stating the unstated context (null construction, subsample sizes,
+where ids come from). Add one for any new figure.
 
 ## Adding a figure (step by step)
 
