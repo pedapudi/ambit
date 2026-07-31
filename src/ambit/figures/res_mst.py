@@ -41,34 +41,32 @@ def fig_res_mst(ctx):
     P[:, 1] += 16                                       # clear the two-line header
 
     w = np.array([e[0] for e in edges])
-    lo, hi = float(np.quantile(w, 0.02)), float(np.quantile(w, 0.98))
-    rng_w = max(hi - lo, 1e-9)
     med = float(np.median(w))
-    q10 = float(np.quantile(w, 0.10))
+    mad = float(np.median(np.abs(w - med))) * 1.4826
+    cut = med - 3.0 * max(mad, 1e-9)
 
-    # short (tight) edges hot and opaque; long (roomy) edges faint — draw long first
-    def style(wv):
-        t = float(np.clip((wv - lo) / rng_w, 0.0, 1.0))          # 0 = tightest
-        if t < 0.25:
-            pct = int(round(90 - 240 * t))                       # bad -> accent blend
-            return f"color-mix(in srgb, var(--bad) {max(pct, 30)}%, var(--accent))", 1.6, 0.95
-        return "var(--ink-faint)", 0.7, 0.28 + 0.25 * (1.0 - t)
-
-    order = np.argsort(-w)                                        # longest first (drawn under)
+    # Only bridges tighter than the bulk are drawn — the long "roomy" edges are
+    # the hairball, and the empty space already says roomy. Robust cut: median
+    # − 3 MAD-sigmas, capped so the figure can never re-busy itself.
+    hot = np.flatnonzero(w <= cut)
+    hot = hot[np.argsort(w[hot])][:600]
+    lo = float(w[hot].min()) if hot.size else cut
+    rng_w = max(cut - lo, 1e-9)
     lines = []
-    for e in order:
+    for e in hot[::-1]:                                           # tightest drawn last (on top)
         wv, i, j = edges[e]
-        col, sw, op = style(wv)
+        t = float(np.clip((wv - lo) / rng_w, 0.0, 1.0))           # 0 = tightest
+        pct = int(round(95 - 60 * t))
         lines.append(f'<line x1="{P[i,0]:.1f}" y1="{P[i,1]:.1f}" x2="{P[j,0]:.1f}" y2="{P[j,1]:.1f}" '
-                     f'stroke="{col}" stroke-width="{sw}" stroke-opacity="{op:.2f}" '
-                     f'vector-effect="non-scaling-stroke"/>')
+                     f'stroke="color-mix(in srgb, var(--bad) {pct}%, var(--accent))" '
+                     f'stroke-width="1.7" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/>')
 
     dots = "".join(f'<circle cx="{P[i,0]:.1f}" cy="{P[i,1]:.1f}" r="1.4" '
                    f'fill="var(--ink-faint)" fill-opacity="0.55"/>' for i in range(len(P)))
 
     # ring the members of the top pockets (same subsample, same seed => same rows)
     pos_of = {int(r): k for k, r in enumerate(idx)}
-    rings, labels = [], []
+    rings, lab_pos = [], []
     for rank, p in enumerate(pk[:3]):
         pts = [pos_of[int(m)] for m in p["members"] if int(m) in pos_of]
         if not pts:
@@ -78,40 +76,50 @@ def fig_res_mst(ctx):
                          f'stroke="var(--bad)" stroke-width="0.9" stroke-opacity="0.85"/>')
         cx = float(np.mean([P[k, 0] for k in pts]))
         cy = float(np.mean([P[k, 1] for k in pts]))
-        # stagger by rank so labels of overlapping pockets never collide
-        labels.append(f'<text x="{cx:.1f}" y="{cy - 12 - 15 * rank:.1f}" fill="var(--bad)" '
-                      f'font-size="10.5" font-weight="700" text-anchor="middle" '
-                      f'style="paint-order:stroke" stroke="var(--paper)" stroke-width="3">'
-                      f'pocket · n={p["size"]}</text>')
+        lab_pos.append([cx, cy - 12.0, p["size"]])
+    # de-overlap: nearby labels are pushed apart vertically until they clear
+    lab_pos.sort(key=lambda a: a[1])
+    for i in range(1, len(lab_pos)):
+        if abs(lab_pos[i][0] - lab_pos[i - 1][0]) < 110 and \
+           lab_pos[i][1] - lab_pos[i - 1][1] < 14:
+            lab_pos[i][1] = lab_pos[i - 1][1] + 14
+    labels = [f'<text x="{cx:.1f}" y="{ly:.1f}" fill="var(--bad)" font-size="10.5" '
+              f'font-weight="700" text-anchor="middle" style="paint-order:stroke" '
+              f'stroke="var(--paper)" stroke-width="3">pocket · n={sz}</text>'
+              for cx, ly, sz in lab_pos]
 
-    head = (f'<text x="{PAD}" y="24" fill="var(--ink-soft)" font-size="12">crowding skeleton · every '
-            f'entity joined by its shortest native-space bridges</text>'
+    head = (f'<text x="{PAD}" y="24" fill="var(--ink-soft)" font-size="12">crowding skeleton · only the '
+            f'bridges tighter than the bulk are drawn</text>'
             f'<text x="{PAD}" y="42" fill="var(--ink-faint)" font-size="10" '
-            f'style="font-variant-numeric:tabular-nums">edge tint = native length · {len(P):,} entities · '
-            f'median bridge {med:.2f} · tightest decile ≤ {q10:.2f} (1−cos)</text>')
-    foot = (f'<text x="{PAD}" y="{H-18}" fill="var(--ink-faint)" font-size="10">edges are native-space links '
-            f'drawn on a projection — a long-looking hot edge is a tight bridge whose endpoints the '
-            f'projection separated</text>')
+            f'style="font-variant-numeric:tabular-nums">{len(lines):,} tight bridges (of {len(edges):,} · '
+            f'cut = median − 3 robust sd = {cut:.2f}) · {len(P):,} entities · median bridge {med:.2f} (1−cos)</text>')
+    foot = (f'<text x="{PAD}" y="{H-18}" fill="var(--ink-faint)" font-size="10">bridges are native-space '
+            f'links on a projected layout — a long-looking one is a tight bridge the projection '
+            f'stretched</text>')
+    if not lines:
+        head += (f'<text x="{W/2:.0f}" y="{(PLOT_B+PAD)/2:.0f}" fill="var(--good)" font-size="13" '
+                 f'text-anchor="middle">no bridge is tighter than the bulk — no crowding skeleton '
+                 f'to draw</text>')
 
     n_pk = len(pk)
-    aria = (f"Crowding skeleton: the minimum spanning tree of {len(P)} entities under cosine distance, "
-            f"drawn over the 2-D projection; short tight bridges are tinted hot, long background bridges "
-            f"faint; members of the top {min(n_pk, 3)} pockets are ringed and labelled with their sizes; "
-            f"median bridge length {med:.2f}.")
+    aria = (f"Crowding skeleton: of the {len(edges)} minimum-spanning-tree bridges over {len(P)} "
+            f"entities, only the {len(lines)} tighter than the bulk (below {cut:.2f}) are drawn, "
+            f"tinted by tightness, over the 2-D projection; members of the top {min(n_pk, 3)} pockets "
+            f"are ringed and labelled with their sizes; median bridge length {med:.2f}.")
     return {
         "num": "RES 12", "order": 90.75, "name": "Crowding skeleton", "tech": "minimum spanning tree",
-        "why": ("The merge tree drawn as geometry: every entity connected into one tree by its shortest "
-                "native-space bridges. Runs of hot (short) edges are the crowding skeleton — the paths along "
-                "which entities blur into each other; faint long edges are the roomy background. Ringed "
-                "points are the members of the top pockets from the pockets figure — same object, seen "
-                "spatially."),
-        "svg": _svg(W, H, aria, head + '<g>' + "".join(lines) + '</g><g>' + dots + '</g><g>'
+        "why": ("The merge tree drawn as geometry, decluttered: every entity is a dot, and only the "
+                "bridges tighter than the bulk (median − 3 robust sd) are drawn — runs of them are the "
+                "crowding skeleton, the paths along which entities blur into each other first. The roomy "
+                "background needs no ink; it is the open space. Ringed points are the top pockets' "
+                "members — same object as the pockets bars, seen spatially."),
+        "svg": _svg(W, H, aria, head + '<g>' + dots + '</g><g>' + "".join(lines) + '</g><g>'
                     + "".join(rings) + "".join(labels) + '</g>' + foot),
-        "legend": ('<span><i class="r"></i> tight bridge (short in native space)</span>'
-                   '<span><i class="f"></i> roomy bridge</span>'
+        "legend": ('<span><i class="r"></i> tight bridge (tinted by tightness)</span>'
+                   '<span><i class="f"></i> entity (no tight bridge)</span>'
                    '<span><i class="r"></i> pocket member (ringed)</span>'),
         "reveal": ("<b>Reveals:</b> <b>where</b> the tight structure sits — whether the pockets are one "
-                   "region or scattered, and which short-bridge runs will blur first as neighborhoods "
-                   "tighten. Edges are native-space links; the projection only supplies the layout."),
+                   "region or scattered, and which bridge runs will blur first as neighborhoods tighten. "
+                   "A healthy corpus draws few or no bridges at all."),
         "cls": "",
     }

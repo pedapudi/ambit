@@ -106,26 +106,37 @@ def _hc_fig(svg, hc):
 
 # Explicit display order, by figure registry key. Listed figures render in this
 # sequence; any enabled figure not listed sorts after, by its own `order`.
+# The report reads as a story in five movements:
+#   see it -> how crowded, at what scale -> who is affected -> what structure it
+#   forms -> why (the space's capacity mechanics), with texture views last.
+# (The CMP block, present only under --compare, stays first: a requested diff is
+# the headline of that report.)
 _DISPLAY_ORDER = [
     "cmp_overlap",     # CMP 12a · neighbor-overlap drift (LOCAL) — leads the CMP block
     "cmp_scorecard",   # CMP 12 · representational drift (GLOBAL CKA & distances)
     "cmp_drift",       # CMP 13 · drift field
     "cmp_shift",       # CMP 14 · distance-distribution shift
-    "res_kcurve",  # RES 09 · crowding curve (the canonical global occupancy figure)
-    "res_bandwidth",  # RES 09b · resolution bandwidth (operational units of the same sample)
-    "res_cmap",    # RES 07 · local crowding cloud
-    "d3_trip",     # 3D 02 · orthographic triptych
-    "res_dtm",     # RES 10 · per-entity crowding field (global → local hand-off)
-    "res_field",   # RES 06 · local concentration field
-    "res_margin",  # RES 04 · nearest-neighbor cosine margin
+    # -- see it: the corpus itself, crowding as color and shape ----------------
+    "res_cmap",    # RES 07 · local crowding cloud (the inviting overview)
+    "d3_trip",     # 3D 02 · orthographic triptych (the cloud's shape, three axes)
+    # -- how crowded, and at what scale ----------------------------------------
+    "cos_hist",    # RES 01 · random-pair cosine (the familiar global fingerprint)
+    "res_kcurve",  # RES 09 · crowding curve (the fingerprint at every scale, vs nulls)
+    "res_bandwidth",  # RES 09b · resolution bandwidth (what it costs, in query-noise units)
+    # -- who is affected --------------------------------------------------------
+    "res_field",   # RES 06 · local concentration field (per-item density distribution)
+    "res_dtm",     # RES 10 · per-entity crowding field (named entities + collision cost)
+    "res_margin",  # RES 04 · nearest-neighbor cosine margin (per-item decisiveness)
+    # -- what structure it forms -----------------------------------------------
+    "res_pockets", # RES 11 · crowding pockets (how many tight groups, who)
+    "res_mst",     # RES 12 · crowding skeleton (where they sit)
     "res_wb",      # RES 05 · within- vs between-cluster cosine
     "res_separability",  # RES 05b · label-aware separability panel
-    "res_pockets", # RES 11 · crowding pockets (merge-tree prominence)
-    "res_mst",     # RES 12 · crowding skeleton (the same tree, drawn spatially)
-    "cos_hist",    # RES 01 · random-pair cosine distribution
-    "res_cumvar",  # RES 02b · cumulative variance
-    "res_uniformity",  # RES 08 · uniformity on the hypersphere
+    # -- why: the space's capacity mechanics -----------------------------------
+    "res_cumvar",  # RES 02b · cumulative variance (carries the IsoScore)
+    "res_uniformity",  # RES 08 · uniformity on the hypersphere (hidden by default)
     "scree",       # RES 02 · covariance eigenvalue scree
+    # -- texture ---------------------------------------------------------------
     "d3_shell",    # 3D 05 · radial shell occupancy
     "den_prom",    # DEN 04 · density-peak prominence
     "cov_sparsity",# COV 09 · nearest-neighbor sparsity field
@@ -282,22 +293,22 @@ _INTERP = {
         '<line x1="62" y1="34" x2="78" y2="38" stroke="var(--bad)" stroke-width="1.8"/>'
         '<line x1="62" y1="34" x2="70" y2="46" stroke="var(--bad)" stroke-width="1.8"/>'
         '<line x1="70" y1="46" x2="58" y2="54" stroke="var(--bad)" stroke-width="1.8"/>'
-        '<line x1="78" y1="38" x2="250" y2="50" stroke="var(--ink-faint)" stroke-width="0.9" stroke-opacity="0.55"/>'
-        '<line x1="250" y1="50" x2="282" y2="32" stroke="var(--ink-faint)" stroke-width="0.9" stroke-opacity="0.55"/>'
-        '<line x1="250" y1="50" x2="264" y2="68" stroke="var(--ink-faint)" stroke-width="0.9" stroke-opacity="0.55"/>'
-        '<line x1="282" y1="32" x2="304" y2="58" stroke="var(--ink-faint)" stroke-width="0.9" stroke-opacity="0.55"/>'
+        '<line x1="78" y1="38" x2="250" y2="50" stroke="var(--ink-faint)" stroke-width="0.9" '
+        'stroke-opacity="0.4" stroke-dasharray="2 4"/>'
         '<g fill="var(--ink-faint)"><circle cx="50" cy="42" r="2.2"/><circle cx="62" cy="34" r="2.2"/>'
         '<circle cx="78" cy="38" r="2.2"/><circle cx="70" cy="46" r="2.2"/><circle cx="58" cy="54" r="2.2"/>'
         '<circle cx="250" cy="50" r="2.2"/><circle cx="282" cy="32" r="2.2"/><circle cx="304" cy="58" r="2.2"/>'
         '<circle cx="264" cy="68" r="2.2"/></g>'
         '<circle cx="64" cy="44" r="24" fill="none" stroke="var(--bad)" stroke-width="1" stroke-dasharray="3 3"/>'
-        '<text x="64" y="82" font-size="8" fill="var(--bad)" text-anchor="middle">short hot bridges = a pocket</text>'
-        '<text x="168" y="34" font-size="8" fill="var(--ink-faint)" text-anchor="middle">long faint bridge = roomy gap</text>'
+        '<text x="64" y="82" font-size="8" fill="var(--bad)" text-anchor="middle">short tight bridges = a pocket</text>'
+        '<text x="168" y="34" font-size="8" fill="var(--ink-faint)" text-anchor="middle">roomy bridges are not drawn</text>'
         '</svg>'
-        "<p>The same merge tree as the pockets figure, drawn as geometry: every entity joined into one "
-        "tree by its shortest <em>native-space</em> bridges. <span class='hc-bad'>Hot short edges</span> "
-        "are the crowding skeleton — the paths along which items blur into each other first; faint long "
-        "edges are the roomy background. Ringed points are the top pockets' members.</p>"
+        "<p>The same merge tree as the pockets figure, drawn as geometry — decluttered: every entity is "
+        "a dot, and <b>only the bridges tighter than the bulk are drawn</b> (median − 3 robust sd). "
+        "<span class='hc-bad'>Runs of tight bridges</span> are the crowding skeleton — the paths along "
+        "which items blur into each other first; the roomy background needs no ink, it is the open "
+        "space. Ringed points are the top pockets' members. A healthy corpus draws few or no bridges "
+        "at all.</p>"
         "<p><span class='hc-look'>The layout is a projection; the edges are not.</span> A hot edge "
         "stretched across the plot is a tight native-space bridge whose endpoints the projection tore "
         "apart — read connection from the edges, location only loosely from the layout.</p>"

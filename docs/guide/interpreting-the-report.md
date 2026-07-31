@@ -392,7 +392,8 @@ which is exactly why ambit shows the spectrum several ways.
 
 ### RES 09 — Crowding curve
 
-*Leads the resolution block. Source: `figures/res_kcurve.py`. Theory:
+*Leads the scale-diagnosis block, after the overview cloud and the cosine
+fingerprint. Source: `figures/res_kcurve.py`. Theory:
 `docs/concepts/continuous-occupancy.md`.*
 
 #### What it answers
