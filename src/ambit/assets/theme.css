@@ -233,9 +233,11 @@
              visibility: hidden; opacity: 0; transform: translateY(-3px); transition: opacity .12s, transform .12s; }
   .hc--up .hc-card { top: auto; bottom: calc(100% + 8px); transform: translateY(3px); }
   .hc:hover .hc-card, .hc:focus-within .hc-card { visibility: visible; opacity: 1; transform: translateY(0); }
-  .hc-card .hc-h { color: var(--accent); font-weight: 700; font-size: 13px; }
-  .hc-card .hc-sub { color: var(--ink-faint); font-size: 9.5px; margin: 2px 0 9px; }
+  .hc-card .hc-h { display: block; color: var(--accent); font-weight: 700; font-size: 13px; }
+  .hc-card .hc-sub { display: block; color: var(--ink-faint); font-size: 9.5px; margin: 2px 0 9px; }
   .hc-card p { margin: 0 0 9px; line-height: 1.5; color: var(--ink-soft); }
+  .hc-card svg.hc-viz { display: block; width: 100%; height: auto; margin: 2px 0 10px;
+                        border: 1px solid var(--rule-soft); border-radius: 4px; }
   .hc-card .hc-math { border-top: 1px solid var(--rule-soft); padding-top: 9px; font-size: 10.5px; line-height: 1.85; }
   .hc-card .hc-intro { color: var(--ink-faint); font-size: 9.5px; margin-bottom: 5px; }
   .hc-card .hc-eq { color: var(--ink); }

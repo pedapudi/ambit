@@ -196,6 +196,18 @@ _INTERP = {
         '<div class="hc-foot">Color is relative rank — in a globally dense space the green dots are still '
         "cramped, just less than the median. The local concentration field shows the absolute level.</div>"),
     "res_kcurve": ("Crowding curve", "the scale at which the space confuses items",
+        '<svg class="hc-viz" viewBox="0 0 336 92" role="img" aria-hidden="true">'
+        '<line x1="18" y1="74" x2="318" y2="74" stroke="var(--rule)" stroke-width="1"/>'
+        '<line x1="18" y1="16" x2="18" y2="74" stroke="var(--rule)" stroke-width="1"/>'
+        '<polygon points="150,41 230,54 300,66 300,74 150,74" fill="color-mix(in srgb, var(--bad) 16%, transparent)"/>'
+        '<polyline points="18,26 90,32 160,42 230,54 300,66" fill="none" stroke="var(--accent)" stroke-width="2"/>'
+        '<polyline points="18,32 90,42 160,56 230,68 268,74" fill="none" stroke="var(--good)" stroke-width="1.4"/>'
+        '<polyline points="18,36 70,52 120,68 148,74" fill="none" stroke="var(--ink-faint)" stroke-width="1.2" stroke-dasharray="4 3"/>'
+        '<line x1="150" y1="20" x2="150" y2="74" stroke="var(--bad)" stroke-width="1" stroke-dasharray="3 3"/>'
+        '<text x="156" y="24" font-size="8" fill="var(--bad)">crowding begins</text>'
+        '<text x="318" y="86" font-size="8" fill="var(--ink-faint)" text-anchor="end">more similar →</text>'
+        '<text x="20" y="86" font-size="8" fill="var(--ink-faint)">fraction of pairs (log)</text>'
+        '</svg>'
         "<p>Sort every sampled pair by similarity and read the result as a curve: at each cosine, "
         "the fraction of pairs at least that similar. An exact CDF — no bin widths, no lattice, "
         "nothing to tune.</p>"
@@ -211,6 +223,23 @@ _INTERP = {
         '<div class="hc-foot">Built from the same random-pair cosine sample as the header facts; the '
         "envelope is a display band, not a formal test.</div>"),
     "res_dtm": ("Per-entity crowding field", "who is crowded, and what it costs",
+        '<svg class="hc-viz" viewBox="0 0 336 100" role="img" aria-hidden="true">'
+        '<circle cx="62" cy="46" r="16" fill="none" stroke="var(--bad)" stroke-width="1.5"/>'
+        '<g fill="var(--ink-faint)"><circle cx="52" cy="42" r="2"/><circle cx="60" cy="38" r="2"/>'
+        '<circle cx="66" cy="46" r="2"/><circle cx="58" cy="52" r="2"/><circle cx="68" cy="54" r="2"/>'
+        '<circle cx="74" cy="42" r="2"/></g>'
+        '<circle cx="62" cy="46" r="2.6" fill="var(--bad)"/>'
+        '<circle cx="240" cy="46" r="38" fill="none" stroke="var(--good)" stroke-width="1.5"/>'
+        '<g fill="var(--ink-faint)"><circle cx="220" cy="26" r="2"/><circle cx="252" cy="70" r="2"/>'
+        '<circle cx="270" cy="34" r="2"/><circle cx="214" cy="60" r="2"/>'
+        '<circle cx="305" cy="24" r="2"/><circle cx="310" cy="72" r="2"/><circle cx="190" cy="86" r="2"/></g>'
+        '<circle cx="240" cy="46" r="2.6" fill="var(--good)"/>'
+        '<text x="62" y="92" font-size="8" fill="var(--bad)" text-anchor="middle">crowded · small ball</text>'
+        '<text x="240" y="96" font-size="8" fill="var(--good)" text-anchor="middle">isolated · large ball</text>'
+        '<text x="150" y="14" font-size="8" fill="var(--ink-faint)" text-anchor="middle" '
+        'style="paint-order:stroke" stroke="var(--panel)" stroke-width="3">'
+        'the ball that holds the same share of the corpus</text>'
+        '</svg>'
         "<p>Each entity is scored by the <b>radius of the ball it needs to gather 2% of the corpus</b> "
         "(the distance to a measure). Tiny radius = crowded; huge radius = isolated. The curve is the "
         "exact CDF of those radii; the listed ids are the two tails.</p>"
@@ -224,6 +253,18 @@ _INTERP = {
         '<div class="hc-foot">Runs on a seeded subsample above 6,000 reservoir points. Ids come from '
         "your id column; without one they are reservoir row numbers.</div>"),
     "res_pockets": ("Crowding pockets", "tight groups, read without a threshold",
+        '<svg class="hc-viz" viewBox="0 0 336 84" role="img" aria-hidden="true">'
+        '<rect x="60" y="30" width="190" height="12" rx="2" fill="var(--bad)" fill-opacity="0.85"/>'
+        '<line x1="60" y1="26" x2="60" y2="46" stroke="var(--bad)" stroke-width="1.6"/>'
+        '<text x="60" y="20" font-size="8" fill="var(--ink-soft)">forms — first members hold together</text>'
+        '<text x="250" y="58" font-size="8" fill="var(--ink-soft)" text-anchor="end">merges into the bulk</text>'
+        '<line x1="250" y1="42" x2="250" y2="48" stroke="var(--ink-faint)" stroke-width="0.8"/>'
+        '<line x1="62" y1="66" x2="248" y2="66" stroke="var(--ink-faint)" stroke-width="0.8"/>'
+        '<polygon points="60,66 66,63 66,69" fill="var(--ink-faint)"/>'
+        '<polygon points="250,66 244,63 244,69" fill="var(--ink-faint)"/>'
+        '<text x="155" y="79" font-size="8" fill="var(--ink-faint)" text-anchor="middle">prominence — how long it stays its own thing</text>'
+        '<text x="290" y="38" font-size="8" fill="var(--ink-faint)">scale →</text>'
+        '</svg>'
         "<p>Entities are linked by shortest bridges and watched as the connection scale grows (the "
         "merge tree — the hierarchy inside the clustering backend, surfaced instead of flattened). "
         "A pocket is <b>born</b> when its first 8 members hold together and <b>dies</b> when it merges "
@@ -236,6 +277,23 @@ _INTERP = {
         "corpus ÷ sample for absolute counts. Pockets smaller than 8 appear in the crowding field's "
         "low tail instead.</div>"),
     "res_mst": ("Crowding skeleton", "where the tight structure sits",
+        '<svg class="hc-viz" viewBox="0 0 336 88" role="img" aria-hidden="true">'
+        '<line x1="50" y1="42" x2="62" y2="34" stroke="var(--bad)" stroke-width="1.8"/>'
+        '<line x1="62" y1="34" x2="78" y2="38" stroke="var(--bad)" stroke-width="1.8"/>'
+        '<line x1="62" y1="34" x2="70" y2="46" stroke="var(--bad)" stroke-width="1.8"/>'
+        '<line x1="70" y1="46" x2="58" y2="54" stroke="var(--bad)" stroke-width="1.8"/>'
+        '<line x1="78" y1="38" x2="250" y2="50" stroke="var(--ink-faint)" stroke-width="0.9" stroke-opacity="0.55"/>'
+        '<line x1="250" y1="50" x2="282" y2="32" stroke="var(--ink-faint)" stroke-width="0.9" stroke-opacity="0.55"/>'
+        '<line x1="250" y1="50" x2="264" y2="68" stroke="var(--ink-faint)" stroke-width="0.9" stroke-opacity="0.55"/>'
+        '<line x1="282" y1="32" x2="304" y2="58" stroke="var(--ink-faint)" stroke-width="0.9" stroke-opacity="0.55"/>'
+        '<g fill="var(--ink-faint)"><circle cx="50" cy="42" r="2.2"/><circle cx="62" cy="34" r="2.2"/>'
+        '<circle cx="78" cy="38" r="2.2"/><circle cx="70" cy="46" r="2.2"/><circle cx="58" cy="54" r="2.2"/>'
+        '<circle cx="250" cy="50" r="2.2"/><circle cx="282" cy="32" r="2.2"/><circle cx="304" cy="58" r="2.2"/>'
+        '<circle cx="264" cy="68" r="2.2"/></g>'
+        '<circle cx="64" cy="44" r="24" fill="none" stroke="var(--bad)" stroke-width="1" stroke-dasharray="3 3"/>'
+        '<text x="64" y="82" font-size="8" fill="var(--bad)" text-anchor="middle">short hot bridges = a pocket</text>'
+        '<text x="168" y="34" font-size="8" fill="var(--ink-faint)" text-anchor="middle">long faint bridge = roomy gap</text>'
+        '</svg>'
         "<p>The same merge tree as the pockets figure, drawn as geometry: every entity joined into one "
         "tree by its shortest <em>native-space</em> bridges. <span class='hc-bad'>Hot short edges</span> "
         "are the crowding skeleton — the paths along which items blur into each other first; faint long "
@@ -246,6 +304,27 @@ _INTERP = {
         '<div class="hc-foot">Same seeded subsample as the pockets figure, so rings and bars '
         "cross-reference exactly.</div>"),
     "res_separability": ("Separability panel", "are the groups geometrically distinct?",
+        '<svg class="hc-viz" viewBox="0 0 336 88" role="img" aria-hidden="true">'
+        '<g stroke="var(--rule-soft)" stroke-width="0.5">'
+        '<rect x="30" y="16" width="18" height="18" fill="var(--paper)"/>'
+        '<rect x="48" y="16" width="18" height="18" fill="var(--accent)" fill-opacity="0.25"/>'
+        '<rect x="66" y="16" width="18" height="18" fill="var(--accent)" fill-opacity="0.95"/>'
+        '<rect x="30" y="34" width="18" height="18" fill="var(--accent)" fill-opacity="0.25"/>'
+        '<rect x="48" y="34" width="18" height="18" fill="var(--paper)"/>'
+        '<rect x="66" y="34" width="18" height="18" fill="var(--accent)" fill-opacity="0.35"/>'
+        '<rect x="30" y="52" width="18" height="18" fill="var(--accent)" fill-opacity="0.95"/>'
+        '<rect x="48" y="52" width="18" height="18" fill="var(--accent)" fill-opacity="0.35"/>'
+        '<rect x="66" y="52" width="18" height="18" fill="var(--paper)"/></g>'
+        '<line x1="100" y1="22" x2="86" y2="24" stroke="var(--ink-faint)" stroke-width="0.8"/>'
+        '<text x="103" y="25" font-size="8" fill="var(--ink-soft)">deep cell = two groups</text>'
+        '<text x="103" y="35" font-size="8" fill="var(--ink-soft)">share a direction</text>'
+        '<text x="57" y="82" font-size="8" fill="var(--ink-faint)" text-anchor="middle">centroid cosine</text>'
+        '<text x="216" y="20" font-size="8" fill="var(--ink-faint)">kNN purity per group</text>'
+        '<rect x="216" y="28" width="100" height="10" rx="2" fill="var(--accent)"/>'
+        '<rect x="216" y="46" width="64" height="10" rx="2" fill="var(--accent)"/>'
+        '<line x1="306" y1="24" x2="306" y2="62" stroke="var(--ink-faint)" stroke-width="0.9" stroke-dasharray="2 3"/>'
+        '<text x="266" y="82" font-size="8" fill="var(--ink-faint)" text-anchor="middle">long bar = neighbors agree</text>'
+        '</svg>'
         "<p><b>Where the groups come from:</b> if the dataset has a label column, those labels are the "
         "groups and the headline says <em>provided</em>. With no labels, ambit clusters the reservoir's "
         "geometry itself (the headline names the method, e.g. k-means or hdbscan) — the panel then "
@@ -261,6 +340,20 @@ _INTERP = {
         "names drop any long shared prefix; the headline notes when only the largest groups are "
         "shown.</div>"),
     "res_bandwidth": ("Resolution bandwidth σ*", "the corpus's query-noise budget",
+        '<svg class="hc-viz" viewBox="0 0 336 92" role="img" aria-hidden="true">'
+        '<line x1="18" y1="76" x2="318" y2="76" stroke="var(--rule)" stroke-width="1"/>'
+        '<rect x="200" y="14" width="52" height="62" fill="color-mix(in srgb, var(--bad) 12%, transparent)"/>'
+        '<line x1="18" y1="42" x2="318" y2="42" stroke="var(--ink-soft)" stroke-width="0.9" stroke-dasharray="5 4"/>'
+        '<text x="22" y="38" font-size="8" fill="var(--ink-soft)">tolerance · 1 collision</text>'
+        '<polyline points="30,72 120,70 168,60 200,42 226,24 300,17" fill="none" stroke="var(--accent)" stroke-width="1.8"/>'
+        '<polyline points="70,73 190,71 232,60 252,42 274,26 306,20" fill="none" stroke="var(--ink-faint)" stroke-width="1.3" stroke-dasharray="4 3"/>'
+        '<circle cx="200" cy="42" r="3" fill="var(--accent)"/>'
+        '<circle cx="252" cy="42" r="3" fill="var(--ink-faint)"/>'
+        '<text x="195" y="56" font-size="8.5" font-weight="700" fill="var(--accent)" text-anchor="end">σ*</text>'
+        '<text x="257" y="56" font-size="8" fill="var(--ink-faint)">uniform</text>'
+        '<text x="226" y="88" font-size="8" fill="var(--bad)" text-anchor="middle">budget spent</text>'
+        '<text x="318" y="88" font-size="8" fill="var(--ink-faint)" text-anchor="end">noise →</text>'
+        '</svg>'
         "<p>Model a query aimed at item <b>x</b> as that item plus noise: <b>q = x + σ·g</b>. "
         "σ is how far the query lands from what it means — paraphrase, vagueness, model quirk.</p>"
         "<p>A competitor at distance r wins exactly when the noise crosses the halfway plane "

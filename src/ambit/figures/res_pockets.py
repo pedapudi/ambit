@@ -25,21 +25,27 @@ def _idstr(v, width: int = 14) -> str:
 
 @figure
 def fig_res_pockets(ctx):
-    W, H = 920, 520
-    L, R, T, B = 90.0, 700.0, 64.0, 470.0
+    W = 920
+    L, R, T = 90.0, 700.0, 64.0
 
     es = ctx.es
     X = np.asarray(es.X)
     if X.ndim != 2 or len(X) < 64:
-        note = (f'<text x="{W/2:.0f}" y="{H/2:.0f}" fill="var(--ink-faint)" font-size="12" '
+        note = (f'<text x="{W/2:.0f}" y="110" fill="var(--ink-faint)" font-size="12" '
                 f'text-anchor="middle">needs a reservoir sample</text>')
         return {"num": "RES 11", "order": 90.7, "name": "Crowding pockets", "tech": "merge tree",
                 "why": "No reservoir available to build the merge tree.",
-                "svg": _svg(W, H, "Crowding pockets (no data)", note),
+                "svg": _svg(W, 200, "Crowding pockets (no data)", note),
                 "legend": "", "reveal": "<b>Reveals:</b> how many over-tight pockets exist, and who is in them.", "cls": ""}
 
     pk, _ = cr.pockets(X, min_size=8, max_n=4096, max_pockets=10, seed=0)
     all_ids = np.asarray(es.ids) if es.ids is not None else np.arange(len(X))
+
+    # the card is exactly as tall as its content — pockets, axis, captions
+    n = len(pk)
+    row_h = 34.0
+    B = T + 26 + max(n, 1) * row_h + 6
+    H = int(B + 56)
 
     body = []
     body.append(f'<text x="{L}" y="28" fill="var(--ink-soft)" font-size="12">'
@@ -82,10 +88,8 @@ def fig_res_pockets(ctx):
                 f'cosine distance (1 − cos) · pocket forms at the left end, merges into the bulk at the right end</text>')
 
     # bars, most prominent first
-    n = len(pk)
-    row_h = min(30.0, (B - T - 10) / max(n, 1))
     for r, p in enumerate(pk):
-        y = T + 8 + r * row_h
+        y = T + 26 + r * row_h
         x0, x1 = Xc(p["birth"]), Xc(p["death"])
         hot = r == 0
         col = "var(--bad)" if hot else "var(--accent)"
@@ -93,15 +97,26 @@ def fig_res_pockets(ctx):
                     f'rx="2" fill="{col}" fill-opacity="{0.92 if hot else 0.75}"/>')
         body.append(f'<line x1="{x0:.1f}" y1="{y-2:.1f}" x2="{x0:.1f}" y2="{y+row_h*0.46+2:.1f}" '
                     f'stroke="{col}" stroke-width="1.6"/>')
+        if hot and (x1 - x0) > 135:
+            # teach the encoding on the first bar (only when both labels fit)
+            body.append(f'<text x="{x0:.1f}" y="{y-6:.1f}" fill="var(--ink-faint)" font-size="8.5" '
+                        f'style="paint-order:stroke" stroke="var(--paper)" stroke-width="3">forms</text>')
+            body.append(f'<text x="{x1:.1f}" y="{y-6:.1f}" fill="var(--ink-faint)" font-size="8.5" '
+                        f'text-anchor="end" style="paint-order:stroke" stroke="var(--paper)" '
+                        f'stroke-width="3">merges into bulk</text>')
         sample = " · ".join(_idstr(all_ids[m]) for m in p["members"][:3])
         txt = (f'n={p["size"]} · forms at {p["birth"]:.2f} '
                f'· holds for {p["prominence"]:.2f} · {sample}')
-        # flip the label to the left of the bar when it would run off the card
-        if x1 + 8 + 6.2 * len(txt) > W - 14:
-            lx, anchor = x0 - 8, "end"
+        # place the label right of the bar; flip left when it would run off the
+        # card; when neither side fits (a near-full-width bar), sit it below
+        wpx = 6.2 * len(txt)
+        if x1 + 8 + wpx <= W - 14:
+            lx, ly, anchor = x1 + 8, y + row_h * 0.36, "start"
+        elif x0 - 8 - wpx >= 10:
+            lx, ly, anchor = x0 - 8, y + row_h * 0.36, "end"
         else:
-            lx, anchor = x1 + 8, "start"
-        body.append(f'<text x="{lx:.1f}" y="{y+row_h*0.36:.1f}" fill="var(--ink)" font-size="9.5" '
+            lx, ly, anchor = x0, y + row_h * 0.46 + 13, "start"
+        body.append(f'<text x="{lx:.1f}" y="{ly:.1f}" fill="var(--ink)" font-size="9.5" '
                     f'text-anchor="{anchor}" style="font-variant-numeric:tabular-nums;paint-order:stroke" '
                     f'stroke="var(--paper)" stroke-width="3">{txt}</text>')
 
