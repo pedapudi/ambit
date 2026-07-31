@@ -610,6 +610,19 @@ computation.
   certificates would need a different metric with its own stability theorem —
   an open question, not an engineering task.
 
+### 13.4b From measurement to gradient
+
+The confusion kernel is differentiable, so the same mathematics doubles as a
+training-time regularizer: `ambit.training` provides `confusion_loss` (minimize
+expected collisions at a *measured* σ — the gradient dies exponentially beyond
+~3σ, so far pairs are untouched by construction), `preservation_loss` (the
+neighbor-overlap comparison in differentiable form, anchoring who-is-similar-to
+-whom to a frozen reference), and the mining utilities (`resolution_weights`,
+`mine_confusable_negatives` with its false-negative guard). The sound workflow —
+diagnose first, cheapest fix wins, held-out verdicts, never grade with the
+functional you optimized — is demonstrated end to end in
+`examples/training-regularizers/`.
+
 ### 13.5 Scope, stated plainly
 
 Everything here treats the corpus as its own query population. That covers
