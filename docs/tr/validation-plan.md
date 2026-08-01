@@ -136,8 +136,17 @@ disk for the 10^7 corpus; E6 needs one GPU.
 
 **Defaults frozen** for Part II: reservoir 20k (≫ the measured 1k sufficiency),
 P = 2×10⁵, m = 0.02, min pocket size 8 (with root-candidate fallback), z at 64
-null replicates. Remaining before the pilot: E4a (global rank envelope), E2 +
-E4b (detection power + null calibration of pocket prominence and liftoff).
+null replicates.
+
+## Tier-2 results (run 2026-08-01)
+
+| exp | verdict | result |
+|---|---|---|
+| E4a | **accept, shipped** | global rank-envelope test with ERL tie-breaking; measured: 0/40 false liftoffs on nulls (pointwise band fired on all 40); liftoff gated on the ERL p (the α-critical envelope alone over-fires ~4×). Benchmark rejects at min p with liftoff 0.93. **Case-study correction:** the legal corpus's liftoff is p=0.005 at cos ≈ 0.82; the earlier +0.07 was the bulk-edge artifact. Figure + hovercard updated. |
+| E4b | **accept** | null calibration on 400 nulls: rank-test rejection 1.25% @ nominal 1%; gated liftoff 6% @ nominal 5%; \|z\|>3 at 0.75%; **pocket-prominence null p99 = 0.009** → shipped as a per-report simulated floor in the pockets figure (suppresses within-null pockets; closes the E1e finding). |
+| E2 | **accept** | at matched 1% FA (measured 0.010–0.013 for every detector): the continuous layer (rank p, σ\*, DTM ratio, pocket prominence) at **full power in every pocket cell** incl. a single 1% pocket where mean-cos/hubness/kNN-distance sit near the FA floor. Honest cells recorded: IsoScore also full-power on single coherent pockets (eigenvalue past the null spectrum edge) but cannot localize and misses the mean-shift cone; z weak on small pockets; pocket detector correctly non-alarming on a cone. |
+
+Remaining: E3 (scaling — running), E6 (deferred; needs sign-off), Part II pilot.
 
 ## Part II — External validation methodology (to be run independently)
 

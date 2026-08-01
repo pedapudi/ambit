@@ -79,14 +79,23 @@ half-cell lattice shift moves a hexbin peak count by $30\%$ and relocates the
 peak on fixed data), verify the confusion law to Monte-Carlo precision
 (maximum deviation $9{\times}10^{-4}$ over a $6{\times}4$ grid of angles and
 noise scales), and trace a planted $5\%$ near-duplicate pocket through every
-layer of the instrument: liftoff of the crowding curve at $\cos\approx0.94$,
-an occupancy-discrepancy $z$ of $-55$, a $3.7\times$ collapse of the
-per-item field's low tail, exact recovery of the pocket's cardinality and
-scales by the merge tree, and a $26\%$ loss of noise budget
-($\sstar\!: 0.203 \to 0.150$). We also report honest negative results,
-including a measured near-redundancy between the confusion functional and
-uniformity ($r = 0.978$) whose single order-flip is nonetheless operationally
-informative. A case study on a public million-document legal corpus and a
+layer of the instrument: whole-curve rejection of uniformity at the minimum
+attainable $p$ with liftoff at $\cos\approx0.93$, an occupancy-discrepancy
+$z$ of $-47 \pm 4$ over $20$ seeds, a $3.7\times$ collapse of the per-item
+field's low tail, exact recovery of the pocket's cardinality and scales by
+the merge tree ($20/20$ seeds), and a $26\%$ loss of noise budget
+($\sstar\!: 0.203 \to 0.150$). The instrument is calibrated and stress-tested
+as a whole: liftoff detection uses a global rank-envelope test whose false
+alarms on $400$ pure nulls match nominal rates (a naive pointwise band, by
+contrast, fired on every null); pocket reporting carries a null-calibrated
+prominence floor; every readout is stable across reservoir sizes from
+$1{,}000$ rows; and a detection-power study against a suite of standard
+diagnostics at matched $1\%$ false alarm shows the continuous layer at full
+power on pockets as small as $1\%$ of the corpus where mean-cosine, hubness,
+and kNN-distance baselines sit near the false-alarm floor. We also report
+honest negative results, including a measured near-redundancy between the
+confusion functional and uniformity ($r = 0.978$) whose single order-flip is
+nonetheless operationally informative. A case study on a public million-document legal corpus and a
 measurement-driven training recipe with a gradient-locality guarantee
 complete the report. \textsf{ambit} is unsupervised by design --- no labels,
 gold pairs, or ground truth --- and its core depends only on \textsf{numpy}.
@@ -417,17 +426,27 @@ compared over all $\binom{8}{2}$ pairs. \emph{Training}
 $d = 64$; a $20\%$ held-out slice is excluded from mining, weighting, and
 batching, and \emph{all} reported verdicts (collision counts, neighbor
 overlap at $k = 10$) are computed on it; schedules as tabulated.
+\emph{Calibration and power} (\S\ref{sec:power}): $400$ pure-null and
+$50$-per-cell pathology corpora at $(n, d) = (2{,}000, 256)$ with
+$6{\times}10^4$ sampled pairs each; every detector is a scalar with a
+one-sided alarm direction, thresholded at the $1\%$ null quantile computed
+on the same nulls (the rank test self-calibrates via its $p$); replicate
+seeds are disjoint from threshold seeds. \emph{Sensitivity sweeps}
+(reservoir, pair-sample, mass-fraction, min-size, null-replicate count,
+noise-model robustness): grids and seed counts as stated inline where each
+result is used.
 
 \paragraph{Reporting conventions.}
 Aggregates are reported with their null value at matched sample size
 wherever a null exists; effect sizes are stated in the null's units
 ($z$-scores) or as ratios. Negative results are reported with the same
-prominence as positive ones. The single-seed character of the synthetic
-experiments is deliberate --- each is a demonstration of a deterministic or
-concentration-driven effect, not a survey --- except where replicate counts
-are stated ($19$-replicate envelopes; $20$-replicate null spread for the
-discrepancy $z$); the case study (\S\ref{sec:instrument}) provides the
-complementary real-corpus run.
+prominence as positive ones. Headline benchmark numbers are replicated over
+$20$ seeds and reported as mean $\pm$ sd; calibration and power studies use
+the replicate counts stated with them ($400$ nulls, $50$ per pathology
+cell, $199$-null rank envelopes, $64$-replicate discrepancy nulls);
+single-seed values appear only for deterministic or concentration-driven
+demonstrations and are marked by the absence of a spread. The case study
+(\S\ref{sec:instrument}) provides the complementary real-corpus run.
 
 % =========================================================================
 \section{The Fragility of Binned Occupancy}
@@ -570,14 +589,23 @@ $K$ is Ripley's $K$ function on the sphere \cite{ripley1976} in cosine
 coordinates. Two references with matched sample size accompany it
 (Figure~\ref{fig:kcurve}):
 
-\emph{(i) The uniform null.} For i.i.d.\ uniform points the pair cosine
-satisfies $c = 2B - 1$, $B \sim
+\emph{(i) The uniform null, tested globally.} For i.i.d.\ uniform points the
+pair cosine satisfies $c = 2B - 1$, $B \sim
 \mathrm{Beta}\!\big(\tfrac{d-1}{2},\tfrac{d-1}{2}\big)$, so null pair samples
 are drawn directly --- no $d$-dimensional vectors are materialized. The
 sphere being boundaryless, no edge correction exists to get wrong
-\cite{robeson2014}. A pointwise envelope over $19$ replicates is a display
-band; whole-curve inference, when wanted, is a rank envelope
-\cite{myllymaki2017}.
+\cite{robeson2014}. Inference over the whole curve is a one-sided global
+\emph{rank-envelope} test \cite{myllymaki2017} with extreme-rank-length tie
+breaking (a one-sided $K$ test is massively tied where every null is exactly
+zero): the data curve is ranked among $199$ null curves, a single global $p$
+covers all scales at once, and \emph{liftoff} --- the highest cosine at
+which the data exceed the $\alpha$-critical envelope --- is annotated only
+when the global test rejects. Calibration is measured, not assumed: on $40$
+pure-null corpora the gated test reported $0$ liftoffs, whereas the naive
+pointwise band (the max of the null curves) fired on \emph{every} null seed
+at the bulk edge --- the multiple-comparison failure made concrete --- and
+even the $\alpha$-critical envelope alone over-fires $\approx 4\times$
+nominal; the envelope locates the scale, the rank $p$ decides significance.
 
 \emph{(ii) The anisotropy-conditioned null.} Real corpora are cone-shaped for
 benign reasons; judging them against uniformity alone over-alarms. The second
@@ -587,12 +615,12 @@ sampled from the eigenvalues alone by rotation invariance: the corpus's
 second-moment cone \emph{without} its clustering. Height of the data curve
 above this reference is crowding the cone cannot explain.
 
-On the benchmark, the data curve exceeds the uniform envelope from
-$\cos \approx 0.94$ --- the pocket announces itself at precisely the
-near-duplicate scale --- and carries a shoulder of excess mass
-($K \approx 2.4{\times}10^{-3}$, matching the pocket's pair share) that the
-ACG reference, built from the same corpus's covariance, does not reproduce:
-the crowding is clustering, not cone.
+On the benchmark, the global test rejects at the minimum attainable
+$p = 1/200$ with liftoff at $\cos \approx 0.93$ --- the pocket announces
+itself at precisely the near-duplicate scale --- and the curve carries a
+shoulder of excess mass ($K \approx 2.4{\times}10^{-3}$, matching the
+pocket's pair share) that the ACG reference, built from the same corpus's
+covariance, does not reproduce: the crowding is clustering, not cone.
 
 \begin{figure}[t]
 \centering
@@ -605,22 +633,25 @@ the crowding is clustering, not cone.
   yticklabels={$1$,$10^{-1}$,$10^{-2}$,$10^{-3}$,$10^{-4}$,$10^{-5}$},
   legend style={draw=none, font=\small, at={(0.97,0.95)}, anchor=north east},
   axis lines=left]
-\addplot[faint, thick, dashed] coordinates {(0.0000,-0.2999) (0.0112,-0.4201) (0.0225,-0.5711) (0.0337,-0.7535) (0.0449,-0.9675) (0.0562,-1.2172) (0.0674,-1.4988) (0.0786,-1.8224) (0.0898,-2.1850) (0.1011,-2.5685) (0.1123,-3.0131) (0.1235,-3.4497) (0.1348,-3.9392) (0.1460,-4.3467) (0.1572,-4.8238) (0.1685,-5.3009) (0.1797,-5.3009) (0.1909,-5.6020) (0.2021,-5.6020) (0.2134,-5.6020) (0.2246,-5.6020) (0.2358,-5.6020) (0.2471,-5.6020) (0.2583,-5.6020) (0.2695,-5.6020) (0.2808,-5.6020) (0.2920,-5.6020) (0.3032,-5.6020) (0.3144,-5.6020) (0.3257,-5.6020) (0.3369,-5.6020) (0.3481,-5.6020) (0.3594,-5.6020) (0.3706,-5.6020) (0.3818,-5.6020) (0.3931,-5.6020) (0.4043,-5.6020) (0.4155,-5.6020) (0.4268,-5.6020) (0.4380,-5.6020) (0.4492,-5.6020) (0.4604,-5.6020) (0.4717,-5.6020) (0.4829,-5.6020) (0.4941,-5.6020) (0.5054,-5.6020) (0.5166,-5.6020) (0.5278,-5.6020) (0.5391,-5.6020) (0.5503,-5.6020) (0.5615,-5.6020) (0.5727,-5.6020) (0.5840,-5.6020) (0.5952,-5.6020) (0.6064,-5.6020) (0.6177,-5.6020) (0.6289,-5.6020) (0.6401,-5.6020) (0.6514,-5.6020) (0.6626,-5.6020) (0.6738,-5.6020) (0.6851,-5.6020) (0.6963,-5.6020) (0.7075,-5.6020) (0.7187,-5.6020) (0.7300,-5.6020) (0.7412,-5.6020) (0.7524,-5.6020) (0.7637,-5.6020) (0.7749,-5.6020) (0.7861,-5.6020) (0.7974,-5.6020) (0.8086,-5.6020) (0.8198,-5.6020) (0.8310,-5.6020) (0.8423,-5.6020) (0.8535,-5.6020) (0.8647,-5.6020) (0.8760,-5.6020) (0.8872,-5.6020) (0.8984,-5.6020) (0.9097,-5.6020) (0.9209,-5.6020) (0.9321,-5.6020) (0.9433,-5.6020) (0.9546,-5.6020) (0.9658,-5.6020) (0.9770,-5.6020) (0.9883,-5.6020) (0.9995,-5.6020)};
-\addlegendentry{uniform-sphere envelope (max of 19 nulls)}
+\addplot[faint, thick, dashed] coordinates {(0.0000,-0.2986) (0.0112,-0.4198) (0.0225,-0.5696) (0.0337,-0.7518) (0.0449,-0.9659) (0.0562,-1.2134) (0.0674,-1.4986) (0.0786,-1.8146) (0.0898,-2.1703) (0.1011,-2.5489) (0.1123,-2.9685) (0.1235,-3.3871) (0.1348,-3.8238) (0.1460,-4.2595) (0.1572,-4.6020) (0.1685,-4.9999) (0.1797,-5.3009) (0.1909,-5.6020) (0.2021,-5.6020) (0.2134,-5.6020) (0.2246,-5.6020) (0.2358,-5.6020) (0.2471,-5.6020) (0.2583,-5.6020) (0.2695,-5.6020) (0.2808,-5.6020) (0.2920,-5.6020) (0.3032,-5.6020) (0.3144,-5.6020) (0.3257,-5.6020) (0.3369,-5.6020) (0.3481,-5.6020) (0.3594,-5.6020) (0.3706,-5.6020) (0.3818,-5.6020) (0.3931,-5.6020) (0.4043,-5.6020) (0.4155,-5.6020) (0.4268,-5.6020) (0.4380,-5.6020) (0.4492,-5.6020) (0.4604,-5.6020) (0.4717,-5.6020) (0.4829,-5.6020) (0.4941,-5.6020) (0.5054,-5.6020) (0.5166,-5.6020) (0.5278,-5.6020) (0.5391,-5.6020) (0.5503,-5.6020) (0.5615,-5.6020) (0.5727,-5.6020) (0.5840,-5.6020) (0.5952,-5.6020) (0.6064,-5.6020) (0.6177,-5.6020) (0.6289,-5.6020) (0.6401,-5.6020) (0.6514,-5.6020) (0.6626,-5.6020) (0.6738,-5.6020) (0.6851,-5.6020) (0.6963,-5.6020) (0.7075,-5.6020) (0.7187,-5.6020) (0.7300,-5.6020) (0.7412,-5.6020) (0.7524,-5.6020) (0.7637,-5.6020) (0.7749,-5.6020) (0.7861,-5.6020) (0.7974,-5.6020) (0.8086,-5.6020) (0.8198,-5.6020) (0.8310,-5.6020) (0.8423,-5.6020) (0.8535,-5.6020) (0.8647,-5.6020) (0.8760,-5.6020) (0.8872,-5.6020) (0.8984,-5.6020) (0.9097,-5.6020) (0.9209,-5.6020) (0.9321,-5.6020) (0.9433,-5.6020) (0.9546,-5.6020) (0.9658,-5.6020) (0.9770,-5.6020) (0.9883,-5.6020) (0.9995,-5.6020)};
+\addlegendentry{$\alpha$-critical global envelope (rank test, 199 nulls)}
 \addplot[good, thick] coordinates {(0.0000,-0.3013) (0.0112,-0.3833) (0.0225,-0.4778) (0.0337,-0.5854) (0.0449,-0.7042) (0.0562,-0.8328) (0.0674,-0.9707) (0.0786,-1.1160) (0.0898,-1.2650) (0.1011,-1.4194) (0.1123,-1.5694) (0.1235,-1.7234) (0.1348,-1.8855) (0.1460,-2.0268) (0.1572,-2.1827) (0.1685,-2.3343) (0.1797,-2.4873) (0.1909,-2.6654) (0.2021,-2.8181) (0.2134,-3.0065) (0.2246,-3.1804) (0.2358,-3.4201) (0.2471,-3.5849) (0.2583,-3.8096) (0.2695,-3.9585) (0.2808,-4.1870) (0.2920,-4.3467) (0.3032,-4.6989) (0.3144,-4.6989) (0.3257,-4.9999) (0.3369,-5.3009) (0.3481,-5.6020) (0.3594,-5.6020) (0.3706,-5.6020) (0.3818,-5.6020) (0.3931,-5.6020) (0.4043,-5.6020) (0.4155,-5.6020) (0.4268,-5.6020) (0.4380,-5.6020) (0.4492,-5.6020) (0.4604,-5.6020) (0.4717,-5.6020) (0.4829,-5.6020) (0.4941,-5.6020) (0.5054,-5.6020) (0.5166,-5.6020) (0.5278,-5.6020) (0.5391,-5.6020) (0.5503,-5.6020) (0.5615,-5.6020) (0.5727,-5.6020) (0.5840,-5.6020) (0.5952,-5.6020) (0.6064,-5.6020) (0.6177,-5.6020) (0.6289,-5.6020) (0.6401,-5.6020) (0.6514,-5.6020) (0.6626,-5.6020) (0.6738,-5.6020) (0.6851,-5.6020) (0.6963,-5.6020) (0.7075,-5.6020) (0.7187,-5.6020) (0.7300,-5.6020) (0.7412,-5.6020) (0.7524,-5.6020) (0.7637,-5.6020) (0.7749,-5.6020) (0.7861,-5.6020) (0.7974,-5.6020) (0.8086,-5.6020) (0.8198,-5.6020) (0.8310,-5.6020) (0.8423,-5.6020) (0.8535,-5.6020) (0.8647,-5.6020) (0.8760,-5.6020) (0.8872,-5.6020) (0.8984,-5.6020) (0.9097,-5.6020) (0.9209,-5.6020) (0.9321,-5.6020) (0.9433,-5.6020) (0.9546,-5.6020) (0.9658,-5.6020) (0.9770,-5.6020) (0.9883,-5.6020) (0.9995,-5.6020)};
 \addlegendentry{anisotropy-conditioned (ACG) reference}
 \addplot[acc, very thick] coordinates {(0.0000,-0.3013) (0.0112,-0.4231) (0.0225,-0.5738) (0.0337,-0.7531) (0.0449,-0.9658) (0.0562,-1.2068) (0.0674,-1.4737) (0.0786,-1.7611) (0.0898,-2.0574) (0.1011,-2.3155) (0.1123,-2.4934) (0.1235,-2.5775) (0.1348,-2.6143) (0.1460,-2.6261) (0.1572,-2.6270) (0.1685,-2.6279) (0.1797,-2.6279) (0.1909,-2.6279) (0.2021,-2.6279) (0.2134,-2.6279) (0.2246,-2.6279) (0.2358,-2.6279) (0.2471,-2.6279) (0.2583,-2.6279) (0.2695,-2.6279) (0.2808,-2.6279) (0.2920,-2.6279) (0.3032,-2.6279) (0.3144,-2.6279) (0.3257,-2.6279) (0.3369,-2.6279) (0.3481,-2.6279) (0.3594,-2.6279) (0.3706,-2.6279) (0.3818,-2.6279) (0.3931,-2.6279) (0.4043,-2.6279) (0.4155,-2.6279) (0.4268,-2.6279) (0.4380,-2.6279) (0.4492,-2.6279) (0.4604,-2.6279) (0.4717,-2.6279) (0.4829,-2.6279) (0.4941,-2.6279) (0.5054,-2.6279) (0.5166,-2.6279) (0.5278,-2.6279) (0.5391,-2.6279) (0.5503,-2.6279) (0.5615,-2.6279) (0.5727,-2.6279) (0.5840,-2.6279) (0.5952,-2.6279) (0.6064,-2.6279) (0.6177,-2.6279) (0.6289,-2.6279) (0.6401,-2.6279) (0.6514,-2.6279) (0.6626,-2.6279) (0.6738,-2.6279) (0.6851,-2.6279) (0.6963,-2.6279) (0.7075,-2.6279) (0.7187,-2.6279) (0.7300,-2.6279) (0.7412,-2.6279) (0.7524,-2.6279) (0.7637,-2.6279) (0.7749,-2.6279) (0.7861,-2.6279) (0.7974,-2.6279) (0.8086,-2.6279) (0.8198,-2.6279) (0.8310,-2.6279) (0.8423,-2.6279) (0.8535,-2.6279) (0.8647,-2.6279) (0.8760,-2.6279) (0.8872,-2.6279) (0.8984,-2.6279) (0.9097,-2.6279) (0.9209,-2.6363) (0.9321,-3.2595) (0.9433,-5.6020) (0.9546,-5.6020) (0.9658,-5.6020) (0.9770,-5.6020) (0.9883,-5.6020) (0.9995,-5.6020)};
 \addlegendentry{benchmark corpus ($5\%$ pocket)}
-\draw[bad, dashed, thick] (axis cs:0.936,-5.8) -- (axis cs:0.936,-0.1)
-  node[pos=0.97, anchor=south east, font=\small, bad] {liftoff $\approx 0.94$};
+\draw[bad, dashed, thick] (axis cs:0.932,-5.8) -- (axis cs:0.932,-0.1)
+  node[pos=0.97, anchor=south east, font=\small, bad]
+  {liftoff $\approx 0.93$ \ ($p = 0.005$)};
 \end{axis}
 \end{tikzpicture}
 \caption{The crowding curve on the benchmark (measured, $2{\times}10^5$
 pairs). The pocket produces a shoulder of excess close-pair mass
 ($\approx 2.4{\times}10^{-3}$, its exact pair share) that neither reference
-reproduces, and the data curve exceeds the uniform envelope from
-$\cos \approx 0.94$ --- the scale at which this corpus begins to confuse
-items. No bin width or lattice placement exists anywhere in the figure.}
+reproduces; the whole-curve rank test rejects uniformity at the minimum
+attainable $p = 1/200$, with liftoff at $\cos \approx 0.93$ --- the scale at
+which this corpus begins to confuse items. No bin width or lattice placement
+exists anywhere in the figure, and the liftoff claim is family-wise honest
+across all scales at once.}
 \label{fig:kcurve}
 \end{figure}
 
@@ -638,13 +669,25 @@ The mean pairwise chord is therefore ``every lattice at every scale at
 once'': the exact completion of what binned occupancy approximates, with no
 lattice to choose. \textsf{ambit} reports it as a $z$-score against the
 uniform null at matched pair-sample size, pricing in sampling noise.
-Measured on the benchmark: the uniform corpus scores $z = +1.5$ (consistent
-with its null); planting the $5\%$ pocket moves the mean chord from
-$1.41405$ to $1.41160$ --- a shift of $0.17\%$ --- which the razor-thin null
-resolves as $z = -55$. Tightening the pocket further (members within a cap
-of angular radius $\approx 0.15$) drives the same statistic to $z = -430$:
-detection strength scales with the pathology while the uniform control stays
-at noise level.
+Measured on the benchmark over $20$ seeds: the uniform control scores
+$z = -0.14 \pm 1.00$ --- exactly calibrated --- while planting the $5\%$
+pocket moves the mean chord from $1.41405$ to $1.41160$, a shift of
+$0.17\%$, which the razor-thin null resolves as $z = -47 \pm 4$. Tightening
+the pocket further (members within a cap of angular radius $\approx 0.15$)
+drives the same statistic to $z = -430$: detection strength scales with the
+pathology while the control stays at noise level.
+
+Two properties of $z$ are stated so it is read correctly. First, \emph{$z$
+is a test statistic, not an effect size}: its magnitude grows with the
+pair-sample size $P$ (the null mean's spread shrinks as $1/\sqrt P$), so $z$
+values are comparable only at matched $P$ and the instrument reports them at
+its standard $P = 2{\times}10^5$; $\sstar$ and the liftoff scale, by
+contrast, are effect-size-like and concentrate as $1/\sqrt P$ (measured:
+$\mathrm{sd}(\sstar)$ falls $0.0126 \to 0.0013$ over
+$P = 10^4 \to 10^6$). Second, the null's spread must itself be estimated
+well: with $24$ null replicates $|z|$ is inflated $\approx 20\%$ and
+reproduces with $\mathrm{sd} \approx 8$; the default is $64$ replicates
+($z = -43 \pm 4.5$ on the benchmark), measured across a replicate sweep.
 
 \subsection{Localization: the distance-to-measure field}
 \label{sec:dtm}
@@ -703,12 +746,41 @@ needs to gather an $m$-share of the corpus.
 
 Small radius means crowded; large, isolated (Figure~\ref{fig:dtm}). The one
 knob $m$ is a \emph{mass fraction} --- scale-free in $n$ --- and replaces
-bin width, grid origin, and fixed $k$ simultaneously. The estimator inherits
+bin width, grid origin, and fixed $k$ simultaneously. Its one trade-off is
+measured rather than asserted (Table~\ref{tab:mrule}): separation between a
+planted pocket and the bulk collapses almost exactly at the predicted blur
+boundary $m \approx k/n$, so the reporting rule is ``choose $m$ below the
+smallest pocket share you care about,'' and the default $m = 0.02$ resolves
+pockets down to $2\%$ of the corpus.
+
+\begin{table}[t]
+\centering
+\caption{The DTM mass fraction's measured blur boundary (bulk median $/$
+pocket median of the field; benchmark family, planted pocket of $k$ members
+in $n = 4{,}000$). Separation survives while $m \lesssim k/n$ (boldface) and
+collapses beyond it --- exactly the predicted rule.}
+\label{tab:mrule}
+\small
+\begin{tabular}{lccccc}
+\toprule
+& $m{=}0.005$ & $m{=}0.01$ & $m{=}0.02$ & $m{=}0.05$ & $m{=}0.1$\\
+\midrule
+$k=20$ \ ($k/n{=}0.005$) & \textbf{2.83} & 1.34 & 1.13 & 1.05 & 1.02\\
+$k=50$ \ ($k/n{=}0.013$) & \textbf{3.63} & \textbf{3.59} & 1.52 & 1.14 & 1.06\\
+$k=200$ ($k/n{=}0.050$) & \textbf{3.70} & \textbf{3.69} & \textbf{3.67} & \textbf{3.52} & 1.37\\
+$k=800$ ($k/n{=}0.200$) & \textbf{3.75} & \textbf{3.74} & \textbf{3.74} & \textbf{3.72} & \textbf{3.70}\\
+\bottomrule
+\end{tabular}
+\end{table} The estimator inherits
 the stability theorem $\lVert \dtm^P_m - \dtm^Q_m\rVert_\infty \le
 m^{-1/2}\, W_2(P, Q)$ \cite{chazal2011}: a small perturbation of the corpus
 provably moves every item's score a small amount --- the guarantee step
 functions lack, and measured: jittering every coordinate by $10^{-3}$ leaves
-the field $0.997$-correlated with itself. Both tails are actionable and
+the field $0.997$-correlated with itself, and against a fixed $10^6$-row
+corpus the field's first percentile is invariant to the reservoir drawn
+($0.365$--$0.366$ across reservoirs of $10^3$--$1.6{\times}10^4$ rows, ten
+seeds each), as is every other headline readout --- $\sstar$ spans
+$0.0559$--$0.0562$ against $0.0564$ at a $3.2{\times}10^4$ reference. Both tails are actionable and
 \emph{named}: the low tail is the crowded-item list (each entry annotated
 with its expected collision count at the corpus's own $\sstar$;
 \S\ref{sec:semantics}), the high tail the coverage voids. In strongly
@@ -759,17 +831,30 @@ metric \cite{campello2015}, condensed at a minimum pocket size, selected by
 excess of mass in $\lambda = 1/\mathrm{distance}$ --- equivalently $H_0$
 persistence with the elder rule \cite{chazal2013,rolle2020}. Each selected
 pocket reports birth, death, prominence, size, and member ids
-(Figure~\ref{fig:tree}). Two implementation findings mattered. First, the
-naive elder rule is wrong for this purpose: the tightest pocket is the
-\emph{eldest} component and survives to the root, so the bulk ``dies into
-it''; excess-of-mass selection resolves the inversion. Second,
-single-linkage chains inside a tight pocket are caterpillars, so membership
-is reported as the condensed core plus side branches that fell out in the
-tight regime (below the geometric mean of birth and death), excluding bulk
-stragglers. On the benchmark the tree recovers the planted pocket exactly
-(size $200$, birth $0.063$, death $0.898$, prominence $0.835$); on a
-two-pocket variant ($60$ and $40$ planted members at $d = 64$) it recovers
-sizes $60$ and $40$ exactly.
+(Figure~\ref{fig:tree}). Three implementation findings mattered --- the
+third found by the validation battery itself. First, the naive elder rule is
+wrong for this purpose: the tightest pocket is the \emph{eldest} component
+and survives to the root, so the bulk ``dies into it''; excess-of-mass
+selection resolves the inversion. Second, single-linkage chains inside a
+tight pocket are caterpillars, so membership is reported as the condensed
+core plus side branches that fell out in the tight regime (below the
+geometric mean of birth and death), excluding bulk stragglers. Third,
+chaining can prevent \emph{any} real split from existing: a tight pocket may
+seed the one component that absorbs the bulk point by point, so no node ever
+has two $\ge$\,min-size children, the only cluster is the root --- and the
+tightest structure in the corpus goes silently unreported (a parameter sweep
+exposed this: at min-size $32$ a planted $200$-pocket returned
+\emph{nothing}, and $3$ of $20$ benchmark seeds missed it even at the
+default). The fix treats a childless root as a candidate with death at the
+final merge scale, whereupon the membership rule extracts exactly the pocket
+core. Post-fix, the tree recovers the planted pocket in $20$ of $20$ seeds
+at exact size ($200.0 \pm 0.0$; birth $0.063$, death $0.898$, prominence
+$0.835$) across min-sizes $8$--$64$, and on a two-pocket variant recovers
+sizes $60$ and $40$ exactly. Reported prominence also carries a \emph{null
+floor}: uniform corpora of matched size and dimension produce maximum
+prominences of only $\approx 0.005$ (99th percentile $0.009$ over $400$
+nulls), so the instrument simulates the floor per run and suppresses pockets
+within it --- a genuine pocket sits two orders of magnitude above it.
 
 \subsection{Complexity, and the design filters}
 \label{sec:filters}
@@ -966,8 +1051,15 @@ The semantics carry their boundary: (i) the corpus is treated as its own
 query population --- exact for deduplication, clustering, and
 corpus-as-queries retrieval; extrapolation to an external workload assumes
 the workload lands where the documents are; (ii) the noise channel is
-isotropic, while real query drift is structured; (iii) the aggregate is an
-upper bound. $\sstar$ is therefore a conservative intra-corpus guarantee,
+isotropic, while real query drift is structured --- and the sensitivity of
+this assumption is \emph{measured}: re-ranking a grid of corpus types under
+structured Gaussian channels at matched total power, the isotropic ordering
+survives moderately structured noise (rank-$25$ subspace noise: $0.99$
+pairwise-order agreement over five seeds) and degrades under extreme
+misspecification (rank-$2$: $0.79$; noise aligned with each corpus's own top
+principal directions: $0.82$), so comparative use is robust and adversarial
+noise structure is the stated failure mode; (iii) the aggregate is an upper
+bound. $\sstar$ is therefore a conservative intra-corpus guarantee,
 strongest used comparatively --- one corpus embedded two ways, or one
 embedding over time.
 
@@ -1024,6 +1116,77 @@ metric with its own stability theorem --- an open question, not an
 engineering task.
 
 % =========================================================================
+\section{Calibration and Detection Power}
+\label{sec:power}
+% =========================================================================
+
+The instrument's statistics were calibrated and stress-tested as a whole
+against $400$ pure-null corpora, then compared for detection power against a
+suite of standard diagnostics with \emph{every} threshold set on the same
+nulls at a matched $1\%$ false-alarm rate --- power against power at equal
+specificity, with no detector favored.
+
+\paragraph{Null calibration (E4b).}
+On pure nulls ($n = 2{,}000$, $d = 256$; the benchmark family's generators
+with no pathology): the global rank test rejects at $p \le 0.01$ in $1.25\%$
+of nulls (nominal $1\%$); the gated liftoff fires in $6\%$ at
+$\alpha = 0.05$ (nominal $5\%$); $|z| > 3$ occurs in $0.75\%$; and the
+pocket-prominence maximum has null median $0.005$ and 99th percentile
+$0.009$ --- the floor of \S\ref{sec:tree}. Measured false-alarm rates for
+all calibrated thresholds land on $0.010$--$0.013$.
+
+\begin{table}[t]
+\centering
+\caption{Detection power at matched $1\%$ false alarm ($50$ replicates per
+cell; thresholds calibrated on $400$ nulls; $n = 2{,}000$, $d = 256$).
+Pocket cells are (count $\times$ size, spread $s$; $s = 0.005$ is
+near-duplicate, $0.06$ loose). Continuous-layer detectors left of the rule;
+baseline suite right. The hardest cells --- a single pocket of $1\%$ of the
+corpus --- separate the layers; boldface marks the honest exceptions
+discussed in the text.}
+\label{tab:power}
+\small
+\setlength{\tabcolsep}{4.2pt}
+\begin{tabular}{l cccc | ccccc}
+\toprule
+cell & rank$_p$ & $\sstar$ & DTM & pocket & mean$\cos$ & Iso & unif. & hub & kNN$_{q05}$\\
+\midrule
+$1{\times}20$, $s{=}.005$ & 1.00 & 1.00 & 1.00 & 1.00 & .04 & \textbf{1.00} & .88 & .18 & .22\\
+$1{\times}20$, $s{=}.02$  & 1.00 & 1.00 & 1.00 & 1.00 & .02 & \textbf{1.00} & .70 & .42 & .34\\
+$1{\times}20$, $s{=}.06$  & 1.00 & .22 & 1.00 & 1.00 & .04 & \textbf{1.00} & .02 & .90 & .32\\
+$1{\times}50$, $s{=}.005$ & 1.00 & 1.00 & 1.00 & 1.00 & .58 & 1.00 & 1.00 & 1.00 & .92\\
+$5{\times}20$, $s{=}.02$  & 1.00 & 1.00 & 1.00 & 1.00 & .26 & 1.00 & 1.00 & 1.00 & 1.00\\
+$1{\times}200$, any $s$   & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00\\
+cone (mean shift)         & 1.00 & 1.00 & 1.00 & \textbf{.12} & 1.00 & \textbf{.00} & 1.00 & 1.00 & 1.00\\
+low-rank collapse         & 1.00 & 1.00 & 1.00 & 1.00 & .26 & 1.00 & 1.00 & \textbf{.00} & 1.00\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Detection power (E2).}
+Table~\ref{tab:power} reports the pathology grid. Three readings. First, the
+continuous layer --- the rank test, $\sstar$, the DTM tail ratio, and pocket
+prominence --- is at \emph{full power in every pocket cell}, including the
+hardest: a single pocket of $20$ items ($1\%$ of the corpus), where
+mean-cosine ($0.04$), hubness ($0.18$), and the kNN-distance quantile
+($0.22$) sit near the false-alarm floor --- the quantitative form of
+\S\ref{sec:averages}'s ``crowding hides from averages.'' Second, the honest
+exceptions are printed, not hidden: covariance-spectrum statistics
+(IsoScore) are \emph{also} at full power on single coherent pockets --- a
+$1\%$ mass sharing one direction lifts an eigenvalue past the null spectrum
+edge --- so for pure corpus-level detection of one tight pocket, a spectrum
+summary suffices; what it cannot do is name the members, resist a mean-shift
+cone (power $0.00$ there, since centering removes the shift), or price the
+damage in noise-budget units. Third, the discriminating cells behave as the
+theory says they should: the mean-chord $z$ is weak on small pockets (their
+pair mass is tiny); the pocket detector correctly declines to alarm on a
+cone ($0.12$ --- a cone is not a pocket); and hubness is blind to a
+low-rank collapse. The layer's value is therefore not a single more powerful
+scalar but full power at matched specificity \emph{together with}
+localization to named items, scale attribution, and operational units ---
+the properties the baselines structurally lack.
+
+% =========================================================================
 \section{The Instrument}
 \label{sec:instrument}
 % =========================================================================
@@ -1063,7 +1226,7 @@ items $\times$ dims & $1{,}000{,}000 \times 1024$\\
 mean pair cosine & $+0.236$\\
 IsoScore / effective rank & $0.090$ \;/\; $728.0 / 1024$\\
 occupancy discrepancy $z$ & $-4{,}211$\\
-crowding-curve liftoff & $\cos \approx +0.07$\\
+whole-curve rank test & $p = 0.005$; liftoff $\cos \approx 0.82$\\
 resolution bandwidth $\sstar$ (uniform null) & $0.123$ \;($0.148$)\\
 noise budget retained & $83\%$\\
 top pocket (size; birth; prominence) & $204$; $0.41$; $0.09$\\
@@ -1077,8 +1240,15 @@ Table~\ref{tab:case} summarizes a full run on a public legal corpus of
 $10^6$ documents embedded at $d = 1024$ by an instruction-tuned text
 encoder. The corpus is strongly cone-shaped (mean pair cosine $+0.236$;
 IsoScore $0.090$) yet spectrally rich (effective rank $728/1024$); the
-occupancy discrepancy sits at $z = -4{,}211$ with liftoff at
-$\cos \approx +0.07$ --- overwhelmingly the cone, per the ACG reference.
+occupancy discrepancy sits at $z = -4{,}211$, and the whole-curve rank test
+rejects uniformity at the minimum attainable $p = 0.005$ with liftoff at
+$\cos \approx 0.82$ --- genuine tight-pair excess, at the near-duplicate
+scale. (An instructive correction from the calibration study: an earlier
+pointwise reading placed the liftoff at $\cos \approx +0.07$; that reading
+was precisely the bulk-edge multiple-comparison artifact the null
+calibration exposed, and the honest test relocates the significant excess to
+the high-similarity scale. The bulk of the discrepancy $z$ remains the cone,
+per the ACG reference.)
 Operationally the corpus retains $83\%$ of the ideal noise budget: a query
 may fade to cosine $\approx 0.25$ against its target before an impostor is
 expected to win. The per-item field's low tail is real but shallow, and the
