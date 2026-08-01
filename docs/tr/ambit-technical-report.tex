@@ -481,11 +481,12 @@ demonstrations and are marked by the absence of a spread. \emph{Figures}
 follow one rule: every data-bearing plot embeds unmodified experimental
 outputs as its coordinates --- and the primary examples are the \emph{real
 corpus's}: the crowding curve, the DTM field, and the collision curves are
-Nemotron-Legal measurements, the merge-tree anatomy carries its measured
-pocket, and two figures are unretouched cards from the instrument's own
-report on that corpus; the lattice demonstration's highlighted peak cells
-are computed from the figure's own points; the remaining figures are
-intuition schematics and are captioned as such.
+Nemotron-Legal measurements, and two figures reproduce the instrument's own
+report readouts on that corpus natively (the named-document localization
+list and the pockets bar, with the report's values verbatim); the lattice
+demonstration's highlighted peak cells are computed from the figure's own
+points; the remaining figures are intuition schematics and are captioned as
+such.
 
 % =========================================================================
 \section{The Fragility of Binned Occupancy}
@@ -837,13 +838,51 @@ detection-power results of \S\ref{sec:power}.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.94\textwidth]{figs/card_dtm.png}
-\caption{The per-entity crowding field as the instrument actually reports it
-(unretouched report card, Nemotron-Legal): the field's CDF against the
-uniform band, with the most crowded documents \emph{named by id} and each
-annotated with its expected collision count at the corpus's own $\sstar$ ---
-the radius says how crowded, the count says what it costs. This is the
-output no cell-based display can produce.}
+\begin{minipage}[c]{0.46\textwidth}
+\small\ttfamily
+\begin{tabular}{@{}l r r@{}}
+\multicolumn{3}{@{}l@{}}{\rmfamily\bfseries most crowded documents}\\
+\multicolumn{3}{@{}l@{}}{\rmfamily\footnotesize id
+  \,$\cdot$\, DTM radius \,$\cdot$\, $\approx$collisions at
+  $\sstar{=}0.12$}\\[2pt]
+9b3dd305-0e50-4\ldots & 0.921 & $\approx$12\\
+a310931d-78cc-4\ldots & 0.922 & $\approx$12\\
+369ba45c-63b5-4\ldots & 0.923 & $\approx$4\\
+7ce46beb-eb01-4\ldots & 0.928 & $\approx$4\\
+18a8b3f6-a37c-4\ldots & 0.933 & $\approx$3\\
+efaeae26-62ef-4\ldots & 0.936 & $\approx$4\\[4pt]
+\multicolumn{3}{@{}l@{}}{\rmfamily\bfseries most isolated (voids)}\\[2pt]
+59c2a211-f8cc-4\ldots & 1.207 &\\
+2a761d0e-c3e0-4\ldots & 1.198 &\\
+0eba585f-60f9-4\ldots & 1.190 &\\
+\end{tabular}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.51\textwidth}
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.86\textwidth, height=5.6cm,
+  xlabel={DTM radius (low tail; chord units)},
+  ylabel={fraction of items $\le$ radius},
+  xmin=0.9, xmax=1.02, ymin=0, ymax=0.10,
+  legend style={draw=none, font=\small, at={(0.04,0.96)}, anchor=north west},
+  axis lines=left]
+\addplot[acc, thick] coordinates {(0.9207,0.0000) (0.9723,0.0169) (0.9803,0.0339) (0.9857,0.0508) (0.9898,0.0678) (0.9937,0.0847) (0.9973,0.1017) (0.9999,0.1186) (1.0026,0.1356) (1.0052,0.1525) (1.0078,0.1695) (1.0102,0.1864) (1.0124,0.2034) (1.0143,0.2203) (1.0163,0.2373) (1.0182,0.2542) (1.0201,0.2712) (1.0223,0.2881) (1.0244,0.3051) (1.0262,0.3220) (1.0281,0.3390) (1.0300,0.3559) (1.0321,0.3729) (1.0338,0.3898) (1.0359,0.4068) (1.0381,0.4237) (1.0398,0.4407) (1.0417,0.4576) (1.0434,0.4746) (1.0457,0.4915) (1.0479,0.5085) (1.0500,0.5254) (1.0524,0.5424) (1.0541,0.5593) (1.0563,0.5763) (1.0581,0.5932) (1.0599,0.6102) (1.0616,0.6271) (1.0634,0.6441) (1.0649,0.6610) (1.0666,0.6780) (1.0686,0.6949) (1.0705,0.7119) (1.0725,0.7288) (1.0747,0.7458) (1.0768,0.7627) (1.0791,0.7797) (1.0818,0.7966) (1.0844,0.8136) (1.0871,0.8305) (1.0900,0.8475) (1.0930,0.8644) (1.0959,0.8814) (1.0992,0.8983) (1.1034,0.9153) (1.1083,0.9322) (1.1142,0.9492) (1.1211,0.9661) (1.1318,0.9831) (1.2072,1.0000)};
+\addlegendentry{Nemotron-Legal field (CDF)}
+\addplot[only marks, mark=*, mark size=1.8pt, bad] coordinates
+  {(0.921,0.004) (0.922,0.006) (0.923,0.008) (0.928,0.010)
+   (0.933,0.012) (0.936,0.014)};
+\addlegendentry{the six named documents}
+\end{axis}
+\end{tikzpicture}
+\end{minipage}
+\caption{The per-entity localization readout, reproduced natively from the
+instrument's report on Nemotron-Legal (values are the report's own).
+\emph{Left:} the crowded-document list --- \emph{named by uuid}, each with
+its DTM radius and its expected collision count at the corpus's
+$\sstar$: the radius says how crowded, the count says what it costs.
+\emph{Right:} where those six sit --- the extreme low tail of the field's
+CDF (the bulk rises to $1$ near radius $1.05$; the uniform band lies far
+right at $1.36$). This is the output no cell-based display can produce.}
 \label{fig:dtmcard}
 \end{figure} Both tails are actionable and
 \emph{named}: the low tail is the crowded-item list (each entry annotated
@@ -868,10 +907,14 @@ low tail against the corpus's own bulk.
     {\textbf{birth} $0.415$: first members hold together};
   \node[font=\small, anchor=south west] at (6.55,2.18)
     {\textbf{death} $0.505$: merges into bulk};
+  \node[font=\small, anchor=west] at (6.75,1.7)
+    {$n = 204$ \,$\cdot$\, {\footnotesize\ttfamily 6fe03cb6\ldots,
+     fca9cb1f\ldots, 3c3dab0a\ldots}};
   \draw[decorate, decoration={brace, mirror, amplitude=4pt}, faint]
     (5.25,1.2) -- (6.35,1.2);
   \node[faint, font=\small, anchor=north] at (5.8,0.92)
-    {\textbf{prominence} $0.090$ ($16\times$ the null floor $0.006$)};
+    {\textbf{prominence} $0.090$ ($16\times$ the null floor $0.006$;
+     one further candidate suppressed by the floor)};
   \draw[faint, -{Stealth[length=2mm]}] (0,0) -- (12.7,0);
   \node[faint, font=\small, anchor=north] at (6.3,-0.45)
     {merge scale (cosine distance)};
@@ -879,13 +922,15 @@ low tail against the corpus's own bulk.
     { \draw[faint] (\x,0.05) -- (\x,-0.08)
       node[below, font=\scriptsize] {\l}; }
 \end{tikzpicture}
-\caption{Merge-tree anatomy, with the real corpus's measured pocket
-(Nemotron-Legal; $204$ members): a pocket is \emph{born} when its first
-members hold together and \emph{dies} into the bulk (excess-of-mass
-selection). Its prominence $0.090$ is modest --- a loose association, not a
-duplicate cluster --- yet $16\times$ the null prominence floor, so it is a
-finding; on the traced benchmark the same construction recovers a planted
-pocket exactly ($200/200$; birth $0.063$, death $0.898$, prominence
+\caption{The pockets readout, reproduced natively from the instrument's
+report on Nemotron-Legal with the merge-tree anatomy annotated on it: the
+one pocket surviving the null-calibrated prominence floor ($204$ members,
+sample ids on the bar) is \emph{born} when its first members hold together
+and \emph{dies} into the bulk (excess-of-mass selection). Its prominence
+$0.090$ is modest --- a loose association, not a duplicate cluster --- yet
+$16\times$ the null floor, so it is a finding, and the floor suppressed one
+further candidate; on the traced benchmark the same construction recovers a
+planted pocket exactly ($200/200$; birth $0.063$, death $0.898$, prominence
 $0.835$), with no flat threshold anywhere.}
 \label{fig:tree}
 \end{figure}
@@ -922,20 +967,9 @@ floor}: uniform corpora of matched size and dimension produce maximum
 prominences of only $\approx 0.005$ (99th percentile $0.009$ over $400$
 nulls), so the instrument simulates the floor per run and suppresses pockets
 within it --- a genuine pocket sits two orders of magnitude above it.
-Figure~\ref{fig:pocketcard} shows the resulting report card on the real
-corpus: one pocket survives the floor ($204$ members, with sample ids), and
-the card states how many candidates the floor suppressed.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.94\textwidth]{figs/card_pockets.png}
-\caption{The crowding-pockets card as the instrument reports it (unretouched,
-Nemotron-Legal): the surviving pocket's bar spans birth to death with member
-ids on the bar, and the subtitle states the null prominence floor and the
-one candidate it suppressed --- threshold-free reporting with a
-null-calibrated guard.}
-\label{fig:pocketcard}
-\end{figure}
+Figure~\ref{fig:tree} shows the resulting readout on the real corpus: one
+pocket survives the floor ($204$ members, sample ids on its bar), and one
+further candidate was suppressed.
 
 \subsection{Complexity, and the design filters}
 \label{sec:filters}
