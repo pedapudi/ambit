@@ -141,9 +141,12 @@ Its contributions:
   functional operational units; a precise scope statement; and two negative
   results recorded so they stay dead.
 \item \textbf{An open instrument and a training recipe}
-  (\S\ref{sec:instrument}--\S\ref{sec:training}): a streaming numpy-only
-  core, a narrative report, a public million-document case study, and
-  measurement-driven regularizers with a gradient-locality guarantee.
+  (\S\ref{sec:instrument}, \S\ref{sec:training}): a streaming numpy-only
+  measurement core, a public million-document case study, and
+  measurement-driven regularizers with a gradient-locality guarantee. (The
+  toolkit delivers its measurements through a self-contained HTML report;
+  that artifact is engineering, not a contribution, and is documented
+  separately in \S\ref{sec:report}.)
 \end{enumerate}
 
 Throughout, \textsf{ambit} is \emph{unsupervised by design}: no labels, gold
@@ -1034,32 +1037,18 @@ sharded directory) accumulates exact second moments, norms, and a uniform
 reservoir; a context builder derives projections (PCA by default), the
 eigenspectrum, a kNN graph (optionally filtered to \emph{reciprocal}
 neighbors, which suppresses hubs by construction), unsupervised clusters,
-and the pair-cosine sample; a figure registry renders a single
-self-contained, theme-adaptive HTML file with no external requests. The core
-depends on \textsf{numpy} alone; heavier capabilities (tabular IO, ANN
-graphs, UMAP, GPU paths, on-the-fly embedding via an OpenAI-compatible
-endpoint, the training extra) are optional and degrade gracefully. A
-comparison mode aligns two embeddings of the same items by id and prefixes
-the report with a local neighbor-overlap view read against global
+and the pair-cosine sample. All measurements of
+\S\ref{sec:continuous}--\S\ref{sec:semantics} are library functions over
+these objects; a separate presentation layer (\S\ref{sec:report}) renders
+them. The core depends on \textsf{numpy} alone; heavier capabilities
+(tabular IO, ANN graphs, UMAP, GPU paths, on-the-fly embedding via an
+OpenAI-compatible endpoint, the training extra) are optional and degrade
+gracefully. A comparison mode aligns two embeddings of the same items by id
+and computes a local neighbor-overlap view read against global
 representational-similarity statistics (CKA \cite{kornblith2019}, kernel and
 rigid distances); the local/global pair can disagree informatively --- a
 high-CKA, low-overlap outcome is a re-skin that preserves gross structure
 while rewriting fine neighborhoods.
-
-\subsection{Report design}
-
-Three principles govern the report. \emph{Direction, not hue}: meaning lives
-in positions along annotated axes. \emph{Reference, not threshold}: every
-panel draws its null. \emph{Display versus measurement}: projections lay
-figures out but never carry the statistic. The figures are ordered as a
-narrative --- see it; how crowded, at what scale; who is affected; what
-structure it forms; why the space behaves so --- and every card carries an
-in-place explainer with an intuition diagram and the card's unstated context
-(null construction, subsample sizes, id provenance). One legibility finding
-is recorded: a minimum-spanning-tree view drawn over the projection --- even
-restricted to tighter-than-bulk bridges --- remained too busy to read on
-real corpora and was demoted to a hidden option; the condensed tree carries
-the same object legibly as prominence bars.
 
 \subsection{Case study: a million-document corpus}
 
@@ -1100,6 +1089,36 @@ separability panel (labels provided, used only to condition the readout)
 shows high neighborhood purity ($0.95$) against near-zero silhouette
 ($+0.04$): subsets are locally coherent yet globally entangled within the
 cone --- a reading no single number provides.
+
+% =========================================================================
+\section{The Report Artifact}
+\label{sec:report}
+% =========================================================================
+
+The toolkit delivers its measurements as a single self-contained,
+theme-adaptive HTML report with no external requests. We document its design
+here for completeness and reproducibility; \emph{the artifact itself is
+engineering, not an academic contribution} --- the contribution of this
+report is the measurement layer of
+\S\ref{sec:continuous}--\S\ref{sec:semantics}, which is exposed as library
+functions independent of any rendering. Two of the artifact's design rules
+are nonetheless direct consequences of the measurement theory and are worth
+stating. \emph{Reference, not threshold}: every panel draws its null,
+because \S\ref{sec:geometry} established that absolute cosine is not
+self-interpreting. \emph{Display versus measurement}: 2-D projections lay
+figures out but never carry a statistic, because \S\ref{sec:binned}
+established that projected density is not corpus density. The remaining
+choices are presentation craft: a single accent color with meaning carried
+by position along annotated axes; figures ordered as a narrative (see it;
+how crowded, at what scale; who is affected; what structure it forms; why
+the space behaves so); and an in-place explainer on every panel stating its
+unstated context (null construction, subsample sizes, id provenance). One
+legibility finding from the artifact's development is recorded because it
+reinforces the display/measurement separation: a minimum-spanning-tree view
+drawn over the projection --- even restricted to tighter-than-bulk bridges
+--- remained too busy to read on real corpora and was demoted to a hidden
+option; the condensed tree of \S\ref{sec:tree} carries the same object
+legibly as prominence bars.
 
 % =========================================================================
 \section{From Measurement to Gradient}
