@@ -122,6 +122,23 @@ disk for the 10^7 corpus; E6 needs one GPU.
 
 ---
 
+## Tier-1 results (run 2026-08-01; 32-core CPU host; ~4 min/batch)
+
+| exp | verdict | result |
+|---|---|---|
+| E1a | **accept** | with corpus-n semantics, σ\* is flat across reservoirs: 0.0559–0.0562 for n\_r ∈ [1k, 16k] vs 0.0564 at 32k; DTM p1 invariant (0.365); pocket detection 10/10 at every size. Sufficiency from n\_r = 1,000 — stronger than the ≥4k bar. |
+| E1b | **accept, with a reporting rule** | sd(σ\*) tracks 1/√P (0.0126→0.0013 over P = 10⁴→10⁶); liftoff ultra-stable. **But z grows with P** (it is a test statistic, not an effect size) — the report must state z at the standard P. |
+| E1c | **accept** | separation collapses at the predicted m ≈ k/n boundary (k=200 detects through m=0.05, dies at 0.1). The "choose m below the smallest pocket share" rule is measured fact. |
+| E1d | **accept after fix** | the sweep found a real bug: single-linkage chaining could leave the tightest pocket unreported (no real split ⇒ only the root cluster ⇒ excluded). Fixed (root-candidate fallback); 15/16 cells recover exactly; the remaining cell plants a pocket *smaller than min\_size*, which is by definition not reportable as a pocket (it appears in the DTM low tail — documented semantics). |
+| E1e | **accept after fix** | 20/20 detection at exact size 200.0±0.0 (was 17/20 pre-fix); z = −46.7±4.0 clumped vs −0.14±1.00 uniform (perfect calibration). Two carried findings: uniform corpora trigger spurious pointwise-envelope "liftoff" at the bulk edge in every seed (**E4a is now required, not optional**), and uniform corpora report negligible-prominence pockets (E4b to set the null-calibrated floor). |
+| E4c | **accept, default changed** | \|z\| inflated ~20% at 24 null replicates (sd ±8); default raised to 64 (−43±4.5). |
+| E5 | **accept as scope** | σ\*/C corpus ranking robust to moderately structured noise (rank-25: 0.99 order agreement with isotropic) and degraded under extreme misspecification (rank-2: 0.79; PC-aligned: 0.82) — a measured caveat for the scope section. |
+
+**Defaults frozen** for Part II: reservoir 20k (≫ the measured 1k sufficiency),
+P = 2×10⁵, m = 0.02, min pocket size 8 (with root-candidate fallback), z at 64
+null replicates. Remaining before the pilot: E4a (global rank envelope), E2 +
+E4b (detection power + null calibration of pocket prominence and liftoff).
+
 ## Part II — External validation methodology (to be run independently)
 
 **The question:** do ambit's unsupervised readouts, computed from document
