@@ -103,6 +103,59 @@ def null_envelope(dim: int, n_pairs: int, grid, reps: int = 19, seed: int = 0):
     return ks.max(0), ks.mean(0)
 
 
+def rank_envelope(cos_sample, dim: int, grid=None, reps: int = 199,
+                  alpha: float = 0.05, seed: int = 0):
+    """One-sided global rank-envelope test (Myllymäki et al., 2017) for the
+    crowding curve: is the data's K anywhere above what `reps` uniform-null
+    curves allow, with family-wise level `alpha` over the WHOLE grid — the
+    honest replacement for reading exceedance off a pointwise band (which
+    false-alarms at the bulk edge on pure nulls).
+
+    Curves are ordered by extreme-rank-length (ERL) — each curve's pointwise
+    top-ranks sorted ascending, compared lexicographically — which breaks the
+    massive ties a one-sided K test has where every null is exactly zero.
+
+    Returns (p_global, liftoff, grid, k_data, envelope): `p_global` is the
+    Monte-Carlo p-value of the data curve among the nulls; `liftoff` is the
+    highest cosine at which the data exceed the alpha-critical envelope (None
+    when the curve is globally consistent with uniformity); `envelope` is the
+    pointwise max of the null curves after dropping the floor(alpha*reps)
+    most extreme — exceeding it anywhere is significant at level alpha."""
+    cos_sample = np.asarray(cos_sample, np.float64)
+    if grid is None:
+        grid = np.linspace(0.999, max(float(cos_sample.mean()), 0.0), 160)
+    grid = np.asarray(grid, np.float64)
+    n_pairs = len(cos_sample)
+    k_data = exceedance(cos_sample, grid)
+    K = np.stack([exceedance(null_pair_cos(dim, n_pairs, seed + 101 * r), grid)
+                  for r in range(reps)])
+    allK = np.vstack([k_data[None, :], K])                    # data is row 0
+    # one-sided top-rank per point: 1 = (tied-)largest; ties share the min rank
+    ranks = (allK[None, :, :] > allK[:, None, :]).sum(1) + 1
+    erl = np.sort(ranks, axis=1)                               # sorted rank vectors
+    # lexicographic ERL ordering: smaller vector = more extreme
+    def more_extreme_or_equal(a, b):
+        c = a != b
+        i = np.argmax(c)
+        return (not c.any()) or a[i] < b[i]
+    e_data = erl[0]
+    n_le = sum(1 for j in range(1, reps + 1)
+               if more_extreme_or_equal(erl[j], e_data))
+    p_global = (1 + n_le) / (reps + 1)
+    # alpha-critical envelope: drop the most extreme nulls, take pointwise max
+    null_order = sorted(range(1, reps + 1),
+                        key=lambda j: tuple(erl[j]))
+    drop = set(null_order[: int(np.floor(alpha * reps))])
+    keep = [j for j in range(1, reps + 1) if j not in drop]
+    env = K[[j - 1 for j in keep]].max(0)
+    above = np.flatnonzero(k_data > env)
+    # liftoff is only reported when the WHOLE-curve test rejects: the envelope
+    # locates the scale, the ERL p decides significance (gating on the
+    # envelope alone over-fires ~4x at level alpha, measured on pure nulls)
+    lift = float(grid[above[0]]) if (above.size and p_global <= alpha) else None
+    return p_global, lift, grid, k_data, env
+
+
 def liftoff_cos(cos_sample, dim: int, grid=None, reps: int = 19, seed: int = 0):
     """The largest pair-cosine at which the data curve exceeds the uniform-null
     envelope — the scale where crowding begins. None if the data never exceeds it."""

@@ -42,12 +42,15 @@ def fig_res_kcurve(ctx):
     c_lo = float(np.quantile(cos, 0.02))
     grid = np.linspace(c_lo, 0.9995, 260)
     k_data = occ.exceedance(cos, grid)
-    env_max, env_mean = occ.null_envelope(dim, n_pairs, grid, reps=19, seed=0)
+    # the honest whole-curve test: a global rank envelope (the pointwise band
+    # false-alarms at the bulk edge on pure nulls — measured); liftoff is only
+    # annotated when the global test rejects
+    p_glob, lift_cos, _, _, env_max = occ.rank_envelope(
+        cos, dim, grid=grid[::-1], reps=99, seed=0)
+    env_max = env_max[::-1]
+    _, env_mean = occ.null_envelope(dim, n_pairs, grid, reps=19, seed=0)
     acg_cos = occ.acg_pair_cos(ctx.eigs, min(n_pairs, 100_000), seed=0)
     k_acg = occ.exceedance(acg_cos, grid)
-
-    lift = np.flatnonzero(k_data > env_max)
-    lift_cos = float(grid[lift[0]]) if lift.size else None
 
     s_scalar, s_z = occ.stolarsky_z(cos, dim, reps=24, seed=0)
     sig = occ.sigma_star(cos, n_items, tol=1.0)
@@ -95,6 +98,7 @@ def fig_res_kcurve(ctx):
                 f'crowding lives to the right</text>')
 
     # excess shading: where data exceeds the uniform envelope
+    lift = np.flatnonzero(k_data > env_max)     # excess region (display shading)
     if lift.size:
         seg = []
         for c, kd, ke in zip(grid[lift[0]:], k_data[lift[0]:], env_max[lift[0]:]):
@@ -108,7 +112,7 @@ def fig_res_kcurve(ctx):
     body.append(poly(k_acg, "var(--good)", 1.4))
     body.append(poly(k_data, "var(--accent)", 2.2))
 
-    # liftoff marker
+    # liftoff marker — annotated only when the whole-curve rank test rejects
     if lift_cos is not None:
         xx = X(lift_cos)
         body.append(f'<line x1="{xx:.1f}" y1="{T}" x2="{xx:.1f}" y2="{B}" stroke="var(--bad)" '
@@ -117,12 +121,13 @@ def fig_res_kcurve(ctx):
         dx = -6 if anchor == "end" else 6
         body.append(f'<text x="{xx+dx:.1f}" y="{T+14}" fill="var(--bad)" font-size="10.5" font-weight="700" '
                     f'text-anchor="{anchor}" style="paint-order:stroke" stroke="var(--paper)" '
-                    f'stroke-width="3">crowding begins ≈ cos {lift_cos:+.2f}</text>')
-        verdict = f"exceeds the uniform envelope from cos {lift_cos:+.2f}"
+                    f'stroke-width="3">crowding begins ≈ cos {lift_cos:+.2f} · global p = {p_glob:.3f}</text>')
+        verdict = (f"exceeds the alpha-critical global envelope from cos {lift_cos:+.2f} "
+                   f"(whole-curve rank test, p = {p_glob:.3f})")
     else:
         body.append(f'<text x="{R}" y="{T+14}" fill="var(--good)" font-size="10.5" font-weight="700" '
-                    f'text-anchor="end">no excess over the uniform envelope</text>')
-        verdict = "never exceeds the uniform envelope"
+                    f'text-anchor="end">globally consistent with uniformity (p = {p_glob:.2f})</text>')
+        verdict = f"is globally consistent with uniformity (whole-curve rank test, p = {p_glob:.2f})"
 
     # footer scalars — two stacked lines so they can never collide
     body.append(f'<text x="{L}" y="{H-34}" fill="var(--ink-soft)" font-size="10.5" '
@@ -139,13 +144,15 @@ def fig_res_kcurve(ctx):
     return {
         "num": "RES 09", "order": 90.5, "name": "Crowding curve", "tech": "pair-closeness CDF · Ripley K",
         "why": ("The exact cumulative pair-closeness curve (no bins, no lattice) read against two nulls: "
-                "the uniform sphere (dashed envelope) and the corpus's own anisotropy cone without its "
-                "clustering (solid reference). Height above the cone reference is crowding that anisotropy "
-                "cannot explain; the marked scale is where the space starts confusing entities."),
+                "the uniform sphere's α-critical global envelope (dashed; a whole-curve rank test — the "
+                "liftoff mark appears only when it rejects, with its p printed) and the corpus's own "
+                "anisotropy cone without its clustering (solid reference). Height above the cone "
+                "reference is crowding that anisotropy cannot explain; the marked scale is where the "
+                "space starts confusing entities."),
         "svg": _svg(W, H, aria, "".join(body)),
         "legend": ('<span><i class="a"></i> this dataset</span>'
                    '<span><i class="g"></i> anisotropy-matched reference</span>'
-                   '<span><i class="dash"></i> uniform-sphere envelope</span>'
+                   '<span><i class="dash"></i> α-critical global envelope (rank test)</span>'
                    '<span><i class="r"></i> excess close pairs (crowding)</span>'),
         "reveal": ("<b>Reveals:</b> the <b>scale</b> at which crowding begins, and how much of it is "
                    "explained by the anisotropy cone versus genuine clustering — plus the two continuous "

@@ -74,6 +74,21 @@ def test_liftoff_detects_clump_scale():
     assert lift_u is None or lift_u < 0.5           # uniform: no high-cos excess
 
 
+def test_rank_envelope_calibrated_and_detects():
+    d = 128
+    # detection: the clumped benchmark must reject at (near-)minimum p with
+    # liftoff at the near-duplicate scale
+    p, lift, *_ = occ.rank_envelope(_pair_cos(_clumped(3000, d)), d, reps=99, seed=0)
+    assert p <= 2 / 100 and lift is not None and lift > 0.5
+    # calibration: pure nulls must essentially never report a liftoff
+    fires = 0
+    for s in range(10):
+        p, lift, *_ = occ.rank_envelope(_pair_cos(_uniform(3000, d, seed=s), seed=s),
+                                        d, reps=49, seed=3 * s)
+        fires += lift is not None
+    assert fires <= 1
+
+
 def test_confusion_kernel_is_exact_gaussian_flip():
     # brute-force the Gaussian query channel against Phi(-chord/(2 sigma))
     rng = np.random.default_rng(0)

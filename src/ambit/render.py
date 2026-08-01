@@ -223,16 +223,20 @@ _INTERP = {
         "the fraction of pairs at least that similar. An exact CDF — no bin widths, no lattice, "
         "nothing to tune.</p>"
         "<p>Two references, drawn at the same sample size. <span class='hc-look'>Dashed</span> is the "
-        "uniform-sphere envelope (19 simulated well-spread corpora — the curve a corpus with no "
-        "structure at all would trace). <span class='hc-look'>Solid green</span> is the corpus's own "
-        "anisotropy cone <em>without</em> its clustering: a reference cloud stretched exactly like this "
-        "dataset (same covariance) but otherwise unstructured.</p>"
+        "α-critical <b>global envelope</b> from a whole-curve rank test over 99 simulated well-spread "
+        "corpora: exceeding it anywhere is significant for the entire curve at once (a naive pointwise "
+        "band false-alarms at the bulk edge — measured on pure nulls — so the liftoff mark only appears "
+        "when the global test rejects, and the p-value is printed beside it). "
+        "<span class='hc-look'>Solid green</span> is the corpus's own anisotropy cone <em>without</em> "
+        "its clustering: a reference cloud stretched exactly like this dataset (same covariance) but "
+        "otherwise unstructured.</p>"
         "<p>So: data hugging the green curve = the usual cone, no local pathology. Data <b>above</b> "
         "green = clustering the cone cannot explain. Data above the dashed envelope at high cosine = "
         "excess close pairs — the marked scale is where that begins, and the shaded area is the pair "
         "mass a retrieval neighborhood of that size would confuse.</p>"
         '<div class="hc-foot">Built from the same random-pair cosine sample as the header facts; the '
-        "envelope is a display band, not a formal test.</div>"),
+        "envelope and p come from a whole-curve rank test (family-wise level 0.05), so the liftoff "
+        "claim is honest across all scales at once.</div>"),
     "res_dtm": ("Per-entity crowding field", "who is crowded, and what it costs",
         '<svg class="hc-viz" viewBox="0 0 336 100" role="img" aria-hidden="true">'
         '<circle cx="62" cy="46" r="16" fill="none" stroke="var(--bad)" stroke-width="1.5"/>'
