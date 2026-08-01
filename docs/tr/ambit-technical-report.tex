@@ -93,7 +93,7 @@ $1{,}000$ rows; and a detection-power study against a suite of standard
 diagnostics at matched $1\%$ false alarm shows the continuous layer at full
 power on pockets as small as $1\%$ of the corpus where mean-cosine, hubness,
 and kNN-distance baselines sit near the false-alarm floor. We also report
-honest negative results, including a measured near-redundancy between the
+negative results, including a measured near-redundancy between the
 confusion functional and uniformity ($r = 0.978$) whose single order-flip is
 nonetheless operationally informative. A case study on a public million-document legal corpus and a
 measurement-driven training recipe with a gradient-locality guarantee
@@ -148,14 +148,14 @@ Its contributions:
   Gaussian confusion law, verified to Monte-Carlo precision; the resolution
   bandwidth $\sstar$; a Chernoff identity giving the Wang--Isola uniformity
   functional operational units; a precise scope statement; and two negative
-  results recorded so they stay dead.
+  results recorded with the reasons for their failure.
 \item \textbf{An open instrument and a training recipe}
   (\S\ref{sec:instrument}, \S\ref{sec:training}): a streaming numpy-only
   measurement core, a public million-document case study, and
   measurement-driven regularizers with a gradient-locality guarantee. (The
   toolkit delivers its measurements through a self-contained HTML report;
   that artifact is engineering, not a contribution, and is documented
-  separately in \S\ref{sec:report}.)
+  separately in Appendix~\ref{sec:report}.)
 \end{enumerate}
 
 Throughout, \textsf{ambit} is \emph{unsupervised by design}: no labels, gold
@@ -171,9 +171,8 @@ negative results that pruned its design space.
 \label{sec:geometry}
 % =========================================================================
 
-This section builds the intuition the rest of the report formalizes. Nothing
-in it is difficult; the point is that three elementary observations, taken
-together, dictate the entire measurement design.
+This section develops the geometric considerations that the remainder of
+the report formalizes. Three elementary observations, taken together, determine the measurement design.
 
 \subsection{Items are directions; retrieval neighborhoods are caps}
 
@@ -181,12 +180,12 @@ Cosine-compared embeddings live on the unit sphere: each item is a
 \emph{direction}, and similarity is the angle between directions. A retrieval
 neighborhood --- ``everything scoring above $0.8$ against this query'' --- is
 a \emph{spherical cap}: the disc of directions within a fixed angle of the
-query (Figure~\ref{fig:cap}). This picture converts every occupancy question
-into a cap question. Where does the corpus concentrate? --- which caps hold
-more items than their share of the sphere's area. How crowded is an item? ---
-how small a cap around it already contains other items. What will retrieval
-confuse? --- items sharing a small cap are \emph{future collisions}: a query
-landing near one cannot avoid the others.
+query (Figure~\ref{fig:cap}). This picture reduces every occupancy question
+to a statement about caps. Corpus concentration corresponds to caps holding
+more items than their share of the sphere's area; an item's degree of
+crowding, to the smallest cap around it that already contains other items;
+and retrieval confusion, to items sharing a small cap --- \emph{future
+collisions}, since a query landing near one cannot avoid the others.
 
 \begin{figure}[t]
 \centering
@@ -243,8 +242,8 @@ corpora of this size, the fraction of pairs with $\cos \ge 0.30$ is exactly
 zero --- so \emph{any} observed mass there is unambiguous structure. Distance
 concentration, the classical curse of high dimension \cite{beyer1999}, is for
 a null-calibrated instrument a blessing: every close pair is a finding.
-Third, and less happily: because almost every pair is a near-orthogonal
-background pair, \emph{averages over pairs are owned by the background} ---
+Third, because almost every pair is a near-orthogonal
+background pair, \emph{averages over pairs are dominated by the background} ---
 the observation the next subsection makes precise.
 
 \begin{figure}[t]
@@ -269,7 +268,7 @@ the observation the next subsection makes precise.
 is the \emph{measured} sd $0.0361$ from $4{,}000$ sampled uniform points,
 matching $1/\sqrt d$ to four decimals): the null pair-cosine distribution
 collapses to a needle at $0$ as dimension grows. The informative region of
-the null is empty --- and the average is owned by the needle.}
+the null is empty --- and the average is dominated by the needle.}
 \label{fig:conc}
 \end{figure}
 
@@ -288,10 +287,7 @@ a shift of $6\%$ of one null standard deviation \emph{per pair} ---
 invisible without a calibrated test, and utterly uninformative about
 \emph{which} items failed (Figure~\ref{fig:hide}). Covariance-spectrum
 summaries (effective rank, isotropy scores) are blind for the same
-arithmetic reason: they are sums over the corpus, owned by the diffuse
-majority. The lesson generalizes: \emph{global averages answer ``is the
-whole cloud degenerate?''; crowding asks ``which part of the cloud has
-collapsed, at what scale, and who is in it?''} A sound instrument must
+arithmetic reason: they are sums over the corpus, dominated by the diffuse majority. More generally: \emph{global averages address whether the whole cloud is degenerate; crowding concerns which part of the cloud has collapsed, at what scale, and which items it contains.} A sound instrument must
 therefore (i) read \emph{distributions}, not means; (ii) read them
 \emph{at every scale}, since pockets live at small scales the bulk never
 visits; (iii) \emph{calibrate} against a matched null, since absolute cosine
@@ -351,8 +347,8 @@ object altogether. \textsf{ambit} adopts this dichotomy as a design filter
 Ripley's $K$ function \cite{ripley1976,besag1977} reads clustering as a
 continuous function of scale from the interpoint-distance distribution; on
 the sphere the null is a cap-area law and, the domain being boundaryless,
-planar edge corrections vanish \cite{robeson2014}; global envelopes make
-whole-curve inference honest \cite{myllymaki2017}. The modifiable areal unit
+planar edge corrections vanish \cite{robeson2014}; global envelopes provide valid
+whole-curve inference \cite{myllymaki2017}. The modifiable areal unit
 problem \cite{gehlke1934,openshaw1979,openshaw1984} and the ecological
 fallacy \cite{robinson1950} are the canonical statements of why
 partition-based statistics are fragile and non-attributive; histogram
@@ -407,7 +403,8 @@ direction $c$, i.i.d.\ Gaussian $g_i$, and spread $s = 0.01$ --- chosen
 because it lands the pocket in the \emph{near-duplicate regime} (median
 intra-pocket cosine $0.929$, i.e.\ items a retrieval system cannot rank
 apart) while leaving every global average essentially unmoved
-(\S\ref{sec:averages}): the hardest honest test of a local diagnostic. The
+(\S\ref{sec:averages}): a stringent test for a local diagnostic: the pathology is severe, yet no
+global statistic responds. The
 uniform control is the same draw without the replacement. The wider family
 varies what the traced instance fixes: pocket count ($1$--$20$), size
 ($20$--$800$), and tightness ($s = 0.005$--$0.06$, spanning near-duplicate
@@ -578,7 +575,7 @@ Injecting $200$ near-identical points inside an already-dense cell moves the
 hexbin peak from $340$ to $540$ --- indistinguishable from a benign hot cell
 --- while the continuous per-item field of \S\ref{sec:dtm} collapses by a
 factor of $18$ at its first percentile. A fixed $k$ in a kNN graph is the
-same defect in rank clothing: in a dense pocket $k{=}10$ spans a tiny radius,
+same defect in rank-based form: in a dense pocket $k{=}10$ spans a tiny radius,
 in a sparse rind a huge one, so ``neighborhood'' denotes a different physical
 scale at every point --- precisely what a crowding measure must not let
 drift.
@@ -613,8 +610,7 @@ $c_{ij} = \langle x_i,x_j\rangle$; chord $r_{ij} = \lVert x_i - x_j\rVert =
 moments by streaming and draws a bounded uniform reservoir plus a large
 random-pair cosine sample ($2{\times}10^5$ pairs by default) for everything
 else. Throughout this section the \emph{figures} show the real corpus
-(Nemotron-Legal, \S\ref{sec:method}) --- the primary examples are learned
-geometry, not synthetic --- while the traced benchmark of
+(Nemotron-Legal, \S\ref{sec:method}) --- the primary examples are drawn from learned-embedding geometry rather than synthetic constructions --- while the traced benchmark of
 \S\ref{sec:averages}, whose planted pathology is known exactly, supplies
 the falsifiable counterpart for every layer in the text.
 
@@ -645,7 +641,7 @@ which the data exceed the $\alpha$-critical envelope --- is annotated only
 when the global test rejects. Calibration is measured, not assumed: on $40$
 pure-null corpora the gated test reported $0$ liftoffs, whereas the naive
 pointwise band (the max of the null curves) fired on \emph{every} null seed
-at the bulk edge --- the multiple-comparison failure made concrete --- and
+at the bulk edge --- a direct demonstration of the multiple-comparison failure --- and
 even the $\alpha$-critical envelope alone over-fires $\approx 4\times$
 nominal; the envelope locates the scale, the rank $p$ decides significance.
 
@@ -659,22 +655,21 @@ above this reference is crowding the cone cannot explain.
 
 Figure~\ref{fig:kcurve} shows the curve on the real corpus
 (Nemotron-Legal, \S\ref{sec:method}): the global test rejects at the minimum
-attainable $p = 1/200$ with liftoff at $\cos \approx 0.81$. The reading is
-richer than a single number: through mid-similarities the data hug the ACG
-reference --- that part of the excess over uniformity \emph{is} the
+attainable $p = 1/200$ with liftoff at $\cos \approx 0.81$. The reading is more
+detailed than a single scalar: through mid-similarities the data track the ACG reference --- that part of the excess over uniformity \emph{is} the
 anisotropy cone, benign and expected of a learned encoder --- while above
-$\cos \approx 0.8$ the data climb clear of both references: genuine
+$\cos \approx 0.8$ the data rise above both references: genuine
 tight-pair structure at the near-duplicate scale, which \S\ref{sec:dtm}
 will attribute to named documents. On the traced benchmark the same test
 rejects at $p = 1/200$ with liftoff $\cos \approx 0.93$ and a shoulder of
 excess mass exactly matching the planted pocket's pair share
-($2.4{\times}10^{-3}$) --- the falsifiability half of the pair.
+($2.4{\times}10^{-3}$) --- the counterpart with known ground truth.
 
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=0.86\textwidth, height=6.8cm,
-  xlabel={pair cosine $t$ \ (the size of a retrieval cap; crowding lives to the right)},
+  xlabel={pair cosine $t$ \ (the size of a retrieval neighborhood; larger $t$, tighter pairs)},
   ylabel={$K(t)$ = fraction of pairs $\ge t$},
   xmin=0, xmax=1.0, ymin=-5.8, ymax=0.2,
   ytick={0,-1,-2,-3,-4,-5},
@@ -694,13 +689,13 @@ excess mass exactly matching the planted pocket's pair share
 \end{tikzpicture}
 \caption{The crowding curve on the real corpus (Nemotron-Legal
 \cite{nemotronlegal}, measured from the report's own $2{\times}10^5$-pair
-sample). Through mid-similarities the data hug the anisotropy-matched
+sample). Through mid-similarities the data track the anisotropy-matched
 reference --- that excess over uniformity is the cone, benign --- but above
-$\cos \approx 0.8$ the curve climbs clear of both references: genuine
+$\cos \approx 0.8$ the curve rises above both references: genuine
 tight-pair structure, globally significant at the minimum attainable
 $p = 1/200$. No bin width or lattice placement exists anywhere in the
-figure, and the liftoff claim is family-wise honest across all scales at
-once.}
+figure, and the liftoff claim is family-wise valid across all
+scales.}
 \label{fig:kcurve}
 \end{figure}
 
@@ -721,7 +716,7 @@ uniform null at matched pair-sample size, pricing in sampling noise.
 Measured on the benchmark over $20$ seeds: the uniform control scores
 $z = -0.14 \pm 1.00$ --- exactly calibrated --- while planting the $5\%$
 pocket moves the mean chord from $1.41405$ to $1.41160$, a shift of
-$0.17\%$, which the razor-thin null resolves as $z = -47 \pm 4$. Tightening
+$0.17\%$, which the concentrated null resolves as $z = -47 \pm 4$. Tightening
 the pocket further (members within a cap of angular radius $\approx 0.15$)
 drives the same statistic to $z = -430$: detection strength scales with the
 pathology while the control stays at noise level.
@@ -882,15 +877,15 @@ its DTM radius and its expected collision count at the corpus's
 $\sstar$: the radius says how crowded, the count says what it costs.
 \emph{Right:} where those six sit --- the extreme low tail of the field's
 CDF (the bulk rises to $1$ near radius $1.05$; the uniform band lies far
-right at $1.36$). This is the output no cell-based display can produce.}
+right at $1.36$). Aggregate, cell-based displays cannot provide this output.}
 \label{fig:dtmcard}
 \end{figure} Both tails are actionable and
 \emph{named}: the low tail is the crowded-item list (each entry annotated
 with its expected collision count at the corpus's own $\sstar$;
 \S\ref{sec:semantics}), the high tail the coverage voids. In strongly
 cone-shaped corpora the entire field sits below the uniform band --- the cone
-shortens every radius --- and the instrument says so rather than reporting a
-meaningless all-items count; the finding in that regime is the shape of the
+shortens every radius --- and the instrument reports the regime explicitly rather than an
+uninformative all-items count; the finding in that regime is the shape of the
 low tail against the corpus's own bulk.
 
 \subsection{Structure: the condensed merge tree}
@@ -927,8 +922,7 @@ report on Nemotron-Legal with the merge-tree anatomy annotated on it: the
 one pocket surviving the null-calibrated prominence floor ($204$ members,
 sample ids on the bar) is \emph{born} when its first members hold together
 and \emph{dies} into the bulk (excess-of-mass selection). Its prominence
-$0.090$ is modest --- a loose association, not a duplicate cluster --- yet
-$16\times$ the null floor, so it is a finding, and the floor suppressed one
+$0.090$ is modest --- a loose association, not a duplicate cluster --- yet $16\times$ the null floor, and therefore reportable; and the floor suppressed one
 further candidate; on the traced benchmark the same construction recovers a
 planted pocket exactly ($200/200$; birth $0.063$, death $0.898$, prominence
 $0.835$), with no flat threshold anywhere.}
@@ -996,15 +990,16 @@ neural-collapse metrics \cite{papyan2020} (supervision).
 \label{sec:semantics}
 % =========================================================================
 
-Geometric functionals ask ``how uniform is the sphere?''; a practitioner
-asks ``how much query sloppiness can this corpus absorb?''. This section
-converts the former into the latter exactly, then measures the conversion.
+Geometric functionals quantify how uniformly a corpus covers the sphere; a
+practitioner needs to know how much query perturbation the corpus can
+absorb before retrieval degrades. This section converts the former quantity
+into the latter exactly, then measures the conversion.
 
 \subsection{An exact pairwise confusion law}
 
 Model a query aimed at item $x$ as $q = x + \sigma g$, $g \sim \mathcal
-N(0, I_d)$ --- the simplest honest model of ``the query means $x$ but lands
-nearby.'' Retrieval errs on competitor $y$ when $\langle q, y\rangle >
+N(0, I_d)$ --- the minimal model of a query that intends $x$ but lands
+nearby. Retrieval errs on competitor $y$ when $\langle q, y\rangle >
 \langle q, x\rangle$.
 
 \begin{figure}[t]
@@ -1031,7 +1026,7 @@ nearby.'' Retrieval errs on competitor $y$ when $\langle q, y\rangle >
 and competitor is the perpendicular bisector at distance $r/2$; Gaussian
 noise of scale $\sigma$ crosses it with probability exactly
 $\Phi(-r/2\sigma)$. A far competitor is safe; a near-duplicate ($r \to 0$)
-is a coin flip \emph{at any noise level}.}
+has error probability approaching $1/2$ at every noise scale.}
 \label{fig:bisector}
 \end{figure}
 
@@ -1077,8 +1072,7 @@ $2.0$ & .0000 & .0000 && .0000 & .0000 && .0024 & .0025 && .0803 & .0804\\
 
 Table~\ref{tab:flip} verifies the law across a $6{\times}4$ grid of angles
 and noise scales to a maximum deviation of $9{\times}10^{-4}$. Two readings
-follow: a competitor far relative to the noise is harmless, and a
-near-duplicate is a coin flip at any noise level --- the formal reason
+follow: a competitor far relative to the noise is harmless, and a near-duplicate has error probability approaching $1/2$ at every noise scale --- the formal reason
 duplicate pockets are the worst crowding pathology
 (cf.\ \S\ref{sec:kcurve}'s liftoff at the near-duplicate scale).
 
@@ -1133,9 +1127,9 @@ the corpus's cone and tight pairs dominate $C(\sigma)$ at the noise scales
 where retrieval operates, pulling the tolerance crossing from
 $\sstar = 0.148$ to $0.123$: the corpus retains $83\%$ of a well-spread
 corpus's noise budget. At large $\sigma$ the curves converge (every pair
-confuses) and at tiny $\sigma$ both vanish; the budget is decided where
-they differ. On the traced benchmark the same construction prices the
-planted $5\%$ pocket at $26\%$ of the budget
+confuses) and at tiny $\sigma$ both vanish; the tolerance crossing is determined where
+they differ. On the traced benchmark the same construction attributes a cost of $26\%$ of the budget to the
+planted $5\%$ pocket
 ($\sstar\!: 0.203 \to 0.150$).}
 \label{fig:csigma}
 \end{figure}
@@ -1213,7 +1207,8 @@ cone $+$ duplicate pocket & \textbf{17.78} & $\mathbf{-3.21}$\\
 \end{tabular}
 \end{table}
 
-Two results from the design process are recorded so they stay dead.
+Two negative results from the design process are recorded to prevent
+their re-derivation.
 
 \emph{Near-redundancy of $C$ with uniformity}
 (Table~\ref{tab:redundancy}). As a corpus-level \emph{discriminative}
@@ -1221,9 +1216,7 @@ measurement, the confusion transform adds almost nothing beyond uniformity
 --- rank correlation $0.978$, $27/28$ order agreements --- its value being
 semantic: units, calibration, per-item counts. The single disagreement is
 informative: the confusion kernel ranks a duplicate-pocket corpus as worse
-than a diffuse low-rank collapse, the Gaussian kernel oppositely; duplicates
-are coin flips at every noise level while a spread subspace remains partly
-navigable, so the confusion ordering is the operationally correct one, and
+than a diffuse low-rank collapse, the Gaussian kernel oppositely; duplicate pairs approach error probability $1/2$ at every noise scale while a spread subspace remains partially navigable, so the confusion ordering is the operationally correct one, and
 the flip occurs precisely between qualitatively different pathologies.
 
 \emph{A vacuous stability certificate.} Composing the DTM stability bound
@@ -1244,8 +1237,7 @@ engineering task.
 The instrument's statistics were calibrated and stress-tested as a whole
 against $400$ pure-null corpora, then compared for detection power against a
 suite of standard diagnostics with \emph{every} threshold set on the same
-nulls at a matched $1\%$ false-alarm rate --- power against power at equal
-specificity, with no detector favored.
+nulls at a matched $1\%$ false-alarm rate --- a comparison at fixed specificity across all detectors.
 
 \paragraph{Null calibration (E4b).}
 On pure nulls ($n = 2{,}000$, $d = 256$; the benchmark family's generators
@@ -1263,8 +1255,7 @@ cell; thresholds calibrated on $400$ nulls; $n = 2{,}000$, $d = 256$).
 Pocket cells are (count $\times$ size, spread $s$; $s = 0.005$ is
 near-duplicate, $0.06$ loose). Continuous-layer detectors left of the rule;
 baseline suite right. The hardest cells --- a single pocket of $1\%$ of the
-corpus --- separate the layers; boldface marks the honest exceptions
-discussed in the text.}
+corpus --- separate the layers; boldface marks the exceptions discussed in the text.}
 \label{tab:power}
 \small
 \setlength{\tabcolsep}{4.2pt}
@@ -1285,20 +1276,18 @@ low-rank collapse         & 1.00 & 1.00 & 1.00 & 1.00 & .26 & 1.00 & 1.00 & \tex
 \end{table}
 
 \paragraph{Detection power (E2).}
-Table~\ref{tab:power} reports the pathology grid. Three readings. First, the
+Table~\ref{tab:power} reports the pathology grid. Three observations follow. First, the
 continuous layer --- the rank test, $\sstar$, the DTM tail ratio, and pocket
 prominence --- is at \emph{full power in every pocket cell}, including the
 hardest: a single pocket of $20$ items ($1\%$ of the corpus), where
 mean-cosine ($0.04$), hubness ($0.18$), and the kNN-distance quantile
-($0.22$) sit near the false-alarm floor --- the quantitative form of
-\S\ref{sec:averages}'s ``crowding hides from averages.'' Second, the honest
-exceptions are printed, not hidden: covariance-spectrum statistics
+($0.22$) sit near the false-alarm floor --- quantifying the claim of \S\ref{sec:averages}. Second, the exceptions are reported explicitly: covariance-spectrum statistics
 (IsoScore) are \emph{also} at full power on single coherent pockets --- a
 $1\%$ mass sharing one direction lifts an eigenvalue past the null spectrum
 edge --- so for pure corpus-level detection of one tight pocket, a spectrum
 summary suffices; what it cannot do is name the members, resist a mean-shift
-cone (power $0.00$ there, since centering removes the shift), or price the
-damage in noise-budget units. Third, the discriminating cells behave as the
+cone (power $0.00$ there, since centering removes the shift), or express the loss in operational
+units. Third, the discriminating cells behave as the
 theory says they should: the mean-chord $z$ is weak on small pockets (their
 pair mass is tiny); the pocket detector correctly declines to alarm on a
 cone ($0.12$ --- a cone is not a pocket); and hubness is blind to a
@@ -1323,7 +1312,7 @@ eigenspectrum, a kNN graph (optionally filtered to \emph{reciprocal}
 neighbors, which suppresses hubs by construction), unsupervised clusters,
 and the pair-cosine sample. All measurements of
 \S\ref{sec:continuous}--\S\ref{sec:semantics} are library functions over
-these objects; a separate presentation layer (\S\ref{sec:report}) renders
+these objects; a separate presentation layer (Appendix~\ref{sec:report}) renders
 them. The core depends on \textsf{numpy} alone; heavier capabilities
 (tabular IO, ANN graphs, UMAP, GPU paths, on-the-fly embedding via an
 OpenAI-compatible endpoint, the training extra) are optional and degrade
@@ -1388,14 +1377,14 @@ scatter accumulation and the context build's $d^3$ eigendecomposition
 continuous layer grows only through BLAS on the reservoir Gram
 ($1.8 \to 3.4$\,s over $d = 128 \to 4096$).
 
-One caveat is demonstrated rather than footnoted. With the planted pocket
+One caveat is demonstrated empirically. With the planted pocket
 placed in the corpus's \emph{last} rows (the layout produced by
 label-sorted shards), the full scan detects it (rank test $p = 0.010$,
 liftoff $0.92$), while approximate scans of the first $5{\times}10^4$ to
 $3{\times}10^5$ rows see a clean corpus ($p = 0.18$--$0.45$, no liftoff,
 mean cosine $\approx 0$): an approximate scan's reservoir is only as
 representative as the row order that fed it, so the instrument's approximate
-mode is for iteration speed, never for verdicts, on data whose layout may
+mode is for exploratory iteration rather than for conclusions on data whose layout may
 correlate with content.
 
 \subsection{Case study: a million-document corpus}
@@ -1430,10 +1419,10 @@ IsoScore $0.090$) yet spectrally rich (effective rank $728/1024$); the
 occupancy discrepancy sits at $z = -4{,}211$, and the whole-curve rank test
 rejects uniformity at the minimum attainable $p = 0.005$ with liftoff at
 $\cos \approx 0.82$ --- genuine tight-pair excess, at the near-duplicate
-scale. (An instructive correction from the calibration study: an earlier
+scale. (A correction attributable to the calibration study: an earlier
 pointwise reading placed the liftoff at $\cos \approx +0.07$; that reading
 was precisely the bulk-edge multiple-comparison artifact the null
-calibration exposed, and the honest test relocates the significant excess to
+calibration exposed, and the corrected test relocates the significant excess to
 the high-similarity scale. The bulk of the discrepancy $z$ remains the cone,
 per the ACG reference.)
 Operationally the corpus retains $83\%$ of the ideal noise budget: a query
@@ -1448,35 +1437,6 @@ shows high neighborhood purity ($0.95$) against near-zero silhouette
 cone --- a reading no single number provides.
 
 % =========================================================================
-\section{The Report Artifact}
-\label{sec:report}
-% =========================================================================
-
-The toolkit delivers its measurements as a single self-contained,
-theme-adaptive HTML report with no external requests. We document its design
-here for completeness and reproducibility; \emph{the artifact itself is
-engineering, not an academic contribution} --- the contribution of this
-report is the measurement layer of
-\S\ref{sec:continuous}--\S\ref{sec:semantics}, which is exposed as library
-functions independent of any rendering. Two of the artifact's design rules
-are nonetheless direct consequences of the measurement theory and are worth
-stating. \emph{Reference, not threshold}: every panel draws its null,
-because \S\ref{sec:geometry} established that absolute cosine is not
-self-interpreting. \emph{Display versus measurement}: 2-D projections lay
-figures out but never carry a statistic, because \S\ref{sec:binned}
-established that projected density is not corpus density. The remaining
-choices are presentation craft: a single accent color with meaning carried
-by position along annotated axes; figures ordered as a narrative (see it;
-how crowded, at what scale; who is affected; what structure it forms; why
-the space behaves so); and an in-place explainer on every panel stating its
-unstated context (null construction, subsample sizes, id provenance). One
-legibility finding from the artifact's development is recorded because it
-reinforces the display/measurement separation: a minimum-spanning-tree view
-drawn over the projection --- even restricted to tighter-than-bulk bridges
---- remained too busy to read on real corpora and was demoted to a hidden
-option; the condensed tree of \S\ref{sec:tree} carries the same object
-legibly as prominence bars.
-
 % =========================================================================
 \section{From Measurement to Gradient}
 \label{sec:training}
@@ -1559,7 +1519,7 @@ grade with the functional that was optimized.
 in $4{,}000$ items at $d = 64$; a linear adapter as the model stand-in; all
 verdicts from a held-out slice unseen by mining or batching). A linear
 adapter roughly halves flagged-item collisions at high structure
-preservation; we report this as the honest ceiling of the \emph{adapter} ---
+preservation; we report this as the attainable ceiling of the \emph{adapter} ---
 which cannot unfold a tight pocket further without moving everything else,
 exactly the trade $\mathcal L_{\mathrm{pres}}$ enforces --- not of the
 method.}
@@ -1602,8 +1562,8 @@ confusion, within the tool's supervision constraint.
 live; Gaussian comparison inequalities may yield two-sided estimates.
 \textbf{Recoverability.} ``Resolution headroom'' --- the fraction of
 measured crowding removable by a budgeted transform class, computed rather
-than predicted --- would answer the practitioner's first question (``is this
-the embedding's fault or my data's?'').
+than predicted --- would attribute measured crowding to the embedding model
+versus the data themselves.
 \textbf{Streaming structure.} The pair curve sketches trivially; the merge
 tree does not; a mergeable approximate hierarchy with prominence error
 bounds would extend the structural layer past the reservoir.
@@ -1612,7 +1572,8 @@ bounds would extend the structural layer past the reservoir.
 \section{Conclusion}
 % =========================================================================
 
-Crowding is where embedded systems quietly fail, and it is exactly the
+Crowding is a failure mode that embedded systems exhibit without overt
+errors, and it is exactly the
 property that global averages cannot see and binned displays cannot be
 trusted to measure. The instrument described here rests on one methodological
 commitment applied uniformly: \emph{read continuous objects at every scale
@@ -1623,16 +1584,111 @@ contribution is their selection, calibration, and composition into a system
 with stated guarantees and stated scope, traced end to end through a single
 benchmark whose planted pathology every layer detects, localizes, prices,
 and (in the training layer) partially repairs. The negative results are
-reported alongside the positive ones because an instrument is trustworthy
-only when its designers say what it cannot do.
-
-\subsection*{Acknowledgments}
-The design benefited from adversarial self-review; the redundancy and
-certificate results of \S\ref{sec:negative} are the surviving record of
-proposals that did not.
+reported alongside the positive ones because an instrument's reliability rests in part on a precise statement of its
+limits.
 
 % =========================================================================
 \appendix
+\section{Engineering Notes}
+\label{app:eng}
+% =========================================================================
+
+The implementation is organized so that its asymptotic costs match the
+claims of \S\ref{sec:instrument}: one streaming pass over the corpus,
+followed by statistics whose cost is independent of corpus size. This
+appendix records the implementation decisions behind the measured constants
+of Table~\ref{tab:scaling}.
+
+\paragraph{Streaming scan.}
+Ingestion is a single sequential pass over raw \texttt{.npy} files
+(memory-mapped) or sharded Parquet (chunked decode), in batches of
+$5\times10^4$ rows. Each batch of $b$ rows updates the running mean, the
+norm moments, and the $d \times d$ second-moment scatter through one
+$X_b^{\!\top} X_b$ GEMM, and feeds a bounded reservoir sample; peak memory
+is $O(d^2 + \text{reservoir})$ irrespective of corpus size, and the
+covariance spectrum is extracted once at the end of the pass. An optional
+approximate mode terminates the pass after a prescribed number of rows and
+estimates the spectrum from that prefix; \S\ref{sec:instrument} documents
+the failure mode this introduces on sorted shards.
+
+\paragraph{Blocked kernels at reservoir scale.}
+No computation materializes an $m \times m$ matrix for reservoir size $m$.
+Top-$k$ cosine values (the input to the distance-to-measure field) and
+collision counts are computed from $b \times m$ Gram tiles with
+partial-selection top-$k$ (\texttt{argpartition}, linear per row, in place
+of a full sort). The mutual-reachability minimum spanning tree uses a
+vectorized Prim iteration that maintains a frontier-distance array:
+$O(m^2)$ arithmetic executed as full-array operations, $O(m)$ memory
+beyond the current tile. The structural layer additionally caps its inputs
+($6{,}000$ points for the DTM field, $4{,}096$ for the merge tree), which
+fixes the corpus-size-independent constants observed in
+Table~\ref{tab:scaling}.
+
+\paragraph{Null sampling without vector synthesis.}
+All isotropic-null quantities exploit the closed form for the pair cosine
+of independent uniform directions on $S^{d-1}$,
+$c = 2B - 1$ with $B \sim \mathrm{Beta}\!\left(\tfrac{d-1}{2},
+\tfrac{d-1}{2}\right)$: null pair samples are drawn directly from this
+scalar law, so a $199$-replicate rank envelope requires $199$ scalar-array
+draws rather than $199$ synthetic corpora. The anisotropy-conditioned
+reference uses the rotation invariance of the pair-cosine law under the
+angular central Gaussian --- only the covariance spectrum enters --- so
+reference pairs are generated from a small pool of spectrum-weighted
+Gaussian directions with no eigenvector computation. The Gaussian
+confusion law is evaluated with a vectorized rational approximation to
+$\operatorname{erf}$ (absolute error below $1.5\times10^{-7}$), which
+keeps the core free of dependencies beyond \textsf{numpy}.
+
+\paragraph{One shared pair sample.}
+A single random-pair cosine sample (default $2\times10^5$ pairs) is drawn
+once per corpus and reused by every pairwise statistic --- $K(t)$, the
+envelope test, the discrepancy $z$, the confusion functional $C(\sigma)$,
+and $\sstar$. The continuous layer therefore costs one pass over a
+fixed-size array per statistic, and all reported statistics refer to the
+same measured sample.
+
+\paragraph{Optional acceleration tiers.}
+The core is \textsf{numpy}-only, with the heavy kernels routed through
+multi-threaded BLAS. An optional module provides the same three kernels
+--- covariance accumulation, pair cosines, and exact blocked $k$NN --- on
+\textsf{torch} devices (CPU, CUDA, or Apple \textsf{mps}, with automatic
+selection), transferring each chunk to the device as it streams; an
+approximate-neighbor path through FAISS is available where installed.
+These tiers change constants, not asymptotics; every number reported in
+this paper was produced by the \textsf{numpy}-only configuration
+(Appendix~\ref{app:env}).
+
+% =========================================================================
+\section{The Report Artifact}
+\label{sec:report}
+% =========================================================================
+
+The toolkit delivers its measurements as a single self-contained,
+theme-adaptive HTML report with no external requests. We document its design
+here for completeness and reproducibility; \emph{the artifact itself is
+engineering, not an academic contribution} --- the contribution of this
+report is the measurement layer of
+\S\ref{sec:continuous}--\S\ref{sec:semantics}, which is exposed as library
+functions independent of any rendering. Two of the artifact's design rules
+are nonetheless direct consequences of the measurement theory and are worth
+stating. \emph{Reference, not threshold}: every panel draws its null,
+because \S\ref{sec:geometry} established that absolute cosine is not
+self-interpreting. \emph{Display versus measurement}: 2-D projections lay
+figures out but never carry a statistic, because \S\ref{sec:binned}
+established that projected density is not corpus density. The remaining
+choices are presentation craft: a single accent color with meaning carried
+by position along annotated axes; figures ordered as a narrative (see it;
+how crowded, at what scale; who is affected; what structure it forms; why
+the space behaves so); and an in-place explainer on every panel stating its
+unstated context (null construction, subsample sizes, id provenance). One
+legibility finding from the artifact's development is recorded because it
+reinforces the display/measurement separation: a minimum-spanning-tree view
+drawn over the projection --- even restricted to tighter-than-bulk bridges
+--- remained too busy to read on real corpora and was demoted to a hidden
+option; the condensed tree of \S\ref{sec:tree} carries the same object
+legibly as prominence bars.
+
+% =========================================================================
 \section{Test Environments}
 \label{app:env}
 % =========================================================================
