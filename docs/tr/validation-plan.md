@@ -146,7 +146,9 @@ null replicates.
 | E4b | **accept** | null calibration on 400 nulls: rank-test rejection 1.25% @ nominal 1%; gated liftoff 6% @ nominal 5%; \|z\|>3 at 0.75%; **pocket-prominence null p99 = 0.009** → shipped as a per-report simulated floor in the pockets figure (suppresses within-null pockets; closes the E1e finding). |
 | E2 | **accept** | at matched 1% FA (measured 0.010–0.013 for every detector): the continuous layer (rank p, σ\*, DTM ratio, pocket prominence) at **full power in every pocket cell** incl. a single 1% pocket where mean-cos/hubness/kNN-distance sit near the FA floor. Honest cells recorded: IsoScore also full-power on single coherent pockets (eigenvalue past the null spectrum edge) but cannot localize and misses the mean-shift cone; z weak on small pockets; pocket detector correctly non-alarming on a cone. |
 
-Remaining: E3 (scaling — running), E6 (deferred; needs sign-off), Part II pilot.
+| E3 | **accept** | scan linear in bytes at ~2 GB/s (10⁷×1024, 41 GB in 18.6 s on raw npy; Parquet decode dominates the case-study path); everything downstream reservoir-bound and **constant in n** (ctx ~3 s, continuous layer ~1.8 s from 10⁵ to 10⁷ rows); dimension enters via d² scan / d³ eigendecomposition (52.6 s at d=4096), continuous layer nearly flat (1.8→3.4 s). Sorted-shards failure mode demonstrated: full scan detects the last-rows pocket (p=0.010) while 50k–300k-row approximate scans all miss it (p=0.18–0.45) — approximate mode is for iteration, never verdicts, on layout-correlated data. |
+
+Remaining: E6 (deferred; needs sign-off — large-scale embedding boundary), Part II pilot (unblocked; query-precision decision pending).
 
 ## Part II — External validation methodology (to be run independently)
 

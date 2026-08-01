@@ -388,12 +388,19 @@ Every claim marked \emph{measured} in this report follows one protocol,
 stated here once.
 
 \paragraph{Environment.}
-All experiments run on a commodity Linux workstation, CPU only,
-single-threaded except for BLAS. Every statistic is computed by the released
-library (\textsf{numpy} core; the training experiments additionally use
-\textsf{torch} on CPU); no experiment uses code outside the artifact. Random
-seeds are fixed and stated per experiment; figures embed the unmodified
-numerical outputs as their plotted coordinates.
+Two CPU-only Linux hosts, described by their properties. The
+\emph{measurement host} (validation battery, scaling study): a
+16-core/32-thread x86-64 workstation, $123$\,GB RAM, NVMe storage with
+$\approx 2$\,GB/s measured streaming reads, Python~3.13, \textsf{numpy}~2.5
+with multi-threaded OpenBLAS, and the \emph{numpy-only core install} of the
+artifact --- deliberately, since that is the configuration the portability
+claim is about. The \emph{case-study host}: a 6-core/12-thread mobile-class
+x86-64 machine with $27$\,GB RAM, exercising the optional tabular-IO path
+(sharded Parquet with decode overhead). Every statistic is computed by the
+released library (the training experiments additionally use \textsf{torch}
+on CPU); no experiment uses code outside the artifact. Random seeds are
+fixed and stated per experiment; figures embed the unmodified numerical
+outputs as their plotted coordinates.
 
 \paragraph{The traced benchmark.}
 The synthetic benchmark of \S\ref{sec:averages} is constructed as follows:
@@ -1212,6 +1219,70 @@ representational-similarity statistics (CKA \cite{kornblith2019}, kernel and
 rigid distances); the local/global pair can disagree informatively --- a
 high-CKA, low-overlap outcome is a re-skin that preserves gross structure
 while rewriting fine neighborhoods.
+
+\subsection{Scaling}
+
+\begin{table}[t]
+\centering
+\caption{Scaling on the measurement host (numpy-only core; raw \texttt{.npy}
+input; per-phase wall time and peak RSS from forked children --- RSS is
+dominated by memory-mapped input pages, not allocator footprint). Left:
+corpus-size sweep at $d = 1024$; the streaming scan is linear in bytes at
+$\approx 2$\,GB/s and the reservoir-bound phases are \emph{constant} in $n$.
+Right: dimension sweep at $n = 10^6$; the scan carries the $d^2$ scatter
+accumulation and the context build the $d^3$ eigendecomposition, while the
+continuous layer stays nearly flat.}
+\label{tab:scaling}
+\small
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{rrrr}
+\toprule
+\multicolumn{4}{c}{$d = 1024$}\\
+$n$ & scan & ctx & cont.\\
+\midrule
+$10^5$ & $0.2$\,s & $2.7$\,s & $1.8$\,s\\
+$10^6$ & $2.0$\,s & $3.0$\,s & $1.8$\,s\\
+$3{\times}10^6$ & $5.6$\,s & $3.0$\,s & $1.8$\,s\\
+$10^7$ & $18.6$\,s & $2.6$\,s & $1.8$\,s\\
+\bottomrule
+\end{tabular}
+\hspace{1.6em}
+\begin{tabular}{rrrr}
+\toprule
+\multicolumn{4}{c}{$n = 10^6$}\\
+$d$ & scan & ctx & cont.\\
+\midrule
+$256$ & $0.6$\,s & $0.5$\,s & $1.8$\,s\\
+$1024$ & $2.0$\,s & $3.2$\,s & $1.8$\,s\\
+$2048$ & $4.6$\,s & $10.4$\,s & $2.0$\,s\\
+$4096$ & $12.4$\,s & $52.6$\,s & $3.4$\,s\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:scaling} gives the measured curves. The pipeline behaves as
+designed: the one pass over the corpus is I/O-bound and linear in bytes (a
+$10^7 \times 1024$, $41$\,GB corpus streams in $18.6$\,s on raw
+\texttt{.npy}; the Parquet path adds decode overhead --- the case study's
+$10^6 \times 1024$ sharded-Parquet run takes $\approx 3.5$ minutes end to
+end on the smaller host), while everything downstream of the scan is
+\emph{reservoir-bound and therefore constant in corpus size}: context build
+$\approx 3$\,s and the entire continuous layer $\approx 1.8$\,s whether the
+corpus has $10^5$ or $10^7$ rows. Dimension enters through the scan's $d^2$
+scatter accumulation and the context build's $d^3$ eigendecomposition
+($52.6$\,s at $d = 4096$ --- the one super-linear phase), while the
+continuous layer grows only through BLAS on the reservoir Gram
+($1.8 \to 3.4$\,s over $d = 128 \to 4096$).
+
+One caveat is demonstrated rather than footnoted. With the planted pocket
+placed in the corpus's \emph{last} rows (the layout produced by
+label-sorted shards), the full scan detects it (rank test $p = 0.010$,
+liftoff $0.92$), while approximate scans of the first $5{\times}10^4$ to
+$3{\times}10^5$ rows see a clean corpus ($p = 0.18$--$0.45$, no liftoff,
+mean cosine $\approx 0$): an approximate scan's reservoir is only as
+representative as the row order that fed it, so the instrument's approximate
+mode is for iteration speed, never for verdicts, on data whose layout may
+correlate with content.
 
 \subsection{Case study: a million-document corpus}
 

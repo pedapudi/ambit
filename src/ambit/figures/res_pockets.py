@@ -59,7 +59,7 @@ def fig_res_pockets(ctx):
                 f'crowding pockets · merge-tree prominence (birth → merge into the bulk)</text>')
     body.append(f'<text x="{L}" y="46" fill="var(--ink-faint)" font-size="10">'
                 f'{min(len(X), 4096):,} entities · cosine distance · pockets below the '
-                f'null prominence floor ({2*floor_p:.2f}) are not shown'
+                f'null prominence floor ({2*floor_p:.3f}) are not shown'
                 f'{f" ({n_below} suppressed)" if n_below else ""}</text>')
 
     if not pk:
