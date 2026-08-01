@@ -143,6 +143,25 @@ def uniformity_loss(z, t: float = 2.0):
 
 
 # ---------------------------------------------------------------- batch mining
+def guard_mask(topk_idx, rows) -> np.ndarray:
+    """(B, B) exclude mask for `confusion_loss` from precomputed base-model top-k
+    neighbor indices (`knn.topk_cosine` on the base embedding, computed once per
+    round). A pair is guarded — excluded from the penalty — when either batch
+    row's corpus index appears in the other's top-k: the confusable window is
+    exactly where unlabeled true relatives live, and the batch analogue of the
+    miner's false-negative guard keeps the loss from pushing them apart.
+
+    `topk_idx`: (n, k) corpus-level neighbor indices; `rows`: (B,) corpus indices
+    of the batch rows. Symmetric, diagonal False."""
+    topk_idx = np.asarray(topk_idx)
+    rows = np.asarray(rows, np.int64)
+    sub = topk_idx[rows]                                    # (B, k) corpus ids
+    m = (sub[:, None, :] == rows[None, :, None]).any(-1)    # j in top-k of i
+    m |= m.T
+    np.fill_diagonal(m, False)
+    return m
+
+
 def resolution_weights(Xn, sigma: float, floor: float = 0.25, block: int = 2048) -> np.ndarray:
     """Sampling weights over the corpus/reservoir that oversample the entities in
     trouble: proportional to per-entity expected collision counts at `sigma`,

@@ -106,6 +106,33 @@ def test_training_step_reduces_collisions_and_preserves_structure():
 
 
 # ---------------------------------------------------------------- mining
+def test_guard_mask_excludes_base_neighbors_from_the_penalty():
+    from ambit import knn
+
+    X = _clumped(64, 16, k=16, spread=0.02, seed=9).astype(np.float32)
+    Xn = _unit(X)
+    topk = knn.topk_cosine(Xn, 5)
+    rows = np.arange(40, 64)                     # batch spanning the clump
+    m = tr.guard_mask(topk, rows)
+    assert m.shape == (24, 24) and m.dtype == bool
+    assert (m == m.T).all() and not m.diagonal().any()
+    # every guarded pair really is a base top-5 relation in one direction
+    ii, jj = np.nonzero(m)
+    for i, j in zip(ii[:50], jj[:50]):
+        gi, gj = rows[i], rows[j]
+        assert gj in topk[gi] or gi in topk[gj]
+    # guarding the clump's own neighbor pairs must lower the penalty, and the
+    # guarded pairs must contribute no gradient
+    full = tr.confusion_loss(X[rows], 0.2)
+    part = tr.confusion_loss(X[rows], 0.2, exclude=m)
+    assert part < full
+    z = torch.tensor(X[rows], dtype=torch.float64, requires_grad=True)
+    everything = torch.ones(len(rows), len(rows), dtype=torch.bool)
+    l = tr.confusion_loss(z, 0.2, exclude=everything)
+    l.backward()
+    assert float(l) == 0.0 and float(z.grad.abs().max()) == 0.0
+
+
 def test_resolution_weights_oversample_the_clump():
     X = _clumped(400, 24, k=80, seed=7)
     w = tr.resolution_weights(X, 0.2, floor=0.2)
