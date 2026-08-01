@@ -257,11 +257,22 @@ def pockets(Xn, *, min_size: int = 8, k_core: int = None, max_n: int = 4096,
 
     out = []
     for ci, c in enumerate(clusters):
-        if not selected[ci] or not np.isfinite(c["death"]):
+        death = float(c["death"])
+        if not np.isfinite(death):
+            # The root is normally the bulk, not a pocket. But under single-
+            # linkage chaining a tight pocket can seed the one component that
+            # absorbs everything point by point, so no real split ever occurs
+            # and the root is the ONLY cluster: its birth (the scale at which
+            # a min_size core first held together) against the final merge
+            # scale then carries the pocket, and the tight-regime membership
+            # rule below extracts exactly that core.
+            if c["children"]:
+                continue
+            death = float(weight[root])
+        elif not selected[ci]:
             continue
         core = c.get("core", c["top"])
         birth = float(first_w[c["top"]])
-        death = float(c["death"])
         if not np.isfinite(birth) or death <= birth:
             continue
         # members = the chain's core plus side branches that fell out in the tight

@@ -125,7 +125,7 @@ def stolarsky(cos_sample) -> float:
     return float(chords_from_cos(cos_sample).mean())
 
 
-def stolarsky_z(cos_sample, dim: int, reps: int = 24, seed: int = 0):
+def stolarsky_z(cos_sample, dim: int, reps: int = 64, seed: int = 0):
     """(scalar, z): the mean-chord occupancy discrepancy and its z-score against the
     uniform null with a *matched* pair-sample size, so sampling noise is priced in.
     In high d the null is razor-thin (sd of the mean ~ 1e-5), so real crowding shows

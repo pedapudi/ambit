@@ -42,12 +42,15 @@ def pair_cos(X, P=200_000, seed=0):
                      X[j[keep]].astype(np.float64))
 
 
-def headline(X, d, pc=None, seed=0, dtm_cap=6000):
-    """The report's headline readouts for one corpus/reservoir."""
+def headline(X, d, pc=None, seed=0, dtm_cap=6000, corpus_n=None):
+    """The report's headline readouts for one corpus/reservoir. `corpus_n` is
+    the size of the corpus the reservoir represents — sigma* semantics use the
+    corpus item count with the reservoir's pair distribution, exactly as the
+    report's facts row does (it passes scan.n, not the reservoir size)."""
     pc = pair_cos(X, seed=seed) if pc is None else pc
     lift, *_ = occ.liftoff_cos(pc, d, seed=seed)
     _, z = occ.stolarsky_z(pc, d, seed=seed)
-    ss = occ.sigma_star(pc, len(X))
+    ss = occ.sigma_star(pc, corpus_n or len(X))
     sub = X if len(X) <= dtm_cap else X[np.random.default_rng(seed).choice(
         len(X), dtm_cap, replace=False)]
     f = cr.dtm(sub, m_frac=0.02)
@@ -69,10 +72,10 @@ def e1a(out):
         for seed in range(10):
             rng = np.random.default_rng(1000 + seed)
             R = corpus[rng.choice(n, n_r, replace=False)]
-            h = headline(R, d, seed=seed, dtm_cap=16000)
+            h = headline(R, d, seed=seed, dtm_cap=16000, corpus_n=n)
             rows.append({"n_r": n_r, "seed": seed, **h})
     ref = headline(corpus[np.random.default_rng(7).choice(n, 32000, replace=False)],
-                   d, seed=7, dtm_cap=16000)
+                   d, seed=7, dtm_cap=16000, corpus_n=n)
     json.dump({"rows": rows, "reference_32k": ref}, open(out, "w"), indent=1)
 
 

@@ -155,6 +155,20 @@ def test_spanning_edges_align_with_pockets_subsample():
     assert (w >= 0).all() and np.quantile(w, 0.01) < 0.2    # clump makes short bridges
 
 
+def test_pockets_survive_single_linkage_chaining():
+    # Chaining regime: a tight pocket seeds the one component that absorbs the
+    # bulk point by point, so no node ever has two >=min_size children and no
+    # real split exists. The root-candidate fallback must still report the
+    # pocket (regression: min_size >= 32 silently returned nothing).
+    X = _clumped(2000, 256, k=200, spread=0.01, seed=2)
+    for ms in (32, 64):
+        pk, _ = cr.pockets(X.astype(np.float32), min_size=ms, seed=0)
+        assert pk and abs(pk[0]["size"] - 200) <= 10 and pk[0]["prominence"] > 0.5
+    U = _uniform(2000, 256, seed=5)
+    pk, _ = cr.pockets(U.astype(np.float32), min_size=32, seed=0)
+    assert max((p["prominence"] for p in pk), default=0.0) < 0.1
+
+
 def test_pockets_empty_on_uniform():
     pk, _ = cr.pockets(_uniform(1200, 64, seed=8), min_size=8, seed=0)
     assert all(p["prominence"] < 0.2 for p in pk)           # nothing detaches far from the bulk
