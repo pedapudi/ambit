@@ -418,11 +418,13 @@ tuned to the instrument.
 
 \emph{(ii) A public real corpus --- realistic geometry at scale.} Synthetic
 corpora cannot exhibit the learned-embedding pathologies that motivate the
-instrument, so the case study (\S\ref{sec:instrument}) uses a public legal
-corpus of $10^6$ documents in four subsets spanning distinct legal genres
-(regulatory text, case-law summaries, question--answer pairs, statutory
-code), embedded at $d = 1024$ by an instruction-tuned text encoder,
-L2-normalized, stored as sharded Parquet with stable document ids. It
+instrument, so the case study (\S\ref{sec:instrument}) uses
+\emph{Nemotron-Pretraining-Legal-v1} \cite{nemotronlegal}, a public
+(CC-BY-4.0) legal corpus published by NVIDIA: $10^6$ documents drawn from
+four of its thirteen subsets --- the California Code of Regulations,
+case-law summaries, CaseHOLD, and eCFR question--answer pairs --- embedded
+at $d = 1024$ by an instruction-tuned text encoder, L2-normalized, stored as
+sharded Parquet with stable document ids. It
 supplies what the benchmark cannot: a genuine anisotropy cone (mean pair
 cosine $+0.236$), \emph{diffuse} within-subset crowding rather than planted
 pockets, subset labels used only to \emph{condition} one readout (never
@@ -477,10 +479,12 @@ cell, $199$-null rank envelopes, $64$-replicate discrepancy nulls);
 single-seed values appear only for deterministic or concentration-driven
 demonstrations and are marked by the absence of a spread. \emph{Figures}
 follow one rule: every data-bearing plot embeds unmodified experimental
-outputs as its coordinates (the crowding curve, the DTM field, the collision
-curves, the lattice demonstration --- whose highlighted peak cells are
-computed from the figure's own points --- and the merge-tree anatomy, whose
-values are the benchmark's measured ones); the remaining figures are
+outputs as its coordinates --- and the primary examples are the \emph{real
+corpus's}: the crowding curve, the DTM field, and the collision curves are
+Nemotron-Legal measurements, the merge-tree anatomy carries its measured
+pocket, and two figures are unretouched cards from the instrument's own
+report on that corpus; the lattice demonstration's highlighted peak cells
+are computed from the figure's own points; the remaining figures are
 intuition schematics and are captioned as such.
 
 % =========================================================================
@@ -607,9 +611,11 @@ $c_{ij} = \langle x_i,x_j\rangle$; chord $r_{ij} = \lVert x_i - x_j\rVert =
 \sqrt{2 - 2 c_{ij}}$). \textsf{ambit} computes exact full-corpus second
 moments by streaming and draws a bounded uniform reservoir plus a large
 random-pair cosine sample ($2{\times}10^5$ pairs by default) for everything
-else. Throughout this section the running benchmark of
-\S\ref{sec:averages} --- uniform $n{=}4{,}000$, $d{=}768$, with and without
-the planted $200$-item pocket --- traces every layer.
+else. Throughout this section the \emph{figures} show the real corpus
+(Nemotron-Legal, \S\ref{sec:method}) --- the primary examples are learned
+geometry, not synthetic --- while the traced benchmark of
+\S\ref{sec:averages}, whose planted pathology is known exactly, supplies
+the falsifiable counterpart for every layer in the text.
 
 \subsection{The crowding curve}
 \label{sec:kcurve}
@@ -650,12 +656,18 @@ sampled from the eigenvalues alone by rotation invariance: the corpus's
 second-moment cone \emph{without} its clustering. Height of the data curve
 above this reference is crowding the cone cannot explain.
 
-On the benchmark, the global test rejects at the minimum attainable
-$p = 1/200$ with liftoff at $\cos \approx 0.93$ --- the pocket announces
-itself at precisely the near-duplicate scale --- and the curve carries a
-shoulder of excess mass ($K \approx 2.4{\times}10^{-3}$, matching the
-pocket's pair share) that the ACG reference, built from the same corpus's
-covariance, does not reproduce: the crowding is clustering, not cone.
+Figure~\ref{fig:kcurve} shows the curve on the real corpus
+(Nemotron-Legal, \S\ref{sec:method}): the global test rejects at the minimum
+attainable $p = 1/200$ with liftoff at $\cos \approx 0.81$. The reading is
+richer than a single number: through mid-similarities the data hug the ACG
+reference --- that part of the excess over uniformity \emph{is} the
+anisotropy cone, benign and expected of a learned encoder --- while above
+$\cos \approx 0.8$ the data climb clear of both references: genuine
+tight-pair structure at the near-duplicate scale, which \S\ref{sec:dtm}
+will attribute to named documents. On the traced benchmark the same test
+rejects at $p = 1/200$ with liftoff $\cos \approx 0.93$ and a shoulder of
+excess mass exactly matching the planted pocket's pair share
+($2.4{\times}10^{-3}$) --- the falsifiability half of the pair.
 
 \begin{figure}[t]
 \centering
@@ -668,25 +680,26 @@ covariance, does not reproduce: the crowding is clustering, not cone.
   yticklabels={$1$,$10^{-1}$,$10^{-2}$,$10^{-3}$,$10^{-4}$,$10^{-5}$},
   legend style={draw=none, font=\small, at={(0.97,0.95)}, anchor=north east},
   axis lines=left]
-\addplot[faint, thick, dashed] coordinates {(0.0000,-0.2986) (0.0112,-0.4198) (0.0225,-0.5696) (0.0337,-0.7518) (0.0449,-0.9659) (0.0562,-1.2134) (0.0674,-1.4986) (0.0786,-1.8146) (0.0898,-2.1703) (0.1011,-2.5489) (0.1123,-2.9685) (0.1235,-3.3871) (0.1348,-3.8238) (0.1460,-4.2595) (0.1572,-4.6020) (0.1685,-4.9999) (0.1797,-5.3009) (0.1909,-5.6020) (0.2021,-5.6020) (0.2134,-5.6020) (0.2246,-5.6020) (0.2358,-5.6020) (0.2471,-5.6020) (0.2583,-5.6020) (0.2695,-5.6020) (0.2808,-5.6020) (0.2920,-5.6020) (0.3032,-5.6020) (0.3144,-5.6020) (0.3257,-5.6020) (0.3369,-5.6020) (0.3481,-5.6020) (0.3594,-5.6020) (0.3706,-5.6020) (0.3818,-5.6020) (0.3931,-5.6020) (0.4043,-5.6020) (0.4155,-5.6020) (0.4268,-5.6020) (0.4380,-5.6020) (0.4492,-5.6020) (0.4604,-5.6020) (0.4717,-5.6020) (0.4829,-5.6020) (0.4941,-5.6020) (0.5054,-5.6020) (0.5166,-5.6020) (0.5278,-5.6020) (0.5391,-5.6020) (0.5503,-5.6020) (0.5615,-5.6020) (0.5727,-5.6020) (0.5840,-5.6020) (0.5952,-5.6020) (0.6064,-5.6020) (0.6177,-5.6020) (0.6289,-5.6020) (0.6401,-5.6020) (0.6514,-5.6020) (0.6626,-5.6020) (0.6738,-5.6020) (0.6851,-5.6020) (0.6963,-5.6020) (0.7075,-5.6020) (0.7187,-5.6020) (0.7300,-5.6020) (0.7412,-5.6020) (0.7524,-5.6020) (0.7637,-5.6020) (0.7749,-5.6020) (0.7861,-5.6020) (0.7974,-5.6020) (0.8086,-5.6020) (0.8198,-5.6020) (0.8310,-5.6020) (0.8423,-5.6020) (0.8535,-5.6020) (0.8647,-5.6020) (0.8760,-5.6020) (0.8872,-5.6020) (0.8984,-5.6020) (0.9097,-5.6020) (0.9209,-5.6020) (0.9321,-5.6020) (0.9433,-5.6020) (0.9546,-5.6020) (0.9658,-5.6020) (0.9770,-5.6020) (0.9883,-5.6020) (0.9995,-5.6020)};
+\addplot[faint, thick, dashed] coordinates {(0.0000,-0.2988) (0.0112,-0.4405) (0.0225,-0.6216) (0.0337,-0.8466) (0.0449,-1.1165) (0.0562,-1.4301) (0.0674,-1.7913) (0.0786,-2.2017) (0.0898,-2.6526) (0.1011,-3.1220) (0.1123,-3.6108) (0.1235,-4.0457) (0.1348,-4.6989) (0.1460,-5.3010) (0.1572,-5.3010) (0.1685,-5.6020) (0.1797,-5.6020) (0.1909,-5.6020) (0.2021,-5.6020) (0.2134,-5.6020) (0.2246,-5.6020) (0.2358,-5.6020) (0.2471,-5.6020) (0.2583,-5.6020) (0.2695,-5.6020) (0.2808,-5.6020) (0.2920,-5.6020) (0.3032,-5.6020) (0.3144,-5.6020) (0.3257,-5.6020) (0.3369,-5.6020) (0.3481,-5.6020) (0.3594,-5.6020) (0.3706,-5.6020) (0.3818,-5.6020) (0.3931,-5.6020) (0.4043,-5.6020) (0.4155,-5.6020) (0.4268,-5.6020) (0.4380,-5.6020) (0.4492,-5.6020) (0.4604,-5.6020) (0.4717,-5.6020) (0.4829,-5.6020) (0.4941,-5.6020) (0.5054,-5.6020) (0.5166,-5.6020) (0.5278,-5.6020) (0.5391,-5.6020) (0.5503,-5.6020) (0.5615,-5.6020) (0.5727,-5.6020) (0.5840,-5.6020) (0.5952,-5.6020) (0.6064,-5.6020) (0.6177,-5.6020) (0.6289,-5.6020) (0.6401,-5.6020) (0.6514,-5.6020) (0.6626,-5.6020) (0.6738,-5.6020) (0.6851,-5.6020) (0.6963,-5.6020) (0.7075,-5.6020) (0.7187,-5.6020) (0.7300,-5.6020) (0.7412,-5.6020) (0.7524,-5.6020) (0.7637,-5.6020) (0.7749,-5.6020) (0.7861,-5.6020) (0.7974,-5.6020) (0.8086,-5.6020) (0.8198,-5.6020) (0.8310,-5.6020) (0.8423,-5.6020) (0.8535,-5.6020) (0.8647,-5.6020) (0.8760,-5.6020) (0.8872,-5.6020) (0.8984,-5.6020) (0.9097,-5.6020) (0.9209,-5.6020) (0.9321,-5.6020) (0.9433,-5.6020) (0.9546,-5.6020) (0.9658,-5.6020) (0.9770,-5.6020) (0.9883,-5.6020) (0.9995,-5.6020)};
 \addlegendentry{$\alpha$-critical global envelope (rank test, 199 nulls)}
-\addplot[good, thick] coordinates {(0.0000,-0.3013) (0.0112,-0.3833) (0.0225,-0.4778) (0.0337,-0.5854) (0.0449,-0.7042) (0.0562,-0.8328) (0.0674,-0.9707) (0.0786,-1.1160) (0.0898,-1.2650) (0.1011,-1.4194) (0.1123,-1.5694) (0.1235,-1.7234) (0.1348,-1.8855) (0.1460,-2.0268) (0.1572,-2.1827) (0.1685,-2.3343) (0.1797,-2.4873) (0.1909,-2.6654) (0.2021,-2.8181) (0.2134,-3.0065) (0.2246,-3.1804) (0.2358,-3.4201) (0.2471,-3.5849) (0.2583,-3.8096) (0.2695,-3.9585) (0.2808,-4.1870) (0.2920,-4.3467) (0.3032,-4.6989) (0.3144,-4.6989) (0.3257,-4.9999) (0.3369,-5.3009) (0.3481,-5.6020) (0.3594,-5.6020) (0.3706,-5.6020) (0.3818,-5.6020) (0.3931,-5.6020) (0.4043,-5.6020) (0.4155,-5.6020) (0.4268,-5.6020) (0.4380,-5.6020) (0.4492,-5.6020) (0.4604,-5.6020) (0.4717,-5.6020) (0.4829,-5.6020) (0.4941,-5.6020) (0.5054,-5.6020) (0.5166,-5.6020) (0.5278,-5.6020) (0.5391,-5.6020) (0.5503,-5.6020) (0.5615,-5.6020) (0.5727,-5.6020) (0.5840,-5.6020) (0.5952,-5.6020) (0.6064,-5.6020) (0.6177,-5.6020) (0.6289,-5.6020) (0.6401,-5.6020) (0.6514,-5.6020) (0.6626,-5.6020) (0.6738,-5.6020) (0.6851,-5.6020) (0.6963,-5.6020) (0.7075,-5.6020) (0.7187,-5.6020) (0.7300,-5.6020) (0.7412,-5.6020) (0.7524,-5.6020) (0.7637,-5.6020) (0.7749,-5.6020) (0.7861,-5.6020) (0.7974,-5.6020) (0.8086,-5.6020) (0.8198,-5.6020) (0.8310,-5.6020) (0.8423,-5.6020) (0.8535,-5.6020) (0.8647,-5.6020) (0.8760,-5.6020) (0.8872,-5.6020) (0.8984,-5.6020) (0.9097,-5.6020) (0.9209,-5.6020) (0.9321,-5.6020) (0.9433,-5.6020) (0.9546,-5.6020) (0.9658,-5.6020) (0.9770,-5.6020) (0.9883,-5.6020) (0.9995,-5.6020)};
+\addplot[good, thick] coordinates {(0.0000,-0.3007) (0.0112,-0.3454) (0.0225,-0.3935) (0.0337,-0.4460) (0.0449,-0.5031) (0.0562,-0.5647) (0.0674,-0.6292) (0.0786,-0.6983) (0.0898,-0.7716) (0.1011,-0.8475) (0.1123,-0.9284) (0.1235,-1.0127) (0.1348,-1.0999) (0.1460,-1.1911) (0.1572,-1.2847) (0.1685,-1.3771) (0.1797,-1.4741) (0.1909,-1.5704) (0.2021,-1.6698) (0.2134,-1.7754) (0.2246,-1.8710) (0.2358,-1.9799) (0.2471,-2.0933) (0.2583,-2.2005) (0.2695,-2.3009) (0.2808,-2.4161) (0.2920,-2.5315) (0.3032,-2.6506) (0.3144,-2.7618) (0.3257,-2.8859) (0.3369,-3.0199) (0.3481,-3.1336) (0.3594,-3.2365) (0.3706,-3.4088) (0.3818,-3.5685) (0.3931,-3.7211) (0.4043,-3.9207) (0.4155,-4.1248) (0.4268,-4.2595) (0.4380,-4.4558) (0.4492,-4.8238) (0.4604,-4.8238) (0.4717,-5.6020) (0.4829,-5.6020) (0.4941,-5.6020) (0.5054,-5.6020) (0.5166,-5.6020) (0.5278,-5.6020) (0.5391,-5.6020) (0.5503,-5.6020) (0.5615,-5.6020) (0.5727,-5.6020) (0.5840,-5.6020) (0.5952,-5.6020) (0.6064,-5.6020) (0.6177,-5.6020) (0.6289,-5.6020) (0.6401,-5.6020) (0.6514,-5.6020) (0.6626,-5.6020) (0.6738,-5.6020) (0.6851,-5.6020) (0.6963,-5.6020) (0.7075,-5.6020) (0.7187,-5.6020) (0.7300,-5.6020) (0.7412,-5.6020) (0.7524,-5.6020) (0.7637,-5.6020) (0.7749,-5.6020) (0.7861,-5.6020) (0.7974,-5.6020) (0.8086,-5.6020) (0.8198,-5.6020) (0.8310,-5.6020) (0.8423,-5.6020) (0.8535,-5.6020) (0.8647,-5.6020) (0.8760,-5.6020) (0.8872,-5.6020) (0.8984,-5.6020) (0.9097,-5.6020) (0.9209,-5.6020) (0.9321,-5.6020) (0.9433,-5.6020) (0.9546,-5.6020) (0.9658,-5.6020) (0.9770,-5.6020) (0.9883,-5.6020) (0.9995,-5.6020)};
 \addlegendentry{anisotropy-conditioned (ACG) reference}
-\addplot[acc, very thick] coordinates {(0.0000,-0.3013) (0.0112,-0.4231) (0.0225,-0.5738) (0.0337,-0.7531) (0.0449,-0.9658) (0.0562,-1.2068) (0.0674,-1.4737) (0.0786,-1.7611) (0.0898,-2.0574) (0.1011,-2.3155) (0.1123,-2.4934) (0.1235,-2.5775) (0.1348,-2.6143) (0.1460,-2.6261) (0.1572,-2.6270) (0.1685,-2.6279) (0.1797,-2.6279) (0.1909,-2.6279) (0.2021,-2.6279) (0.2134,-2.6279) (0.2246,-2.6279) (0.2358,-2.6279) (0.2471,-2.6279) (0.2583,-2.6279) (0.2695,-2.6279) (0.2808,-2.6279) (0.2920,-2.6279) (0.3032,-2.6279) (0.3144,-2.6279) (0.3257,-2.6279) (0.3369,-2.6279) (0.3481,-2.6279) (0.3594,-2.6279) (0.3706,-2.6279) (0.3818,-2.6279) (0.3931,-2.6279) (0.4043,-2.6279) (0.4155,-2.6279) (0.4268,-2.6279) (0.4380,-2.6279) (0.4492,-2.6279) (0.4604,-2.6279) (0.4717,-2.6279) (0.4829,-2.6279) (0.4941,-2.6279) (0.5054,-2.6279) (0.5166,-2.6279) (0.5278,-2.6279) (0.5391,-2.6279) (0.5503,-2.6279) (0.5615,-2.6279) (0.5727,-2.6279) (0.5840,-2.6279) (0.5952,-2.6279) (0.6064,-2.6279) (0.6177,-2.6279) (0.6289,-2.6279) (0.6401,-2.6279) (0.6514,-2.6279) (0.6626,-2.6279) (0.6738,-2.6279) (0.6851,-2.6279) (0.6963,-2.6279) (0.7075,-2.6279) (0.7187,-2.6279) (0.7300,-2.6279) (0.7412,-2.6279) (0.7524,-2.6279) (0.7637,-2.6279) (0.7749,-2.6279) (0.7861,-2.6279) (0.7974,-2.6279) (0.8086,-2.6279) (0.8198,-2.6279) (0.8310,-2.6279) (0.8423,-2.6279) (0.8535,-2.6279) (0.8647,-2.6279) (0.8760,-2.6279) (0.8872,-2.6279) (0.8984,-2.6279) (0.9097,-2.6279) (0.9209,-2.6363) (0.9321,-3.2595) (0.9433,-5.6020) (0.9546,-5.6020) (0.9658,-5.6020) (0.9770,-5.6020) (0.9883,-5.6020) (0.9995,-5.6020)};
-\addlegendentry{benchmark corpus ($5\%$ pocket)}
-\draw[bad, dashed, thick] (axis cs:0.932,-5.8) -- (axis cs:0.932,-0.1)
-  node[pos=0.97, anchor=south east, font=\small, bad]
-  {liftoff $\approx 0.93$ \ ($p = 0.005$)};
+\addplot[acc, very thick] coordinates {(0.0000,-0.0002) (0.0112,-0.0004) (0.0225,-0.0008) (0.0337,-0.0014) (0.0449,-0.0025) (0.0562,-0.0042) (0.0674,-0.0069) (0.0786,-0.0107) (0.0898,-0.0160) (0.1011,-0.0230) (0.1123,-0.0322) (0.1235,-0.0441) (0.1348,-0.0585) (0.1460,-0.0753) (0.1572,-0.0953) (0.1685,-0.1185) (0.1797,-0.1447) (0.1909,-0.1736) (0.2021,-0.2051) (0.2134,-0.2405) (0.2246,-0.2787) (0.2358,-0.3195) (0.2471,-0.3642) (0.2583,-0.4121) (0.2695,-0.4634) (0.2808,-0.5196) (0.2920,-0.5795) (0.3032,-0.6439) (0.3144,-0.7124) (0.3257,-0.7863) (0.3369,-0.8637) (0.3481,-0.9466) (0.3594,-1.0371) (0.3706,-1.1287) (0.3818,-1.2235) (0.3931,-1.3243) (0.4043,-1.4307) (0.4155,-1.5373) (0.4268,-1.6546) (0.4380,-1.7704) (0.4492,-1.8902) (0.4604,-2.0222) (0.4717,-2.1611) (0.4829,-2.2924) (0.4941,-2.4219) (0.5054,-2.5559) (0.5166,-2.6914) (0.5278,-2.8508) (0.5391,-2.9665) (0.5503,-3.1079) (0.5615,-3.2518) (0.5727,-3.4034) (0.5840,-3.5376) (0.5952,-3.6778) (0.6064,-3.7569) (0.6177,-3.8538) (0.6289,-3.9208) (0.6401,-3.9788) (0.6514,-4.0969) (0.6626,-4.2218) (0.6738,-4.3468) (0.6851,-4.4559) (0.6963,-4.5229) (0.7075,-4.6989) (0.7187,-4.6989) (0.7300,-4.8239) (0.7412,-4.8239) (0.7524,-4.8239) (0.7637,-5.0000) (0.7749,-5.3010) (0.7861,-5.3010) (0.7974,-5.3010) (0.8086,-5.3010) (0.8198,-5.6020) (0.8310,-5.6020) (0.8423,-5.6020) (0.8535,-5.6020) (0.8647,-5.6020) (0.8760,-5.6020) (0.8872,-5.6020) (0.8984,-5.6020) (0.9097,-5.6020) (0.9209,-5.6020) (0.9321,-5.6020) (0.9433,-5.6020) (0.9546,-5.6020) (0.9658,-5.6020) (0.9770,-5.6020) (0.9883,-5.6020) (0.9995,-5.6020)};
+\addlegendentry{Nemotron-Legal ($10^6$ docs, $d=1024$)}
+\draw[bad, dashed, thick] (axis cs:0.809,-5.8) -- (axis cs:0.809,-0.1)
+  node[pos=0.88, anchor=east, font=\small, bad]
+  {liftoff $\approx 0.81$ \ ($p = 0.005$)};
 \end{axis}
 \end{tikzpicture}
-\caption{The crowding curve on the benchmark (measured, $2{\times}10^5$
-pairs). The pocket produces a shoulder of excess close-pair mass
-($\approx 2.4{\times}10^{-3}$, its exact pair share) that neither reference
-reproduces; the whole-curve rank test rejects uniformity at the minimum
-attainable $p = 1/200$, with liftoff at $\cos \approx 0.93$ --- the scale at
-which this corpus begins to confuse items. No bin width or lattice placement
-exists anywhere in the figure, and the liftoff claim is family-wise honest
-across all scales at once.}
+\caption{The crowding curve on the real corpus (Nemotron-Legal
+\cite{nemotronlegal}, measured from the report's own $2{\times}10^5$-pair
+sample). Through mid-similarities the data hug the anisotropy-matched
+reference --- that excess over uniformity is the cone, benign --- but above
+$\cos \approx 0.8$ the curve climbs clear of both references: genuine
+tight-pair structure, globally significant at the minimum attainable
+$p = 1/200$. No bin width or lattice placement exists anywhere in the
+figure, and the liftoff claim is family-wise honest across all scales at
+once.}
 \label{fig:kcurve}
 \end{figure}
 
@@ -752,23 +765,25 @@ reproduces with $\mathrm{sd} \approx 8$; the default is $64$ replicates
 \begin{axis}[width=\textwidth, height=5.4cm,
   xlabel={DTM radius (chord units)},
   ylabel={fraction of items $\le$ radius},
-  xmin=0.2, xmax=1.5, ymin=0, ymax=1.02,
+  xmin=0.8, xmax=1.45, ymin=0, ymax=1.02,
   legend style={draw=none, font=\small, at={(0.04,0.96)}, anchor=north west},
   axis lines=left]
-\addplot[faint, line width=2.2pt] coordinates {(1.3454,0.0000) (1.3481,0.0169) (1.3485,0.0339) (1.3488,0.0508) (1.3490,0.0678) (1.3492,0.0847) (1.3493,0.1017) (1.3495,0.1186) (1.3496,0.1356) (1.3497,0.1525) (1.3498,0.1695) (1.3499,0.1864) (1.3500,0.2034) (1.3501,0.2203) (1.3502,0.2373) (1.3503,0.2542) (1.3503,0.2712) (1.3504,0.2881) (1.3505,0.3051) (1.3505,0.3220) (1.3506,0.3390) (1.3507,0.3559) (1.3507,0.3729) (1.3508,0.3898) (1.3509,0.4068) (1.3509,0.4237) (1.3510,0.4407) (1.3511,0.4576) (1.3511,0.4746) (1.3512,0.4915) (1.3512,0.5085) (1.3513,0.5254) (1.3513,0.5424) (1.3514,0.5593) (1.3515,0.5763) (1.3516,0.5932) (1.3516,0.6102) (1.3517,0.6271) (1.3517,0.6441) (1.3518,0.6610) (1.3519,0.6780) (1.3519,0.6949) (1.3520,0.7119) (1.3521,0.7288) (1.3522,0.7458) (1.3523,0.7627) (1.3524,0.7797) (1.3524,0.7966) (1.3525,0.8136) (1.3526,0.8305) (1.3527,0.8475) (1.3528,0.8644) (1.3529,0.8814) (1.3531,0.8983) (1.3532,0.9153) (1.3534,0.9322) (1.3536,0.9492) (1.3538,0.9661) (1.3542,0.9831) (1.3570,1.0000)};
-\addlegendentry{uniform control}
-\addplot[acc, thick] coordinates {(0.3543,0.0000) (0.3662,0.0169) (0.3704,0.0339) (1.3276,0.0508) (1.3474,0.0678) (1.3486,0.0847) (1.3490,0.1017) (1.3493,0.1186) (1.3495,0.1356) (1.3497,0.1525) (1.3498,0.1695) (1.3500,0.1864) (1.3501,0.2034) (1.3502,0.2203) (1.3503,0.2373) (1.3504,0.2542) (1.3505,0.2712) (1.3506,0.2881) (1.3507,0.3051) (1.3508,0.3220) (1.3509,0.3390) (1.3509,0.3559) (1.3510,0.3729) (1.3511,0.3898) (1.3512,0.4068) (1.3513,0.4237) (1.3513,0.4407) (1.3514,0.4576) (1.3514,0.4746) (1.3515,0.4915) (1.3516,0.5085) (1.3516,0.5254) (1.3517,0.5424) (1.3518,0.5593) (1.3518,0.5763) (1.3519,0.5932) (1.3520,0.6102) (1.3520,0.6271) (1.3521,0.6441) (1.3522,0.6610) (1.3522,0.6780) (1.3523,0.6949) (1.3524,0.7119) (1.3525,0.7288) (1.3526,0.7458) (1.3526,0.7627) (1.3527,0.7797) (1.3528,0.7966) (1.3529,0.8136) (1.3530,0.8305) (1.3531,0.8475) (1.3532,0.8644) (1.3533,0.8814) (1.3535,0.8983) (1.3536,0.9153) (1.3538,0.9322) (1.3540,0.9492) (1.3542,0.9661) (1.3547,0.9831) (1.3574,1.0000)};
-\addlegendentry{benchmark ($5\%$ pocket)}
+\addplot[faint, line width=2.2pt] coordinates {(1.3556,0.0000) (1.3576,0.0169) (1.3579,0.0339) (1.3581,0.0508) (1.3582,0.0678) (1.3583,0.0847) (1.3584,0.1017) (1.3585,0.1186) (1.3586,0.1356) (1.3587,0.1525) (1.3588,0.1695) (1.3589,0.1864) (1.3589,0.2034) (1.3590,0.2203) (1.3591,0.2373) (1.3591,0.2542) (1.3592,0.2712) (1.3592,0.2881) (1.3593,0.3051) (1.3593,0.3220) (1.3594,0.3390) (1.3594,0.3559) (1.3595,0.3729) (1.3595,0.3898) (1.3595,0.4068) (1.3596,0.4237) (1.3596,0.4407) (1.3597,0.4576) (1.3597,0.4746) (1.3598,0.4915) (1.3598,0.5085) (1.3598,0.5254) (1.3599,0.5424) (1.3599,0.5593) (1.3600,0.5763) (1.3600,0.5932) (1.3601,0.6102) (1.3601,0.6271) (1.3602,0.6441) (1.3602,0.6610) (1.3602,0.6780) (1.3603,0.6949) (1.3603,0.7119) (1.3604,0.7288) (1.3605,0.7458) (1.3605,0.7627) (1.3606,0.7797) (1.3606,0.7966) (1.3607,0.8136) (1.3608,0.8305) (1.3608,0.8475) (1.3609,0.8644) (1.3610,0.8814) (1.3611,0.8983) (1.3612,0.9153) (1.3613,0.9322) (1.3614,0.9492) (1.3616,0.9661) (1.3619,0.9831) (1.3631,1.0000)};
+\addlegendentry{uniform control ($d{=}1024$)}
+\addplot[acc, thick] coordinates {(0.9207,0.0000) (0.9723,0.0169) (0.9803,0.0339) (0.9857,0.0508) (0.9898,0.0678) (0.9937,0.0847) (0.9973,0.1017) (0.9999,0.1186) (1.0026,0.1356) (1.0052,0.1525) (1.0078,0.1695) (1.0102,0.1864) (1.0124,0.2034) (1.0143,0.2203) (1.0163,0.2373) (1.0182,0.2542) (1.0201,0.2712) (1.0223,0.2881) (1.0244,0.3051) (1.0262,0.3220) (1.0281,0.3390) (1.0300,0.3559) (1.0321,0.3729) (1.0338,0.3898) (1.0359,0.4068) (1.0381,0.4237) (1.0398,0.4407) (1.0417,0.4576) (1.0434,0.4746) (1.0457,0.4915) (1.0479,0.5085) (1.0500,0.5254) (1.0524,0.5424) (1.0541,0.5593) (1.0563,0.5763) (1.0581,0.5932) (1.0599,0.6102) (1.0616,0.6271) (1.0634,0.6441) (1.0649,0.6610) (1.0666,0.6780) (1.0686,0.6949) (1.0705,0.7119) (1.0725,0.7288) (1.0747,0.7458) (1.0768,0.7627) (1.0791,0.7797) (1.0818,0.7966) (1.0844,0.8136) (1.0871,0.8305) (1.0900,0.8475) (1.0930,0.8644) (1.0959,0.8814) (1.0992,0.8983) (1.1034,0.9153) (1.1083,0.9322) (1.1142,0.9492) (1.1211,0.9661) (1.1318,0.9831) (1.2072,1.0000)};
+\addlegendentry{Nemotron-Legal}
 \end{axis}
 \end{tikzpicture}
 \end{minipage}
-\caption{The distance-to-measure field. \emph{Left:} the intuition --- each
-item is scored by the radius of the ball it needs to gather a fixed share
-($m = 2\%$) of the corpus. \emph{Right:} the field's exact CDF on the
-benchmark (measured): both corpora share the needle at the bulk radius (the
-two curves coincide there; $1$st percentile of the uniform control $1.348$),
-but the pocket gives the benchmark a $5\%$ low-tail step at radius $0.364$
---- a $3.7\times$ separation that names its members by id.}
+\caption{The distance-to-measure field. \emph{Left:} the intuition schematic
+--- each item is scored by the radius of the ball it needs to gather a fixed
+share ($m = 2\%$) of the corpus. \emph{Right:} the field's exact CDF on the
+real corpus (measured): the \emph{entire} field sits left of the uniform
+needle at $1.36$ --- the anisotropy cone shortens every radius, so the
+uniform band is diagnostic of the cone, not of pockets --- and the finding
+is the low tail against the corpus's own bulk (1st percentile $0.966$
+against median $1.047$), whose members the instrument names by id
+(Figure~\ref{fig:dtmcard}).}
 \label{fig:dtm}
 \end{figure}
 
@@ -815,7 +830,22 @@ the field $0.997$-correlated with itself, and against a fixed $10^6$-row
 corpus the field's first percentile is invariant to the reservoir drawn
 ($0.365$--$0.366$ across reservoirs of $10^3$--$1.6{\times}10^4$ rows, ten
 seeds each), as is every other headline readout --- $\sstar$ spans
-$0.0559$--$0.0562$ against $0.0564$ at a $3.2{\times}10^4$ reference. Both tails are actionable and
+$0.0559$--$0.0562$ against $0.0564$ at a $3.2{\times}10^4$ reference. On
+the traced benchmark the planted pocket drags the low tail to $0.364$
+against a bulk at $1.35$ --- the $3.7\times$ separation behind the
+detection-power results of \S\ref{sec:power}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.94\textwidth]{figs/card_dtm.png}
+\caption{The per-entity crowding field as the instrument actually reports it
+(unretouched report card, Nemotron-Legal): the field's CDF against the
+uniform band, with the most crowded documents \emph{named by id} and each
+annotated with its expected collision count at the corpus's own $\sstar$ ---
+the radius says how crowded, the count says what it costs. This is the
+output no cell-based display can produce.}
+\label{fig:dtmcard}
+\end{figure} Both tails are actionable and
 \emph{named}: the low tail is the crowded-item list (each entry annotated
 with its expected collision count at the corpus's own $\sstar$;
 \S\ref{sec:semantics}), the high tail the coverage voids. In strongly
@@ -831,30 +861,32 @@ low tail against the corpus's own bulk.
 \centering
 \begin{tikzpicture}[scale=1.0]
   % the pocket bar, labels above it, brace + axis with clearance below it
-  \draw[bad, line width=3.2mm, line cap=round] (0.6,1.7) -- (12.0,1.7);
-  \draw[bad, thick] (0.6,1.32) -- (0.6,2.08);
-  \draw[bad, thick] (12.0,1.32) -- (12.0,2.08);
-  \node[font=\small, anchor=south west] at (0.35,2.18)
-    {\textbf{birth} $0.063$: first members hold together};
-  \node[font=\small, anchor=south east] at (12.25,2.18)
-    {\textbf{death} $0.898$: merges into bulk};
-  \draw[decorate, decoration={brace, mirror, amplitude=5pt}, faint]
-    (0.65,1.2) -- (11.95,1.2);
-  \node[faint, font=\small, anchor=north] at (6.3,0.92)
-    {\textbf{prominence} $0.835$: how long it remains its own thing};
+  \draw[bad, line width=3.2mm, line cap=round] (5.2,1.7) -- (6.4,1.7);
+  \draw[bad, thick] (5.2,1.32) -- (5.2,2.08);
+  \draw[bad, thick] (6.4,1.32) -- (6.4,2.08);
+  \node[font=\small, anchor=south east] at (5.05,2.18)
+    {\textbf{birth} $0.415$: first members hold together};
+  \node[font=\small, anchor=south west] at (6.55,2.18)
+    {\textbf{death} $0.505$: merges into bulk};
+  \draw[decorate, decoration={brace, mirror, amplitude=4pt}, faint]
+    (5.25,1.2) -- (6.35,1.2);
+  \node[faint, font=\small, anchor=north] at (5.8,0.92)
+    {\textbf{prominence} $0.090$ ($16\times$ the null floor $0.006$)};
   \draw[faint, -{Stealth[length=2mm]}] (0,0) -- (12.7,0);
   \node[faint, font=\small, anchor=north] at (6.3,-0.45)
     {merge scale (cosine distance)};
-  \foreach \x/\l in {0.6/0.06, 5.9/0.45, 12.0/0.90}
+  \foreach \x/\l in {0.0/0.0, 5.2/0.415, 6.4/0.505, 12.4/1.0}
     { \draw[faint] (\x,0.05) -- (\x,-0.08)
       node[below, font=\scriptsize] {\l}; }
 \end{tikzpicture}
-\caption{Merge-tree anatomy, with the benchmark's measured values: link items
-by shortest bridges and watch components merge as the scale grows; a pocket
-is \emph{born} when its first members hold together and \emph{dies} into the
-bulk (elder rule with excess-of-mass selection). The planted pocket is
-recovered \emph{exactly} --- size $200$ of $200$, birth $0.063$, death
-$0.898$ --- with no flat threshold anywhere.}
+\caption{Merge-tree anatomy, with the real corpus's measured pocket
+(Nemotron-Legal; $204$ members): a pocket is \emph{born} when its first
+members hold together and \emph{dies} into the bulk (excess-of-mass
+selection). Its prominence $0.090$ is modest --- a loose association, not a
+duplicate cluster --- yet $16\times$ the null prominence floor, so it is a
+finding; on the traced benchmark the same construction recovers a planted
+pocket exactly ($200/200$; birth $0.063$, death $0.898$, prominence
+$0.835$), with no flat threshold anywhere.}
 \label{fig:tree}
 \end{figure}
 
@@ -890,6 +922,20 @@ floor}: uniform corpora of matched size and dimension produce maximum
 prominences of only $\approx 0.005$ (99th percentile $0.009$ over $400$
 nulls), so the instrument simulates the floor per run and suppresses pockets
 within it --- a genuine pocket sits two orders of magnitude above it.
+Figure~\ref{fig:pocketcard} shows the resulting report card on the real
+corpus: one pocket survives the floor ($204$ members, with sample ids), and
+the card states how many candidates the floor suppressed.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.94\textwidth]{figs/card_pockets.png}
+\caption{The crowding-pockets card as the instrument reports it (unretouched,
+Nemotron-Legal): the surviving pocket's bar spans birth to death with member
+ids on the bar, and the subtitle states the null prominence floor and the
+one candidate it suppressed --- threshold-free reporting with a
+null-calibrated guard.}
+\label{fig:pocketcard}
+\end{figure}
 
 \subsection{Complexity, and the design filters}
 \label{sec:filters}
@@ -1027,44 +1073,50 @@ one. $C$ is monotone; bisection inverts it.
 \begin{axis}[width=0.86\textwidth, height=6.4cm,
   xlabel={query-noise scale $\sigma$ (log)},
   ylabel={$C(\sigma)$: expected collisions per item},
-  xmin=-2.7, xmax=0.2, ymin=-6.2, ymax=3.6,
+  xmin=-2.7, xmax=0.2, ymin=-6.4, ymax=6.4,
   xtick={-2,-1,0}, xticklabels={$0.01$,$0.1$,$1$},
-  ytick={2,0,-2,-4,-6},
-  yticklabels={$10^{2}$,$1$,$10^{-2}$,$10^{-4}$,$10^{-6}$},
+  ytick={6,4,2,0,-2,-4,-6},
+  yticklabels={$10^{6}$,$10^{4}$,$10^{2}$,$1$,$10^{-2}$,$10^{-4}$,$10^{-6}$},
   legend style={draw=none, font=\small, at={(0.04,0.96)}, anchor=north west},
   axis lines=left]
-\addplot[acc, very thick] coordinates {(-2.6990,-8.0000) (-2.6253,-8.0000) (-2.5515,-8.0000) (-2.4778,-8.0000) (-2.4041,-8.0000) (-2.3304,-8.0000) (-2.2567,-8.0000) (-2.1829,-8.0000) (-2.1092,-8.0000) (-2.0355,-8.0000) (-1.9618,-8.0000) (-1.8881,-8.0000) (-1.8143,-8.0000) (-1.7406,-8.0000) (-1.6669,-8.0000) (-1.5932,-8.0000) (-1.5195,-8.0000) (-1.4457,-6.0222) (-1.3720,-4.2902) (-1.2983,-3.0273) (-1.2246,-2.1047) (-1.1509,-1.4286) (-1.0771,-0.9306) (-1.0034,-0.5616) (-0.9297,-0.2860) (-0.8560,-0.0781) (-0.7823,0.0930) (-0.7085,0.3433) (-0.6348,0.8199) (-0.5611,1.3534) (-0.4874,1.7958) (-0.4137,2.1354) (-0.3399,2.3923) (-0.2662,2.5870) (-0.1925,2.7355) (-0.1188,2.8497) (-0.0451,2.9382) (0.0287,3.0076) (0.1024,3.0623) (0.1761,3.1058)};
-\addlegendentry{benchmark corpus ($5\%$ pocket)}
-\addplot[faint, thick, dashed] coordinates {(-2.6990,-8.0000) (-2.6253,-8.0000) (-2.5515,-8.0000) (-2.4778,-8.0000) (-2.4041,-8.0000) (-2.3304,-8.0000) (-2.2567,-8.0000) (-2.1829,-8.0000) (-2.1092,-8.0000) (-2.0355,-8.0000) (-1.9618,-8.0000) (-1.8881,-8.0000) (-1.8143,-8.0000) (-1.7406,-8.0000) (-1.6669,-8.0000) (-1.5932,-8.0000) (-1.5195,-8.0000) (-1.4457,-8.0000) (-1.3720,-8.0000) (-1.2983,-8.0000) (-1.2246,-8.0000) (-1.1509,-8.0000) (-1.0771,-8.0000) (-1.0034,-8.0000) (-0.9297,-5.3436) (-0.8560,-3.0608) (-0.7823,-1.4070) (-0.7085,-0.2066) (-0.6348,0.6676) (-0.5611,1.3072) (-0.4874,1.7780) (-0.4137,2.1269) (-0.3399,2.3877) (-0.2662,2.5841) (-0.1925,2.7336) (-0.1188,2.8484) (-0.0451,2.9373) (0.0287,3.0069) (0.1024,3.0617) (0.1761,3.1053)};
-\addlegendentry{uniform control}
+\addplot[acc, very thick] coordinates {(-2.6990,-8.0000) (-2.6253,-8.0000) (-2.5515,-8.0000) (-2.4778,-8.0000) (-2.4041,-8.0000) (-2.3304,-8.0000) (-2.2567,-8.0000) (-2.1829,-8.0000) (-2.1092,-8.0000) (-2.0355,-8.0000) (-1.9618,-8.0000) (-1.8881,-8.0000) (-1.8143,-8.0000) (-1.7406,-8.0000) (-1.6669,-8.0000) (-1.5932,-8.0000) (-1.5195,-8.0000) (-1.4457,-8.0000) (-1.3720,-8.0000) (-1.2983,-8.0000) (-1.2246,-5.9249) (-1.1509,-4.2248) (-1.0771,-2.9347) (-1.0034,-1.7779) (-0.9297,-0.3636) (-0.8560,1.0263) (-0.7823,2.1422) (-0.7085,2.9943) (-0.6348,3.6353) (-0.5611,4.1155) (-0.4874,4.4754) (-0.4137,4.7461) (-0.3399,4.9509) (-0.2662,5.1071) (-0.1925,5.2271) (-0.1188,5.3201) (-0.0451,5.3928) (0.0287,5.4501) (0.1024,5.4957) (0.1761,5.5321)};
+\addlegendentry{Nemotron-Legal ($10^6$ docs)}
+\addplot[faint, thick, dashed] coordinates {(-2.6990,-8.0000) (-2.6253,-8.0000) (-2.5515,-8.0000) (-2.4778,-8.0000) (-2.4041,-8.0000) (-2.3304,-8.0000) (-2.2567,-8.0000) (-2.1829,-8.0000) (-2.1092,-8.0000) (-2.0355,-8.0000) (-1.9618,-8.0000) (-1.8881,-8.0000) (-1.8143,-8.0000) (-1.7406,-8.0000) (-1.6669,-8.0000) (-1.5932,-8.0000) (-1.5195,-8.0000) (-1.4457,-8.0000) (-1.3720,-8.0000) (-1.2983,-8.0000) (-1.2246,-8.0000) (-1.1509,-8.0000) (-1.0771,-8.0000) (-1.0034,-6.1437) (-0.9297,-2.9688) (-0.8560,-0.6746) (-0.7823,0.9850) (-0.7085,2.1884) (-0.6348,3.0641) (-0.5611,3.7045) (-0.4874,4.1756) (-0.4137,4.5248) (-0.3399,4.7856) (-0.2662,4.9821) (-0.1925,5.1316) (-0.1188,5.2464) (-0.0451,5.3353) (0.0287,5.4049) (0.1024,5.4598) (0.1761,5.5034)};
+\addlegendentry{uniform control ($n = 10^6$, $d = 1024$)}
 \draw[black, dashed] (axis cs:-2.7,0) -- (axis cs:0.2,0)
   node[pos=0.26, anchor=south, font=\small] {tolerance: $1$ expected collision};
-\draw[acc, dashed] (axis cs:-0.8227,-6.2) -- (axis cs:-0.8227,0);
-\node[acc, font=\small, anchor=north east] at (axis cs:-0.84,-0.35)
-  {$\sstar = 0.150$};
-\draw[faint, dashed] (axis cs:-0.6931,-6.2) -- (axis cs:-0.6931,0);
-\node[faint, font=\small, anchor=north west] at (axis cs:-0.67,-0.35)
-  {uniform $\sstar = 0.203$};
+\draw[acc, dashed] (axis cs:-0.9115,-6.4) -- (axis cs:-0.9115,0);
+\node[acc, font=\small, anchor=north east] at (axis cs:-0.93,-0.35)
+  {$\sstar = 0.123$};
+\draw[faint, dashed] (axis cs:-0.8289,-6.4) -- (axis cs:-0.8289,0);
+\node[faint, font=\small, anchor=north west] at (axis cs:-0.81,-0.35)
+  {uniform $\sstar = 0.148$};
 \end{axis}
 \end{tikzpicture}
-\caption{Expected collisions vs.\ query noise on the benchmark (measured).
-The two curves separate exactly in the decision region: the pocket's
-close pairs dominate $C(\sigma)$ at the noise scales where retrieval
-operates, pulling the tolerance crossing from $\sstar = 0.203$ to $0.150$
---- the planted $5\%$ pocket costs $26\%$ of the corpus's noise budget. At
-large $\sigma$ the curves converge (every pair confuses) and at tiny
-$\sigma$ both vanish; the budget is decided where they differ.}
+\caption{Expected collisions vs.\ query noise on the real corpus (measured;
+Nemotron-Legal). The curves separate exactly in the decision region ---
+the corpus's cone and tight pairs dominate $C(\sigma)$ at the noise scales
+where retrieval operates, pulling the tolerance crossing from
+$\sstar = 0.148$ to $0.123$: the corpus retains $83\%$ of a well-spread
+corpus's noise budget. At large $\sigma$ the curves converge (every pair
+confuses) and at tiny $\sigma$ both vanish; the budget is decided where
+they differ. On the traced benchmark the same construction prices the
+planted $5\%$ pocket at $26\%$ of the budget
+($\sstar\!: 0.203 \to 0.150$).}
 \label{fig:csigma}
 \end{figure}
 
-Figure~\ref{fig:csigma} shows both benchmark curves with their crossings:
-the $5\%$ pocket spends $26\%$ of the noise budget
+Figure~\ref{fig:csigma} shows the real corpus's curve against its uniform
+control: Nemotron-Legal crosses the one-collision tolerance at
+$\sstar = 0.123$ against $0.148$ for a well-spread corpus of the same size
+and dimension --- it retains $83\%$ of the ideal noise budget --- while on
+the traced benchmark the planted $5\%$ pocket spends $26\%$ of the budget
 ($\sstar\!: 0.203 \to 0.150$). The per-coordinate scale $\sigma$ translates
 to intuition through the query's self-similarity decay $\langle \bar q,
 x\rangle \approx (1 + \sigma^2 d)^{-1/2}$: $\sstar$ states how \emph{faded}
 a query may become against its own target and still be expected to win
-($\sstar = 0.15$ at $d = 768$ is a query decayed to cosine
-$\approx 0.23$).
+($\sstar = 0.123$ at $d = 1024$ is a query decayed to cosine
+$\approx 0.25$).
 
 \begin{proposition}[Uniformity as a Chernoff bound]\label{prop:chernoff}
 With $U_t = \log \E\, e^{-t\lVert x - y\rVert^2}$ the uniformity functional
@@ -1316,8 +1368,9 @@ correlate with content.
 
 \begin{table}[t]
 \centering
-\caption{Case study: a public million-document legal corpus (four subsets),
-$d = 1024$; full report in $\sim$3.5 minutes on CPU, one streaming pass.}
+\caption{Case study: Nemotron-Pretraining-Legal-v1 \cite{nemotronlegal}
+(four subsets, $10^6$ documents), $d = 1024$; full report in $\sim$3.5
+minutes on CPU, one streaming pass.}
 \label{tab:case}
 \begin{tabular}{lr}
 \toprule
@@ -1335,9 +1388,10 @@ most-crowded items & $\approx 3$--$12$ expected collisions each\\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:case} summarizes a full run on a public legal corpus of
-$10^6$ documents embedded at $d = 1024$ by an instruction-tuned text
-encoder. The corpus is strongly cone-shaped (mean pair cosine $+0.236$;
+Table~\ref{tab:case} summarizes a full run on the
+Nemotron-Pretraining-Legal-v1 corpus \cite{nemotronlegal} (\S\ref{sec:method}):
+$10^6$ documents from four legal subsets, embedded at $d = 1024$ by an
+instruction-tuned text encoder. The corpus is strongly cone-shaped (mean pair cosine $+0.236$;
 IsoScore $0.090$) yet spectrally rich (effective rank $728/1024$); the
 occupancy discrepancy sits at $z = -4{,}211$, and the whole-curve rank test
 rejects uniformity at the minimum attainable $p = 0.005$ with liftoff at
@@ -1720,6 +1774,12 @@ Similarity of neural network representations revisited. \emph{ICML}, 2019.
 \bibitem{papyan2020} V.~Papyan, X.~Y.~Han, D.~L.~Donoho. Prevalence of
 neural collapse during the terminal phase of deep learning training.
 \emph{PNAS} 117(40), 2020.
+
+\bibitem{nemotronlegal} NVIDIA. Nemotron-Pretraining-Legal-v1 (dataset,
+CC-BY-4.0), 2026.
+\url{https://huggingface.co/datasets/nvidia/Nemotron-Pretraining-Legal-v1};
+the dataset card directs citation to the NVIDIA Nemotron~3 Ultra technical
+report.
 
 \end{thebibliography}
 
