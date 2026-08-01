@@ -36,8 +36,8 @@
 \newcommand{\dtm}{\mathrm{DTM}}
 \newcommand{\sstar}{\sigma^{*}}
 
-\title{\textbf{ambit: Continuous, Null-Calibrated Measurement\\
-of Occupancy and Crowding in Embedding Spaces}}
+\title{\textbf{Measurement of Occupancy and Crowding\\
+in Embedding Spaces}}
 \author{Sunil Pedapudi\thanks{\TRaffiliation. Code and reports:
 \url{\TRurl}.}}
 \date{July 2026}
@@ -366,6 +366,65 @@ Neighborhood-preserving layouts do not preserve density
 converges at $O(n^{-4/(4+d)})$ --- vacuous at $d$ in the hundreds
 \cite{silverman1986}. Local intrinsic dimension estimators
 \cite{levina2005,facco2017} are used only per-item and comparatively.
+
+% =========================================================================
+\section{Experimental Methodology}
+\label{sec:method}
+% =========================================================================
+
+Every claim marked \emph{measured} in this report follows one protocol,
+stated here once.
+
+\paragraph{Environment.}
+All experiments run on a commodity Linux workstation, CPU only,
+single-threaded except for BLAS. Every statistic is computed by the released
+library (\textsf{numpy} core; the training experiments additionally use
+\textsf{torch} on CPU); no experiment uses code outside the artifact. Random
+seeds are fixed and stated per experiment; figures embed the unmodified
+numerical outputs as their plotted coordinates.
+
+\paragraph{The traced benchmark.}
+The synthetic benchmark of \S\ref{sec:averages} is constructed as follows:
+$n = 4{,}000$ points at $d = 768$, drawn as normalized standard Gaussians
+(exactly uniform on $\sphere$); the pocket replaces the last $k = 200$ points
+with $x_i = (c + 0.01\, g_i)/\lVert c + 0.01\, g_i\rVert$ for one shared
+uniform direction $c$ and i.i.d.\ Gaussian $g_i$, yielding median
+intra-pocket cosine $0.929$ --- the near-duplicate regime. The uniform
+control is the same draw without the replacement. Pair statistics use
+$2 \times 10^5$ sampled distinct pairs; the uniform-null envelope is the
+pointwise maximum over $19$ independent null replicates at matched pair
+count (a $5\%$ pointwise band); the anisotropy-conditioned reference is
+sampled from the benchmark's own covariance eigenvalues at matched pair
+count. The DTM field uses mass fraction $m = 0.02$; the merge tree uses
+minimum pocket size $8$ on the full $4{,}000$ points.
+
+\paragraph{Per-experiment protocols.}
+\emph{Lattice fragility} (Table~\ref{tab:maup}): $4{,}000$ synthetic 2-D
+points (three Gaussian clumps plus uniform background), assigned by the
+tool's own hexbin code; perturbations are lattice-origin shifts in units of
+the cell, lattice column counts, and an isotropic data jitter of $0.1\%$ of
+the data span. \emph{Flip law} (Table~\ref{tab:flip}): for each
+$(\theta, \sigma)$ cell, two fixed unit vectors at angle $\theta$ in
+$d = 768$; $3 \times 10^5$ independent noise draws; empirical flip rate
+versus the closed form. \emph{Redundancy} (Table~\ref{tab:redundancy}):
+eight corpus generators at $n = 2{,}000$, $d = 256$ as named in the table;
+$C$ and $U$ computed from $6 \times 10^4$ sampled pairs each; orderings
+compared over all $\binom{8}{2}$ pairs. \emph{Training}
+(Table~\ref{tab:training}): a planted $300$-of-$4{,}000$ pocket at
+$d = 64$; a $20\%$ held-out slice is excluded from mining, weighting, and
+batching, and \emph{all} reported verdicts (collision counts, neighbor
+overlap at $k = 10$) are computed on it; schedules as tabulated.
+
+\paragraph{Reporting conventions.}
+Aggregates are reported with their null value at matched sample size
+wherever a null exists; effect sizes are stated in the null's units
+($z$-scores) or as ratios. Negative results are reported with the same
+prominence as positive ones. The single-seed character of the synthetic
+experiments is deliberate --- each is a demonstration of a deterministic or
+concentration-driven effect, not a survey --- except where replicate counts
+are stated ($19$-replicate envelopes; $20$-replicate null spread for the
+discrepancy $z$); the case study (\S\ref{sec:instrument}) provides the
+complementary real-corpus run.
 
 % =========================================================================
 \section{The Fragility of Binned Occupancy}
