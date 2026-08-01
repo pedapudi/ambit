@@ -1,0 +1,954 @@
+% =========================================================================
+% ambit -- technical report.
+% Fill in the placeholder macros below (report number, affiliation, URL)
+% before circulation.
+% Build: pdflatex ambit-technical-report.tex  (twice, for references)
+% =========================================================================
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage[margin=1.25in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+
+% ---- fill these in ------------------------------------------------------
+\newcommand{\TRnumber}{TR-2026-01}          % report number
+\newcommand{\TRaffiliation}{The ambit project}
+\newcommand{\TRurl}{https://github.com/pedapudi/ambit}
+% -------------------------------------------------------------------------
+
+\newcommand{\sphere}{\mathbb{S}^{d-1}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\dtm}{\mathrm{DTM}}
+\newcommand{\sstar}{\sigma^{*}}
+
+\title{\textbf{ambit: Continuous, Null-Calibrated Measurement\\
+of Occupancy and Crowding in Embedding Spaces}}
+\author{Sunil Pedapudi\\[2pt]\normalsize \TRaffiliation\\
+\normalsize \url{\TRurl}}
+\date{Technical Report No.\ \TRnumber\\July 2026}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+Embedding-based systems --- retrieval, retrieval-augmented generation,
+deduplication, clustering --- depend on a single geometric property: items that
+must be distinguished must remain distinguishable under the similarity metric.
+We call the failure of this property \emph{crowding}, and we argue it is the
+correct diagnostic target for embedded corpora: crowding is a loss of
+\emph{resolution}, it is predominantly \emph{local}, and it hides from the
+global averages (mean pairwise cosine, isotropy scores, effective rank) that
+practitioners routinely consult. This report describes \textsf{ambit}, an
+open-source instrument that measures how a corpus occupies its embedding
+space. The design is organized around three commitments. First, occupancy is
+measured \emph{continuously over all scales}: the primary object is the
+empirical pair-distance distribution, read exactly (no histogram bins, grid
+cells, or fixed neighbor counts, whose size and placement provably change the
+answer), against analytic or cheaply simulated null models. Second, every
+statistic is \emph{null-calibrated}: values are reported as deviations from a
+matched well-spread reference, including an anisotropy-conditioned reference
+that separates the ubiquitous ``cone effect'' from clustering the cone cannot
+explain. Third, diagnosis descends to \emph{named entities}: per-item scores
+(a distance-to-measure field with Wasserstein-stability guarantees; expected
+retrieval collisions under an exact Gaussian query-noise law) replace per-cell
+counts, which cannot identify the items at risk. We derive an operational
+scalar, the \emph{resolution bandwidth} $\sstar$ --- the largest query-noise
+scale at which the expected number of retrieval collisions per item stays
+below one --- prove its conservative (union-bound) semantics, and show that
+the widely used uniformity loss of Wang and Isola is the logarithm of a
+Chernoff bound on the same quantity, endowing its temperature parameter with
+units. We report controlled experiments quantifying the fragility of binned
+occupancy statistics (a half-cell lattice shift moves a hexbin peak count by
+$30\%$ on fixed data), the sensitivity of the continuous replacements (a
+$5\%$ near-duplicate pocket is a $430\sigma$ event under the mean-chord
+discrepancy), and honest negative results, including a measured near-redundancy
+between the confusion functional and uniformity ($r=0.978$) whose single
+order-flip is nonetheless operationally informative. A case study on a public
+million-document legal corpus and a measurement-driven training recipe with a
+gradient-locality guarantee complete the report. \textsf{ambit} is
+unsupervised by design --- no labels, gold pairs, or ground truth --- and its
+core depends only on \textsf{numpy}.
+\end{abstract}
+
+\clearpage
+\setcounter{page}{1}
+
+% =========================================================================
+\section{Introduction}
+% =========================================================================
+
+An embedding model maps items to vectors so that semantic relatedness becomes
+geometric proximity. Once a corpus is embedded --- typically onto the unit
+sphere $\sphere$, with similarity the cosine of the angle between items ---
+every downstream capability reduces to one primitive: \emph{given a direction,
+list the items near it}. The primitive degrades in a specific way when
+distinct items land too close together: queries cannot separate them, and the
+system exhibits impostors at the top of rankings, near-duplicates that cannot
+be ordered, and clusters that blur into one another. We refer to this failure
+mode as \emph{crowding} and to its complement --- the corpus's ability to keep
+distinct items distinct --- as \emph{resolution}.
+
+Two facts make crowding a difficult measurement target. First, \emph{crowding
+is local}. Learned text embeddings are almost universally anisotropic
+\cite{gao2019,ethayarajh2019,mu2018}: the entire corpus occupies a narrow cone,
+inflating all pairwise similarities. This global effect is well characterized
+and partially correctable by simple post-processing \cite{mu2018,cai2021}. The
+operationally dangerous crowding is instead a property of sub-populations ---
+a pocket of a corpus collapsing while the bulk remains healthy --- and a small
+pocket barely moves any global average. A mean over pairs, or a covariance
+summed over points, is owned by the diffuse majority; the global number can
+read ``healthy'' while a subset is unusable, and it can never say
+\emph{where}. Second, the standard instruments for localizing density ---
+histograms, hexbin lattices, voxel grids, fixed-$k$ neighbor counts --- carry
+hidden discretization parameters whose values change the answer. Section~3
+demonstrates this fragility quantitatively; it is the spatial-statistics
+\emph{modifiable areal unit problem} \cite{gehlke1934,openshaw1979} imported
+into embedding diagnostics.
+
+This report describes \textsf{ambit}, an instrument built to measure occupancy
+and crowding without either failure. Its contributions:
+
+\begin{enumerate}
+\item \textbf{A critique of binned occupancy} (\S3). We show, with controlled
+  experiments on the tool's own binned displays, that headline statistics of
+  lattice-based occupancy are substantially properties of the lattice: a
+  half-cell shift of a hexbin lattice moves the peak-cell count from $310$ to
+  $403$ on identical data; changing the column count from $20$ to $34$ changes
+  it by a factor of $2.4$; and a pathological pocket of $200$ near-duplicates
+  is invisible as such to the count while a continuous per-item field responds
+  by a factor of $18$.
+\item \textbf{A continuous, null-calibrated measurement layer} (\S4). The
+  empirical pair-distance distribution is promoted to the central object; its
+  exceedance curve is Ripley's $K$ on the sphere \cite{ripley1976}, computed
+  exactly with no bins, with an analytic uniform null (whose pair cosines are
+  sampled directly through a Beta transform, materializing no vectors) and an
+  \emph{anisotropy-conditioned} null (an angular central Gaussian matched to
+  the corpus covariance spectrum) that isolates crowding the cone cannot
+  explain. Stolarsky's invariance principle \cite{stolarsky1973,brauchart2011}
+  supplies a one-number summary --- the mean pairwise chord distance equals,
+  up to constants, the spherical-cap $L_2$ discrepancy integrated over
+  \emph{all} cap centers and radii --- which we report as a $z$-score against
+  a sample-size-matched null. Localization is provided by a
+  distance-to-measure field \cite{chazal2011} with its Wasserstein-Lipschitz
+  stability guarantee, and structure by the condensed merge tree with
+  excess-of-mass selection \cite{campello2015,chazal2013}.
+\item \textbf{Operational semantics for crowding} (\S5). Under a Gaussian
+  query-noise channel $q = x + \sigma g$, the probability that a competitor
+  at chord distance $r$ outranks the intended target is \emph{exactly}
+  $\Phi(-r/2\sigma)$, in any dimension. Summed over competitors this yields a
+  conservative (union-bound) expected-collision count $C(\sigma)$, whose
+  inversion at tolerance one defines the \emph{resolution bandwidth}
+  $\sstar$. A two-line Chernoff argument shows the Wang--Isola uniformity
+  functional \cite{wang2020} is the log of an upper bound on the same
+  quantity at $t = 1/(8\sigma^2)$: an aesthetic loss acquires operational
+  units. We state the scope of these semantics precisely (intra-corpus
+  confusability under isotropic noise) and report the measured
+  near-redundancy of $C(\sigma)$ with uniformity, including the one
+  informative disagreement.
+\item \textbf{A measurement-driven training recipe} (\S7). The confusion
+  kernel is differentiable; \textsf{ambit} ships it as a regularizer whose
+  gradient provably vanishes exponentially outside a measured
+  \emph{confusable window} (so far-pair structure cannot be disturbed),
+  together with a local-structure preservation term (a differentiable form of
+  the neighbor-overlap comparison), collision-count-weighted batch sampling,
+  and window-mining with a false-negative guard. A staged protocol ---
+  diagnose, choose the cheapest licensed fix, train at the measured scale,
+  verify on held-out data never seen by mining --- is demonstrated end to end
+  with honestly reported effect sizes.
+\item \textbf{An open instrument} (\S6, \S8). A streaming, numpy-only core
+  scans corpora of $10^6$ rows; a bounded reservoir feeds a figure registry
+  that renders a single self-contained HTML report, ordered as a narrative
+  and annotated in place. A case study on a public million-document legal
+  corpus exercises the full system.
+\end{enumerate}
+
+Throughout, \textsf{ambit} is \emph{unsupervised by design}: no labels, gold
+pairs, or relevance judgments are consumed. Where user-provided labels exist
+they are used only to \emph{condition} readouts (a separability panel), never
+to define them.
+
+We are explicit about the nature of the contribution: the mathematics
+assembled here is, with small exceptions (\S5), classical. The contribution is
+an \emph{instrument} --- the selection, calibration, and composition of known
+functionals into a measurement system with stated guarantees, stated nulls,
+and stated scope --- together with the negative results (\S5.4) that pruned
+its design space.
+
+% =========================================================================
+\section{Background and Related Work}
+% =========================================================================
+
+\paragraph{Anisotropy and resolution.}
+That learned representations occupy a narrow cone was established for
+generative and contextual encoders by Gao et al.\ \cite{gao2019} (representation
+degeneration) and Ethayarajh \cite{ethayarajh2019}; Mu et al.\ \cite{mu2018}
+showed that removing the mean and a few dominant directions restores much of
+the usable geometry, and Cai et al.\ \cite{cai2021} exhibited local manifold
+structure inside the cone. Global isotropy summaries include the covariance
+spectrum's effective rank \cite{roy2007}, the participation ratio, and
+IsoScore \cite{rudman2022}. Wang and Isola \cite{wang2020} decompose
+contrastive representation quality into \emph{alignment} and
+\emph{uniformity}; the uniformity functional recurs in \S5 with new units.
+Hubness --- the emergence of items that appear in disproportionately many
+neighbor lists --- is a high-dimensional pathology of the metric itself
+\cite{radovanovic2010} and is causally downstream of local intrinsic
+dimension.
+
+\paragraph{Embedding-quality scores.}
+A family of label-free quality scores summarizes the covariance or Gram
+spectrum: RankMe \cite{garrido2023}, $\alpha$-ReQ \cite{agrawal2022}, NESum,
+and stable rank (surveyed in \cite{tsitsulin2023}). A structural fact governs
+this family: with a linear (cosine) kernel on unit vectors, the nonzero Gram
+spectrum equals the uncentered second-moment spectrum, so such scores are
+re-parameterizations of one another. Genuinely new signal requires either a
+nonlinear kernel --- the Vendi score \cite{friedman2023} and its R\'enyi
+family \cite{pasarkar2024}, i.e.\ effective mode counts from kernel-spectrum
+entropy \cite{giraldo2015}, with finite-sample corrections \cite{ospanov2024}
+--- or a different mathematical object altogether. \textsf{ambit} adopts this
+dichotomy as a design filter (\S4.6).
+
+\paragraph{Spatial statistics.}
+Ripley's $K$ function \cite{ripley1976,besag1977} reads clustering as a
+continuous function of scale from the interpoint-distance distribution; on the
+sphere the complete-spatial-randomness null is a cap-area law and, the domain
+being boundaryless, the edge corrections that dominate planar practice vanish
+\cite{robeson2014}. Global envelope tests \cite{myllymaki2017} make
+whole-curve inference honest. The modifiable areal unit problem
+\cite{gehlke1934,openshaw1979,openshaw1984} and the ecological fallacy
+\cite{robinson1950} are the canonical statements of why partition-based
+statistics are fragile and non-attributive; histogram inefficiency and the
+origin problem are classical \cite{scott1979,freedman1981,silverman1986}, with
+the averaged shifted histogram \cite{scott1985} as the placement-free repair.
+Stolarsky's invariance principle \cite{stolarsky1973,brauchart2011} identifies
+the mean pairwise chord distance with the all-caps-all-scales $L_2$
+discrepancy on the sphere.
+
+\paragraph{Geometric inference.}
+The distance to a measure of Chazal, Cohen-Steiner and M\'erigot
+\cite{chazal2011} replaces both kernel density estimates and $k$th-neighbor
+distances with a quantile-averaged distance function that is uniformly
+Lipschitz in the Wasserstein metric of the input; its empirical form is a
+root-mean-square of $k$-nearest-neighbor distances \cite{chazalmichel2021}.
+Mode structure without thresholds is provided by superlevel-set ($H_0$)
+persistence: ToMATo \cite{chazal2013} and the condensed cluster tree with
+excess-of-mass selection of HDBSCAN \cite{campello2015} are two
+normalizations of the same object \cite{rolle2020}, resting on the cluster
+tree of Hartigan \cite{hartigan1981} and its consistent estimation
+\cite{chaudhuri2010}, with stability from persistence theory
+\cite{cohensteiner2007}.
+
+\paragraph{Distance concentration.}
+In high dimension pairwise distances concentrate \cite{beyer1999}; for
+nearest-neighbor methods this is a curse, but for a null-calibrated test it is
+a blessing: the uniform null's pair-cosine distribution has standard deviation
+$1/\sqrt{d}$, so its small-distance tail is \emph{empty}, and any observed
+mass there is unambiguous structure. Projection-based density readings inherit
+a second fragility: neighborhood-preserving layouts do not preserve density
+\cite{wattenberg2016,narayan2021}, and ambient-dimension kernel density
+estimation converges at $O(n^{-4/(4+d)})$ --- vacuous at $d$ in the hundreds
+\cite{silverman1986}. Local intrinsic dimension estimators
+\cite{levina2005,facco2017} are used in \textsf{ambit} only per-item and only
+comparatively, consistent with their measured global insensitivity to small
+pockets (\S3.3).
+
+% =========================================================================
+\section{The Case Against Binned Occupancy}
+% =========================================================================
+
+\textsf{ambit}'s early density views were conventional: hexbin lattices over a
+2-D projection, voxel grids, radial shells, fixed-$k$ neighbor counts. This
+section records why the measurement layer abandoned them. All experiments are
+reproducible from the descriptions here; the first is run against the tool's
+own hexbin assignment code.
+
+\subsection{The answer belongs to the lattice}
+
+\begin{table}[t]
+\centering
+\caption{Lattice fragility on fixed data ($n{=}4{,}000$ synthetic 2-D points,
+three Gaussian clumps plus background; the tool's own hexbin assignment).}
+\label{tab:maup}
+\begin{tabular}{lcc}
+\toprule
+perturbation of the \emph{instrument} & peak-cell count & occupied cells\\
+\midrule
+lattice as placed & 310 & 256\\
+lattice shifted $0.25$ cell & 310 & 253\\
+lattice shifted $0.5$ cell & 403 & 262\\
+\midrule
+$20$ columns & 574 & 168\\
+$26$ columns & 340 & 256\\
+$34$ columns & 242 & 350\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:maup} shows the two MAUP effects \cite{openshaw1984} on the
+tool's own display: the \emph{zonation} effect (placement: a half-cell shift
+moves the headline peak count by $30\%$, and relocates which cell is the
+peak) and the \emph{scale} effect (a factor $2.4$ across reasonable column
+counts). Neither perturbation touches the data. The classical demonstration
+that re-zoning fixed data can move a correlation across essentially
+$[-1,+1]$ \cite{openshaw1979} is the extreme form of the same phenomenon.
+Histograms additionally pay an efficiency tax for discretization --- MISE
+$O(n^{-2/3})$ against $O(n^{-4/5})$ for kernel estimators at optimal
+bandwidths \cite{scott1979,freedman1981} --- and averaging over placements
+(the ASH \cite{scott1985}) recovers both placement-independence and the
+kernel rate. \textsf{ambit} retains one hexbin \emph{display}, de-fragilized
+exactly this way, and captions it as a view, not a measurement.
+
+\subsection{One hidden scale each}
+
+Crowding is multi-scale: near-duplicate pockets live at tiny angles, topical
+clumps at moderate ones, the anisotropy cone at large ones. Every bin width,
+shell count, and fixed neighbor count $k$ silently commits to one scale. In
+the same experiment, injecting $200$ near-identical points inside an
+already-dense cell moves the hexbin peak from $340$ to $540$ --- a change
+indistinguishable from a benign hot cell --- while the 1st percentile of the
+continuous per-item field of \S4.4 collapses by a factor of $18$. A fixed
+$k$ in a kNN graph is the same defect in rank clothing: in a dense pocket
+$k{=}10$ spans a tiny radius, in a sparse rind a huge one, so ``neighborhood''
+denotes a different physical scale at every point.
+
+\subsection{Steps, nulls, and names}
+
+Three further costs are structural. (i) \emph{Instability:} a bin count is a
+step function of the data with no perturbation guarantee; the field of \S4.4
+is provably Lipschitz in the Wasserstein distance of the input, and measured:
+under a $0.1\%$-of-span jitter its self-correlation is $0.99999$. (ii)
+\emph{No null:} a peak count carries no statement of what a well-spread corpus
+would show --- a perfectly uniform cloud still has a hottest cell --- whereas
+every \textsf{ambit} statistic is a deviation from a matched reference. (iii)
+\emph{No names} (the ecological fallacy \cite{robinson1950}): a cell count
+cannot say which items are crowded; per-item fields can, and the actionable
+output of a diagnosis is a list of ids. A fourth cost is inherited when the
+binning is applied to a 2-D projection: the grid then measures the shadow, in
+which far-apart groups collide (false crowding) and orthogonal crowding
+vanishes (missed crowding); nonlinear layouts actively destroy density
+\cite{wattenberg2016}. The repair is not a better ambient density estimate ---
+KDE is hopeless at $d$ in the hundreds \cite{silverman1986} --- but the
+abandonment of partitions for scale-free functionals of interpoint distances,
+whose guarantees carry no dimension factor.
+
+% =========================================================================
+\section{Continuous, Null-Calibrated Occupancy}
+% =========================================================================
+
+Let $x_1,\dots,x_n \in \sphere$ be the embedded corpus (unit-normalized;
+cosine similarity $c_{ij} = \langle x_i,x_j\rangle$; chord distance
+$r_{ij} = \lVert x_i - x_j \rVert = \sqrt{2-2c_{ij}}$). \textsf{ambit}
+computes exact full-corpus second moments by streaming and draws a bounded
+uniform reservoir (default $2\times10^4$ rows) plus a large random-pair
+cosine sample (default $2\times10^5$ pairs) for everything else.
+
+\subsection{The crowding curve}
+
+\begin{definition}[Pair-closeness curve]
+$K(t) \;=\; \Pr_{(i,j)}\!\left[\, c_{ij} \ge t \,\right]$, the fraction of
+distinct pairs at least $t$-similar, estimated exactly from the pair sample by
+sorting (no bins, no origin, no width).
+\end{definition}
+
+$K$ is Ripley's $K$ function on the sphere \cite{ripley1976} in cosine
+coordinates. Two references with matched sample size accompany it:
+
+\emph{(i) The uniform null.} For i.i.d.\ uniform points on $\sphere$ the pair
+cosine has density proportional to $(1-c^2)^{(d-3)/2}$; equivalently
+$c = 2B - 1$ with $B \sim \mathrm{Beta}(\frac{d-1}{2},\frac{d-1}{2})$, so
+null pair samples are drawn directly, materializing no $d$-dimensional
+vectors. The sphere being boundaryless, no edge correction exists to get
+wrong \cite{robeson2014}. A pointwise envelope over $19$ replicates is drawn
+as a display band; whole-curve inference, when wanted, is a rank envelope
+\cite{myllymaki2017}.
+
+\emph{(ii) The anisotropy-conditioned null.} Real corpora are cone-shaped for
+benign reasons; judging them against uniformity alone over-alarms. The second
+reference is the \emph{angular central Gaussian} with the corpus's own
+covariance spectrum --- $x = \Sigma^{1/2} g / \lVert \Sigma^{1/2} g \rVert$,
+sampled from the eigenvalues alone by rotation-invariance --- i.e.\ the
+corpus's second-moment cone \emph{without} its clustering. Height of the data
+curve above this reference is crowding the cone cannot explain; the report
+annotates the \emph{liftoff} scale at which the data first exceed the uniform
+envelope.
+
+In high dimension the null curve's informative region is \emph{empty}: with
+$n{=}4{,}000$ uniform points at $d{=}768$, the measured pair-cosine standard
+deviation is $1/\sqrt{768} = 0.0361$ and $K(0.30) = 0$ in $19$ of $19$ null
+replicates, against $2.5\times10^{-3}$ when $5\%$ of the corpus is collapsed
+into a small cap. Distance concentration, the classical curse
+\cite{beyer1999}, is here a blessing: every close pair is a finding.
+
+\subsection{The occupancy discrepancy (Stolarsky $z$)}
+
+\begin{proposition}[Stolarsky \cite{stolarsky1973}]
+For points on $\sphere$, the spherical-cap $L_2$ discrepancy --- the squared
+deviation between empirical and expected cap occupancy, integrated over all
+cap centers and all cap radii --- equals, up to explicit constants, a constant
+minus the mean pairwise chord distance $\frac{1}{n^2}\sum_{i,j}\lVert x_i -
+x_j\rVert$.
+\end{proposition}
+
+The mean pairwise chord is therefore ``every lattice at every scale at
+once'': the exact completion of what binned occupancy approximates, with no
+lattice to choose. \textsf{ambit} reports it as a $z$-score against the
+uniform null with matched pair-sample size, pricing in sampling noise. The
+null is razor-thin --- measured standard deviation of the null mean chord
+$7\times10^{-6}$ at $(n,d) = (4{,}000, 768)$ --- so the $5\%$-pocket corpus
+above sits at $z = -430$: detection with essentially infinite signal-to-noise,
+computed from a quantity the tool already samples.
+
+\subsection{Localization: the distance-to-measure field}
+
+\begin{definition}[Empirical DTM \cite{chazal2011,chazalmichel2021}]
+For mass fraction $m$, $\;\dtm_m(x_i) = \big( \tfrac1k \sum_{j=1}^{k}
+r_{i,(j)}^2 \big)^{1/2}$ with $k = \lceil m n\rceil$ and $r_{i,(j)}$ the
+distance to $x_i$'s $j$th nearest reservoir point: the radius the item needs
+to gather an $m$-share of the corpus.
+\end{definition}
+
+Small radius means crowded; large means isolated; the field's exact CDF is
+displayed against the $1$st--$99$th percentile band of the same field on a
+matched uniform corpus. The single knob $m$ is a \emph{mass fraction} ---
+scale-free in $n$ --- and replaces bin width, grid origin, and fixed $k$
+simultaneously. The estimator inherits the stability theorem
+$\lVert \dtm^P_m - \dtm^Q_m \rVert_\infty \le m^{-1/2}\, W_2(P,Q)$
+\cite{chazal2011}: a small perturbation of the corpus provably moves every
+item's score a small amount --- the guarantee step-function counts lack. Both
+tails are actionable and \emph{named}: the low tail is the crowded-item list
+(each entry annotated with its expected collision count at the corpus's own
+$\sstar$; \S5), the high tail the coverage voids. One field thus subsumes the
+former hot-cell accents and void-disc grid. In strongly cone-shaped corpora
+the entire field sits below the uniform band --- the cone shortens every
+radius --- and the report says so rather than reporting a meaningless
+all-items count; the finding in that regime is the shape of the low tail
+against the corpus's own bulk.
+
+\subsection{Structure: the condensed merge tree}
+
+Between the global curve and the per-item field sits the question of
+\emph{structure}: is crowding one broad pile or many tight pockets, and which
+items constitute each? \textsf{ambit} surfaces the hierarchy its clustering
+backend already computes and previously flattened: single linkage on the
+mutual-reachability metric (the HDBSCAN construction \cite{campello2015}),
+condensed at a minimum pocket size, with excess-of-mass selection in
+$\lambda = 1/\mathrm{distance}$ --- equivalently, superlevel-set $H_0$
+persistence with the elder rule \cite{chazal2013,rolle2020}. Each selected
+pocket reports its \emph{birth} (the scale at which its first members hold
+together), \emph{death} (merger into the bulk), \emph{prominence}
+(death $-$ birth), size, and member ids; no flat threshold is chosen anywhere.
+Two implementation notes mattered in practice. First, the naive elder rule is
+wrong for this purpose: the tightest pocket is the \emph{eldest} component and
+survives to the root, so the bulk ``dies into it''; excess-of-mass selection
+resolves this correctly. Second, single-linkage chains inside a tight pocket
+are caterpillars, so a pocket's membership is reported as its condensed core
+plus side branches that fell out in the tight regime (below the geometric mean
+of birth and death), which excludes bulk stragglers. On the planted-pocket
+benchmark the tree recovers injected pocket cardinalities exactly (e.g.\
+$60$ and $40$ of $60$ and $40$), and the corresponding minimum-spanning-tree
+edge statistic separates perfectly ($0$ versus $199$ short edges for a
+$200$-point pocket).
+
+\subsection{Complexity}
+
+All continuous-layer statistics run on the reservoir or the pair sample:
+the curve and its nulls are $O(P\log P)$ in the pair-sample size $P$; the DTM
+field is a blocked Gram top-$k$, $O(n_r^2 d)$ on a capped subsample
+($n_r \le 6{,}000$ by default, seconds on CPU); the merge tree is a dense
+Prim MST on $n_r \le 4{,}096$ rows plus a linear condensation pass
+($\sim0.5$\,s). Nothing in the layer exceeds a few seconds at reservoir
+scale, and the full-corpus quantities (second moments, norms) stream in one
+pass.
+
+\subsection{Design filters}
+
+Candidate metrics for the layer were admitted or rejected by five tests,
+recorded here because they prune future proposals cheaply: (i) \emph{spectrum}
+--- does it reduce, under a linear kernel, to a functional of the covariance
+spectrum already reported (effective rank, IsoScore)? (ii) \emph{continuity}
+--- is it a continuous functional of the data or a step function of
+bin/rank/partition membership? (iii) \emph{null} --- does it come with a
+calibrated reference? (iv) \emph{naming} --- can it score items, or only
+regions? (v) \emph{supervision} --- is it label-free? These filters excluded,
+among others, RankMe/NESum/stable rank (spectrum), $k$-means-conditioned
+statistics (continuity), raw counts (null), all cell aggregates (naming), and
+neural-collapse metrics \cite{papyan2020} and their kin (supervision).
+
+% =========================================================================
+\section{Operational Semantics: the Resolution Bandwidth}
+% =========================================================================
+
+Geometric functionals ask ``how uniform is the sphere?''; a practitioner asks
+``how much query sloppiness can this corpus absorb?''. This section converts
+the former into the latter exactly.
+
+\subsection{An exact pairwise confusion law}
+
+Model a query aimed at item $x$ as $q = x + \sigma g$, $g \sim
+\mathcal N(0, I_d)$ --- the simplest honest model of ``the query means $x$ but
+lands nearby.'' Retrieval errs on competitor $y$ when
+$\langle q, y\rangle > \langle q, x\rangle$.
+
+\begin{proposition}[Exact flip law]\label{prop:flip}
+For unit vectors at chord distance $r = \lVert x - y\rVert$,
+\[
+\Pr\big[\langle q,y\rangle > \langle q,x\rangle\big]
+\;=\; \Phi\!\left(-\,\frac{r}{2\sigma}\right),
+\]
+exactly, in any dimension.
+\end{proposition}
+
+\begin{proof}
+$\langle q, y-x\rangle$ is Gaussian with mean $\langle x, y-x\rangle =
+\cos\theta - 1 = -r^2/2$ and standard deviation $\sigma\lVert y - x\rVert =
+\sigma r$; the flip probability is $\Phi\big((-r^2/2)/(\sigma r)\big)$.
+Geometrically: the decision boundary is the perpendicular bisector at distance
+$r/2$, and $\Phi(-(r/2)/\sigma)$ is the chance the noise crosses it.
+\end{proof}
+
+Simulation at $d = 768$ over $\theta \in [0.1, 2.0]$ and $\sigma \in
+[0.05, 0.6]$ matches Proposition~\ref{prop:flip} to a maximum absolute
+deviation of $0.001$ (Monte-Carlo error at $4\times10^5$ trials). Two
+readings follow: a competitor far relative to the noise is harmless, and a
+near-duplicate is a coin flip \emph{at any noise level} --- the formal reason
+duplicate pockets are the worst crowding pathology.
+
+\subsection{$C(\sigma)$, $\sstar$, and the uniformity bound}
+
+Summing the law over competitors gives the expected number of items outranking
+the intended target,
+\[
+C(\sigma) \;=\; \sum_{j \ne i} \Phi\!\left(-\frac{r_{ij}}{2\sigma}\right)
+\;\;\approx\;\; (n-1)\!\int \Phi\!\left(-\frac{r}{2\sigma}\right) dK(r),
+\]
+a functional of the pair-distance distribution alone. By Boole's inequality
+the sum bounds the probability of \emph{any} error under arbitrary competitor
+correlations, so $C$ is conservative: hubness makes it loose, never wrong.
+
+\begin{definition}[Resolution bandwidth]
+$\sstar$ is the largest $\sigma$ with $C(\sigma) \le 1$: the most noise
+queries can carry before, in expectation, one wrong item outranks the right
+one. $C$ is monotone in $\sigma$; bisection inverts it.
+\end{definition}
+
+$\sstar$ is reported against the uniform null's crossing at matched $(n,d)$;
+the ratio is the fraction of the ideal noise budget the corpus retains, and
+the gap is the budget crowding has spent. The per-coordinate scale $\sigma$
+translates to intuition through the query's self-similarity decay,
+$\langle \bar q, x\rangle \approx (1+\sigma^2 d)^{-1/2}$: $\sstar$ states how
+\emph{faded} a query may become against its own target and still be expected
+to win.
+
+\begin{proposition}[Uniformity as a Chernoff bound]\label{prop:chernoff}
+With $U_t = \log \E\, e^{-t \lVert x - y\rVert^2}$ the uniformity functional
+of \cite{wang2020}, $\;C(\sigma) \le (n-1)\, e^{U_t}$ at $t = 1/(8\sigma^2)$.
+\end{proposition}
+
+\begin{proof}
+$\Phi(-z) \le e^{-z^2/2}$ with $z = r/2\sigma$.
+\end{proof}
+
+The widely used uniformity temperature is thus not arbitrary: $t{=}2$ is a
+collision bound at query noise $\sigma = 0.25$. \textsf{ambit} reports
+uniformity with this reading attached.
+
+\subsection{Scope}
+
+The semantics are stated with their boundary: (i) the corpus is treated as its
+own query population --- exact for deduplication, clustering, and
+corpus-as-queries retrieval; extrapolation to an external workload assumes the
+workload lands where the documents are; (ii) the noise channel is isotropic,
+while real query drift is structured; (iii) the aggregate is an upper bound.
+$\sstar$ is therefore a conservative intra-corpus guarantee, strongest used
+comparatively (one corpus embedded two ways, or one embedding over time).
+
+\subsection{Negative results}
+
+Two results from the design process are recorded so they stay dead.
+
+\emph{Near-redundancy of $C$ with uniformity.} Across eight synthetic corpus
+types (uniform; cone; one, five, and twenty planted clumps; cone with
+duplicates; low-rank collapse), $\log C(\sigma{=}0.25)$ and $U_{t=2}$ agree on
+$27$ of $28$ pairwise orderings ($r = 0.978$): as a corpus-level
+\emph{discriminative} measurement, the confusion transform adds almost
+nothing beyond uniformity --- its value is semantic (units, calibration,
+per-item counts). The single disagreement is, however, informative: the
+confusion kernel ranks a duplicate-pocket corpus as worse than a diffuse
+low-rank collapse, while the Gaussian kernel ranks them oppositely; the
+confusion ordering is the operationally correct one, and the flip occurs
+precisely between qualitatively different pathologies.
+
+\emph{A vacuous stability certificate.} Composing the DTM stability bound
+with a split-half empirical Wasserstein estimate, in the hope of finite-sample
+error bars, fails structurally at embedding dimension: the matching distance
+between independent halves is of the order of the data scale
+($\approx 1.35$ on $\mathbb S^{767}$ at $n_r = 2{,}000$), so the certificate
+$m^{-1/2} \widehat W_2 \approx 13.5$ exceeds the field's entire range by an
+order of magnitude. Dimension-free certificates would require a different
+metric with its own stability theorem --- an open question, not an
+engineering task.
+
+% =========================================================================
+\section{The Instrument}
+% =========================================================================
+
+\subsection{Architecture}
+
+\textsf{ambit} is a library with a thin CLI. One canonical in-memory type
+(\texttt{EmbeddingSet}) flows through a pipeline: a \emph{streaming scan}
+(one pass over any of \texttt{.npy/.npz/.parquet/.csv/.jsonl}, single file or
+sharded directory) accumulates exact second moments, norms, and a uniform
+reservoir; \texttt{build\_ctx} derives projections (PCA by default ---
+deterministic and dependency-light), the eigenspectrum, a kNN graph
+(optionally filtered to \emph{reciprocal} neighbors, which suppresses hubs by
+construction), unsupervised clusters, and the pair-cosine sample; a figure
+registry renders a single self-contained, theme-adaptive HTML file with no
+external requests. The core depends on \textsf{numpy} alone; heavier
+capabilities (tabular IO, ANN graphs, UMAP, GPU paths, on-the-fly embedding
+via an OpenAI-compatible endpoint, the training extra) are optional and
+degrade gracefully. A comparison mode aligns two embeddings of the same items
+by id and prefixes the report with a local neighbor-overlap view read against
+global representational-similarity statistics (CKA \cite{kornblith2019},
+kernel and rigid distances): the local/global pair can disagree
+informatively, a high-CKA/low-overlap outcome being a re-skin that preserves
+gross structure while rewriting fine neighborhoods.
+
+\subsection{Report design}
+
+Three principles govern the report. \emph{Direction, not hue}: meaning lives
+in positions along annotated axes; good/bad is a direction, and a single
+accent color marks the dataset's own signal. \emph{Reference, not threshold}:
+every panel draws its null (analytic, simulated, or the
+anisotropy-conditioned reference), because absolute cosine is not
+self-interpreting. \emph{Display versus measurement}: projections lay figures
+out but never carry the statistic; native-space quantities do. The figures
+are ordered as a narrative --- \emph{see it} (a density-colored cloud of the
+corpus), \emph{how crowded and at what scale} (fingerprint, crowding curve,
+bandwidth), \emph{who is affected} (fields ending in named ids),
+\emph{what structure} (pockets; separability of provided or discovered
+groups, with a provenance line stating which), \emph{why} (spectral
+mechanics) --- and every card carries an in-place explainer with an intuition
+diagram, plain-language reading rules, and the card's unstated context (null
+construction, subsample sizes, id provenance). One legibility finding is
+worth recording: a minimum-spanning-tree view drawn over the projection ---
+even restricted to tighter-than-bulk bridges --- remained too busy to read on
+real corpora and was demoted to a hidden option; the condensed tree carries
+the same object legibly as prominence bars.
+
+\subsection{Case study}
+
+A public legal corpus of $10^6$ documents in four subsets, embedded at
+$d = 1{,}024$ by an instruction-tuned text encoder, exercises the full
+system (report generation: $\sim3.5$ minutes on CPU, single pass).
+Table~\ref{tab:case} summarizes. The corpus is strongly cone-shaped (mean
+pair cosine $+0.236$; IsoScore $0.090$) yet spectrally rich (effective rank
+$728/1024$); the occupancy discrepancy sits at $z = -4{,}211$ with liftoff at
+$\cos \approx +0.07$ --- overwhelmingly the cone, per the ACG reference.
+Operationally the corpus retains $83\%$ of the ideal noise budget
+($\sstar = 0.123$ vs.\ $0.148$), i.e.\ a query may fade to cosine
+$\approx 0.25$ against its target before an impostor is expected to win. The
+per-item field's low tail is real but shallow (radii $\approx 0.92$ against
+a bulk band near $1.4$; $3$--$12$ expected collisions each), and the merge
+tree finds one modest pocket ($n = 204$, prominence $0.09$) --- crowding
+here is diffuse within subsets rather than pocketed, exactly the regime where
+global averages mislead in the \emph{optimistic} direction while per-item
+counts still name the at-risk documents. The separability panel (labels
+provided) shows high neighborhood purity ($0.95$) against near-zero
+silhouette ($+0.04$): subsets are locally coherent yet globally entangled
+within the cone --- a reading no single number provides.
+
+\begin{table}[t]
+\centering
+\caption{Case study: a public million-document legal corpus, $d=1024$.}
+\label{tab:case}
+\begin{tabular}{lr}
+\toprule
+items $\times$ dims & $1{,}000{,}000 \times 1024$\\
+mean pair cosine & $+0.236$\\
+IsoScore / effective rank & $0.090$ \;/\; $728.0/1024$\\
+occupancy discrepancy $z$ & $-4{,}211$\\
+crowding-curve liftoff & $\cos \approx +0.07$\\
+resolution bandwidth $\sstar$ (uniform null) & $0.123$ \;($0.148$)\\
+noise budget retained & $83\%$\\
+top pocket (size; birth; prominence) & $204$; $0.41$; $0.09$\\
+kNN purity / silhouette (4 provided subsets) & $0.95$ \;/\; $+0.04$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =========================================================================
+\section{From Measurement to Gradient}
+% =========================================================================
+
+The confusion kernel is differentiable, so the measurement layer doubles as a
+training-time regularizer with a stated guarantee.
+
+\subsection{Losses}
+
+For a batch $z_1,\dots,z_B$ (normalized) and measured target scale $\sigma$:
+\[
+\mathcal L_{\mathrm{conf}}
+= \mathop{\mathrm{mean}}_{(i,j)\,\notin\, \mathcal E}
+\Phi\!\left(-\frac{\lVert z_i - z_j\rVert}{2\sigma}\right),
+\qquad
+\mathcal L_{\mathrm{pres}}
+= \mathop{\mathrm{mean}}_{i}\;
+\mathrm{KL}\!\left(p^{\mathrm{base}}_i \,\middle\|\, p_i\right),
+\]
+where $\mathcal E$ excludes positives and guarded pairs, and $p_i$
+($p^{\mathrm{base}}_i$) are temperature-softmax similarity rows under the
+tuned (frozen base) model. $\mathcal L_{\mathrm{conf}}$ is the batch
+estimate of $C(\sigma)$; since $\partial \Phi(-r/2\sigma)/\partial r \propto
+e^{-r^2/8\sigma^2}$, its gradient vanishes exponentially for pairs beyond
+$\approx 3\sigma$ --- far-pair (dissimilarity) structure \emph{cannot} be
+disturbed, a property enforced by a unit test (a near pair receives
+$>10^3\times$ the gradient of an orthogonal pair). $\mathcal L_{\mathrm{pres}}$
+is the neighbor-overlap comparison in differentiable form and is the explicit
+statement of ``do not rewrite who is similar to whom.'' (An implementation
+note: the chord computation floors $2-2c$ before the square root; at exactly
+zero the root's infinite derivative poisons masked entries with
+$0\cdot\infty$ NaN gradients.)
+
+\subsection{Mining and protocol}
+
+Batch composition is driven by the measurements: sampling weights proportional
+to per-item collision counts (with a uniform floor so the bulk anchors the
+geometry), and negatives drafted from the \emph{confusable window} --- the
+band between the measured liftoff and the alignment scale of true pairs ---
+under a false-negative guard: an anchor's top-$m$ base-model neighbors are
+never negatives, because the window is precisely where unlabeled true
+relatives live. The protocol is staged: diagnose and take the cheapest
+licensed fix (cone $\Rightarrow$ linear post-processing; duplicates
+$\Rightarrow$ data repair; only genuine beyond-cone clumping licenses
+training); train with
+$\mathcal L_{\mathrm{task}} + \lambda_c \mathcal L_{\mathrm{conf}} +
+\lambda_p \mathcal L_{\mathrm{pres}}$ at the measured $\sigma$; verify on a
+held-out reservoir never seen by mining, watching $\sstar$ rise, liftoff
+retreat, flagged-item collisions fall, and neighbor overlap with the base
+stay high (the drift alarm) --- and never grade with the functional that was
+optimized. In the worked end-to-end example (a planted $300$-item pocket in
+$4{,}000$ items at $d = 64$; a linear adapter as the model stand-in), flagged
+items' median expected collisions fall from $2.6$ to $1.6$ at held-out
+neighbor overlap $0.93$; we report this as the honest ceiling of a
+\emph{linear} adapter --- which cannot unfold a tight pocket further without
+moving everything else, exactly the trade the preservation term enforces ---
+rather than as the method's ceiling.
+
+% =========================================================================
+\section{Limitations and Future Work}
+% =========================================================================
+
+\textbf{External validation.} The instrument's readouts are geometrically
+grounded and internally verified; the outstanding scientific step is a study
+correlating them with measured retrieval outcomes across corpora and
+encoders, using relevance judgments only to \emph{score} the unsupervised
+predictions. The confusion transform makes one falsifiable prediction its
+near-redundant sibling does not --- duplicate pathology outranks diffuse
+collapse --- which such a study would test directly.
+\textbf{Query distributions.} Accepting an optional \emph{unlabeled} query
+set (no judgments; within the tool's supervision constraint) would replace
+the corpus-as-queries assumption with a measured cross-set confusion.
+\textbf{Sharper aggregates.} The union bound is safe but loose where hubs
+live; Gaussian comparison inequalities may yield two-sided estimates.
+\textbf{Recoverability.} ``Resolution headroom'' --- the fraction of measured
+crowding removable by a budgeted transform class, computed rather than
+predicted --- would answer the practitioner's first question (``is this the
+embedding's fault or my data's?'') and is well-posed but unproven off the
+reservoir. \textbf{Streaming structure.} The pair curve sketches trivially;
+the merge tree does not; a mergeable approximate hierarchy with prominence
+error bounds would extend the structural layer past the reservoir.
+
+% =========================================================================
+\section{Conclusion}
+% =========================================================================
+
+Crowding is where embedded systems quietly fail, and it is exactly the
+property that global averages cannot see and binned displays cannot be
+trusted to measure. The instrument described here rests on one methodological
+commitment applied uniformly: \emph{read continuous objects at every scale
+against stated nulls, and descend to named items}. The mathematics is
+classical --- Ripley's curve, Stolarsky's identity, the distance to a
+measure, the condensed cluster tree, a Gaussian tail bound --- and the
+contribution is their selection, calibration, and composition into a system
+with stated guarantees and stated scope, plus the operational layer that
+converts geometry into a noise budget a practitioner can act on. The same
+mathematics, being differentiable, closes the loop from diagnosis to repair
+with a gradient that provably cannot disturb what it is not aimed at. The
+negative results are reported alongside the positive ones because an
+instrument is trustworthy only when its designers say what it cannot do.
+
+\subsection*{Acknowledgments}
+The design benefited from adversarial self-review; the redundancy and
+certificate results of \S5.4 are the surviving record of proposals that did
+not.
+
+% =========================================================================
+\begin{thebibliography}{99}
+\small
+
+\bibitem{gao2019} J.~Gao, D.~He, X.~Tan, T.~Qin, L.~Wang, T.-Y.~Liu.
+Representation degeneration problem in training natural language generation
+models. \emph{ICLR}, 2019.
+
+\bibitem{ethayarajh2019} K.~Ethayarajh. How contextual are contextualized
+word representations? \emph{EMNLP}, 2019.
+
+\bibitem{mu2018} J.~Mu, S.~Bhat, P.~Viswanath. All-but-the-top: simple and
+effective postprocessing for word representations. \emph{ICLR}, 2018.
+
+\bibitem{cai2021} X.~Cai, J.~Huang, Y.~Bian, K.~Church. Isotropy in the
+contextual embedding space: clusters and manifolds. \emph{ICLR}, 2021.
+
+\bibitem{roy2007} O.~Roy, M.~Vetterli. The effective rank: a measure of
+effective dimensionality. \emph{EUSIPCO}, 2007.
+
+\bibitem{rudman2022} W.~Rudman, N.~Gillman, T.~Rush, C.~Eickhoff. IsoScore:
+measuring the uniformity of embedding space utilization. \emph{Findings of
+ACL}, 2022.
+
+\bibitem{wang2020} T.~Wang, P.~Isola. Understanding contrastive
+representation learning through alignment and uniformity on the hypersphere.
+\emph{ICML}, 2020.
+
+\bibitem{radovanovic2010} M.~Radovanovi\'c, A.~Nanopoulos, M.~Ivanovi\'c.
+Hubs in space: popular nearest neighbors in high-dimensional data.
+\emph{JMLR} 11, 2010.
+
+\bibitem{garrido2023} Q.~Garrido, R.~Balestriero, L.~Najman, Y.~LeCun.
+RankMe: assessing the downstream performance of pretrained self-supervised
+representations by their rank. \emph{ICML}, 2023.
+
+\bibitem{agrawal2022} K.~Agrawal, A.~Mondal, A.~Ghosh, B.~Richards.
+$\alpha$-ReQ: assessing representation quality by measuring eigenspectrum
+decay. \emph{NeurIPS}, 2022.
+
+\bibitem{tsitsulin2023} A.~Tsitsulin, M.~Munkhoeva, B.~Perozzi. Unsupervised
+embedding quality evaluation. \emph{TAG-ML @ ICML}, 2023.
+
+\bibitem{friedman2023} D.~Friedman, A.~B.~Dieng. The Vendi score: a diversity
+evaluation metric for machine learning. \emph{TMLR}, 2023.
+
+\bibitem{pasarkar2024} A.~Pasarkar, A.~B.~Dieng. Cousins of the Vendi score:
+a family of similarity-based diversity metrics. \emph{AISTATS}, 2024.
+
+\bibitem{giraldo2015} L.~G.~S.~Giraldo, M.~Rao, J.~C.~Pr\'incipe. Measures of
+entropy from data using infinitely divisible kernels. \emph{IEEE Trans.\
+Information Theory} 61(1), 2015.
+
+\bibitem{ospanov2024} A.~Ospanov, F.~Farnia. Do Vendi scores converge with
+finite samples? Truncated Vendi score for finite-sample convergence
+guarantees. arXiv:2410.21719, 2024.
+
+\bibitem{ripley1976} B.~D.~Ripley. The second-order analysis of stationary
+point processes. \emph{J.\ Applied Probability} 13(2), 1976.
+
+\bibitem{besag1977} J.~Besag. Contribution to the discussion of Dr Ripley's
+paper. \emph{JRSS-B} 39(2), 1977.
+
+\bibitem{robeson2014} S.~M.~Robeson, A.~Li, C.~Huang. Point-pattern analysis
+on the sphere. \emph{Spatial Statistics} 10, 2014.
+
+\bibitem{myllymaki2017} M.~Myllym\"aki, T.~Mrkvi\v{c}ka, P.~Grabarnik,
+H.~Seijo, U.~Hahn. Global envelope tests for spatial processes.
+\emph{JRSS-B} 79(2), 2017.
+
+\bibitem{stolarsky1973} K.~B.~Stolarsky. Sums of distances between points on
+a sphere II. \emph{Proc.\ AMS} 41(2), 1973.
+
+\bibitem{brauchart2011} J.~S.~Brauchart, J.~Dick. A simple proof of
+Stolarsky's invariance principle. \emph{Proc.\ AMS} 141, 2013
+(arXiv:1101.4448).
+
+\bibitem{gehlke1934} C.~E.~Gehlke, K.~Biehl. Certain effects of grouping upon
+the size of the correlation coefficient in census tract material.
+\emph{JASA} 29(185A), 1934.
+
+\bibitem{openshaw1979} S.~Openshaw, P.~J.~Taylor. A million or so correlation
+coefficients: three experiments on the modifiable areal unit problem. In
+\emph{Statistical Applications in the Spatial Sciences}, Pion, 1979.
+
+\bibitem{openshaw1984} S.~Openshaw. \emph{The Modifiable Areal Unit Problem}.
+CATMOG 38, Geo Books, 1984.
+
+\bibitem{robinson1950} W.~S.~Robinson. Ecological correlations and the
+behavior of individuals. \emph{American Sociological Review} 15(3), 1950.
+
+\bibitem{scott1979} D.~W.~Scott. On optimal and data-based histograms.
+\emph{Biometrika} 66(3), 1979.
+
+\bibitem{freedman1981} D.~Freedman, P.~Diaconis. On the histogram as a
+density estimator: $L_2$ theory. \emph{Z.\ Wahrsch.\ Verw.\ Gebiete} 57,
+1981.
+
+\bibitem{scott1985} D.~W.~Scott. Averaged shifted histograms: effective
+nonparametric density estimators in several dimensions. \emph{Annals of
+Statistics} 13(3), 1985.
+
+\bibitem{silverman1986} B.~W.~Silverman. \emph{Density Estimation for
+Statistics and Data Analysis}. Chapman \& Hall, 1986.
+
+\bibitem{chazal2011} F.~Chazal, D.~Cohen-Steiner, Q.~M\'erigot. Geometric
+inference for probability measures. \emph{Found.\ Comput.\ Math.} 11(6),
+2011.
+
+\bibitem{chazalmichel2021} F.~Chazal, B.~Michel. An introduction to
+topological data analysis: fundamental and practical aspects for data
+scientists. \emph{Frontiers in AI} 4, 2021.
+
+\bibitem{chazal2013} F.~Chazal, L.~J.~Guibas, S.~Y.~Oudot, P.~Skraba.
+Persistence-based clustering in Riemannian manifolds. \emph{J.\ ACM} 60(6),
+2013.
+
+\bibitem{campello2015} R.~J.~G.~B.~Campello, D.~Moulavi, A.~Zimek,
+J.~Sander. Hierarchical density estimates for data clustering,
+visualization, and outlier detection. \emph{ACM TKDD} 10(1), 2015.
+
+\bibitem{rolle2020} A.~Rolle, L.~Scoccola. Stable and consistent
+density-based clustering via multiparameter persistence. \emph{JMLR}, 2024
+(arXiv:2005.09048).
+
+\bibitem{hartigan1981} J.~A.~Hartigan. Consistency of single linkage for
+high-density clusters. \emph{JASA} 76(374), 1981.
+
+\bibitem{chaudhuri2010} K.~Chaudhuri, S.~Dasgupta. Rates of convergence for
+the cluster tree. \emph{NeurIPS}, 2010.
+
+\bibitem{cohensteiner2007} D.~Cohen-Steiner, H.~Edelsbrunner, J.~Harer.
+Stability of persistence diagrams. \emph{Discrete Comput.\ Geom.} 37, 2007.
+
+\bibitem{beyer1999} K.~Beyer, J.~Goldstein, R.~Ramakrishnan, U.~Shaft. When
+is ``nearest neighbor'' meaningful? \emph{ICDT}, 1999.
+
+\bibitem{levina2005} E.~Levina, P.~J.~Bickel. Maximum likelihood estimation
+of intrinsic dimension. \emph{NeurIPS}, 2005.
+
+\bibitem{facco2017} E.~Facco, M.~d'Errico, A.~Rodriguez, A.~Laio. Estimating
+the intrinsic dimension of datasets by a minimal neighborhood information.
+\emph{Scientific Reports} 7, 2017.
+
+\bibitem{wattenberg2016} M.~Wattenberg, F.~Vi\'egas, I.~Johnson. How to use
+t-SNE effectively. \emph{Distill}, 2016.
+
+\bibitem{narayan2021} A.~Narayan, B.~Berger, H.~Cho. Assessing single-cell
+transcriptomic variability through density-preserving data visualization.
+\emph{Nature Biotechnology} 39, 2021.
+
+\bibitem{kornblith2019} S.~Kornblith, M.~Norouzi, H.~Lee, G.~Hinton.
+Similarity of neural network representations revisited. \emph{ICML}, 2019.
+
+\bibitem{papyan2020} V.~Papyan, X.~Y.~Han, D.~L.~Donoho. Prevalence of neural
+collapse during the terminal phase of deep learning training. \emph{PNAS}
+117(40), 2020.
+
+\end{thebibliography}
+
+\end{document}
