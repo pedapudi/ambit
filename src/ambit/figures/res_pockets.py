@@ -41,6 +41,13 @@ def fig_res_pockets(ctx):
     pk, _ = cr.pockets(X, min_size=8, max_n=4096, max_pockets=10, seed=0)
     all_ids = np.asarray(es.ids) if es.ids is not None else np.arange(len(X))
 
+    # null-calibrated prominence floor: what pure noise at this (n, d) produces;
+    # pockets below it are not findings and are dropped from the display
+    dim = int(getattr(ctx.scan, "dim", X.shape[1]) or X.shape[1])
+    floor_p = cr.null_prominence(min(len(X), 4096), dim, min_size=8, seed=0)
+    n_below = sum(1 for p in pk if p["prominence"] <= 2 * floor_p)
+    pk = [p for p in pk if p["prominence"] > 2 * floor_p]
+
     # the card is exactly as tall as its content — pockets, axis, captions
     n = len(pk)
     row_h = 34.0
@@ -51,12 +58,14 @@ def fig_res_pockets(ctx):
     body.append(f'<text x="{L}" y="28" fill="var(--ink-soft)" font-size="12">'
                 f'crowding pockets · merge-tree prominence (birth → merge into the bulk)</text>')
     body.append(f'<text x="{L}" y="46" fill="var(--ink-faint)" font-size="10">'
-                f'no threshold chosen · {min(len(X), 4096):,} entities · cosine distance · '
-                f'labels list size, scales, and sample member ids</text>')
+                f'{min(len(X), 4096):,} entities · cosine distance · pockets below the '
+                f'null prominence floor ({2*floor_p:.2f}) are not shown'
+                f'{f" ({n_below} suppressed)" if n_below else ""}</text>')
 
     if not pk:
         body.append(f'<text x="{(L+R)/2:.0f}" y="{(T+B)/2:.0f}" fill="var(--good)" font-size="13" '
-                    f'text-anchor="middle">no prominent tight pockets — the corpus merges as one bulk</text>')
+                    f'text-anchor="middle">no pockets above the null prominence floor — '
+                    f'the corpus merges as one bulk</text>')
         aria = "Crowding pockets: no prominent tight pockets; the corpus merges as one bulk."
         return {
             "num": "RES 11", "order": 90.7, "name": "Crowding pockets", "tech": "merge tree",

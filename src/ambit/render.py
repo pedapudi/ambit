@@ -290,7 +290,8 @@ _INTERP = {
         "benign. No flat cluster cut is chosen anywhere.</p>"
         '<div class="hc-foot">Sizes are shares of a ≤4,096-point seeded subsample — scale by '
         "corpus ÷ sample for absolute counts. Pockets smaller than 8 appear in the crowding field's "
-        "low tail instead.</div>"),
+        "low tail instead; pockets whose prominence is within the null floor (what pure noise at this "
+        "size and dimension produces — simulated per report) are suppressed, not reported.</div>"),
     "res_mst": ("Crowding skeleton", "where the tight structure sits",
         '<svg class="hc-viz" viewBox="0 0 336 88" role="img" aria-hidden="true">'
         '<line x1="50" y1="42" x2="62" y2="34" stroke="var(--bad)" stroke-width="1.8"/>'

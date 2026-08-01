@@ -98,6 +98,24 @@ def _mst_prim(D: np.ndarray):
     return edges
 
 
+def null_prominence(n: int, dim: int, *, min_size: int = 8, reps: int = 3,
+                    seed: int = 0) -> float:
+    """The pocket-prominence floor: the maximum prominence the merge tree
+    reports on uniform corpora of matched size and dimension (max over `reps`
+    draws). Pockets below this are within what pure noise produces — measured
+    at reservoir scale the null's 99th percentile is ~0.01, two orders below
+    a genuine tight pocket — so figures gray them out rather than report
+    them as findings."""
+    rng = np.random.default_rng(seed)
+    worst = 0.0
+    for r in range(reps):
+        X = rng.standard_normal((min(n, 4096), dim)).astype(np.float32)
+        X /= np.maximum(np.linalg.norm(X, axis=1, keepdims=True), 1e-12)
+        pk, _ = pockets(X, min_size=min_size, seed=r)
+        worst = max(worst, max((p["prominence"] for p in pk), default=0.0))
+    return float(worst)
+
+
 def spanning_edges(Xn, *, max_n: int = 4096, seed: int = 0):
     """(edges, index_map): the minimum spanning tree of the reservoir under plain
     cosine distance — the corpus's shortest bridges, for display. Uses the same
