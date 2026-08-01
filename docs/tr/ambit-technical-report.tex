@@ -155,7 +155,7 @@ Its contributions:
   measurement-driven regularizers with a gradient-locality guarantee. (The
   toolkit delivers its measurements through a self-contained HTML report;
   that artifact is engineering, not a contribution, and is documented
-  separately in Appendix~\ref{sec:report}.)
+  separately in \ref{sec:report}.)
 \end{enumerate}
 
 Throughout, \textsf{ambit} is \emph{unsupervised by design}: no labels, gold
@@ -383,7 +383,7 @@ converges at $O(n^{-4/(4+d)})$ --- vacuous at $d$ in the hundreds
 
 Every claim marked \emph{measured} in this report follows one protocol,
 stated here once. The test environments are uninteresting and are described
-by their properties in Appendix~\ref{app:env}; what matters scientifically
+by their properties in \ref{app:env}; what matters scientifically
 is the data.
 
 \paragraph{Datasets.}
@@ -1312,7 +1312,7 @@ eigenspectrum, a kNN graph (optionally filtered to \emph{reciprocal}
 neighbors, which suppresses hubs by construction), unsupervised clusters,
 and the pair-cosine sample. All measurements of
 \S\ref{sec:continuous}--\S\ref{sec:semantics} are library functions over
-these objects; a separate presentation layer (Appendix~\ref{sec:report}) renders
+these objects; a separate presentation layer (\ref{sec:report}) renders
 them. The core depends on \textsf{numpy} alone; heavier capabilities
 (tabular IO, ANN graphs, UMAP, GPU paths, on-the-fly embedding via an
 OpenAI-compatible endpoint, the training extra) are optional and degrade
@@ -1588,7 +1588,9 @@ reported alongside the positive ones because an instrument's reliability rests i
 limits.
 
 % =========================================================================
+\clearpage
 \appendix
+\renewcommand{\thesection}{Appendix \Alph{section}}
 \section{Engineering Notes}
 \label{app:eng}
 % =========================================================================
@@ -1656,7 +1658,7 @@ selection), transferring each chunk to the device as it streams; an
 approximate-neighbor path through FAISS is available where installed.
 These tiers change constants, not asymptotics; every number reported in
 this paper was produced by the \textsf{numpy}-only configuration
-(Appendix~\ref{app:env}).
+(\ref{app:env}).
 
 % =========================================================================
 \section{The Report Artifact}
