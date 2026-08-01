@@ -221,9 +221,10 @@ landing near one cannot avoid the others.
   \node[acc, anchor=west, font=\small] at (2.35,0.55) {a query's neighborhood};
   \draw[acc, shorten >=1pt] (2.35,0.55) -- (33:2.2);
 \end{tikzpicture}
-\caption{Items are directions on the unit sphere; a retrieval neighborhood is
-a cap. Items inside one small cap (red pair) are interchangeable to any query
-landing there --- the geometric definition of a retrieval collision.}
+\caption{Intuition schematic: items are directions on the unit sphere; a
+retrieval neighborhood is a cap. Items inside one small cap (red pair) are
+interchangeable to any query landing there --- the geometric definition of a
+retrieval collision.}
 \label{fig:cap}
 \end{figure}
 
@@ -264,11 +265,11 @@ the observation the next subsection makes precise.
 \node[bad, font=\small, anchor=west] at (axis cs:0.315,0.62) {$\cos=0.3$: $8\sigma$};
 \end{axis}
 \end{tikzpicture}
-\caption{Concentration of measure: the null pair-cosine distribution
-collapses to a needle at $0$ as dimension grows ($\mathrm{sd} = 1/\sqrt d$;
-measured $0.0361$ at $d = 768$, matching theory to four decimals). The
-informative region of the null is empty --- and the average is owned by the
-needle.}
+\caption{Concentration of measure (analytic densities; the $d = 768$ width
+is the \emph{measured} sd $0.0361$ from $4{,}000$ sampled uniform points,
+matching $1/\sqrt d$ to four decimals): the null pair-cosine distribution
+collapses to a needle at $0$ as dimension grows. The informative region of
+the null is empty --- and the average is owned by the needle.}
 \label{fig:conc}
 \end{figure}
 
@@ -385,37 +386,59 @@ converges at $O(n^{-4/(4+d)})$ --- vacuous at $d$ in the hundreds
 % =========================================================================
 
 Every claim marked \emph{measured} in this report follows one protocol,
-stated here once.
+stated here once. The test environments are uninteresting and are described
+by their properties in Appendix~\ref{app:env}; what matters scientifically
+is the data.
 
-\paragraph{Environment.}
-Two CPU-only Linux hosts, described by their properties. The
-\emph{measurement host} (validation battery, scaling study): a
-16-core/32-thread x86-64 workstation, $123$\,GB RAM, NVMe storage with
-$\approx 2$\,GB/s measured streaming reads, Python~3.13, \textsf{numpy}~2.5
-with multi-threaded OpenBLAS, and the \emph{numpy-only core install} of the
-artifact --- deliberately, since that is the configuration the portability
-claim is about. The \emph{case-study host}: a 6-core/12-thread mobile-class
-x86-64 machine with $27$\,GB RAM, exercising the optional tabular-IO path
-(sharded Parquet with decode overhead). Every statistic is computed by the
-released library (the training experiments additionally use \textsf{torch}
-on CPU); no experiment uses code outside the artifact. Random seeds are
-fixed and stated per experiment; figures embed the unmodified numerical
-outputs as their plotted coordinates.
+\paragraph{Datasets.}
+Two complementary data regimes carry the evidence, chosen so that between
+them every claim is testable.
 
-\paragraph{The traced benchmark.}
-The synthetic benchmark of \S\ref{sec:averages} is constructed as follows:
-$n = 4{,}000$ points at $d = 768$, drawn as normalized standard Gaussians
-(exactly uniform on $\sphere$); the pocket replaces the last $k = 200$ points
-with $x_i = (c + 0.01\, g_i)/\lVert c + 0.01\, g_i\rVert$ for one shared
-uniform direction $c$ and i.i.d.\ Gaussian $g_i$, yielding median
-intra-pocket cosine $0.929$ --- the near-duplicate regime. The uniform
-control is the same draw without the replacement. Pair statistics use
-$2 \times 10^5$ sampled distinct pairs; the uniform-null envelope is the
-pointwise maximum over $19$ independent null replicates at matched pair
-count (a $5\%$ pointwise band); the anisotropy-conditioned reference is
-sampled from the benchmark's own covariance eigenvalues at matched pair
-count. The DTM field uses mass fraction $m = 0.02$; the merge tree uses
-minimum pocket size $8$ on the full $4{,}000$ points.
+\emph{(i) The synthetic benchmark family --- known ground truth by
+construction.} Detection, localization, and recovery claims can only be
+scored against a pathology whose membership and scales are known exactly;
+planting one supplies that ground truth as \emph{design knowledge} without
+the instrument ever consuming labels. The traced benchmark of
+\S\ref{sec:averages} is: $n = 4{,}000$ points at $d = 768$ (a contemporary
+encoder width), drawn as normalized standard Gaussians (exactly uniform on
+$\sphere$); the pocket replaces the last $k = 200$ points ($5\%$) with
+$x_i = (c + s\, g_i)/\lVert c + s\, g_i\rVert$ for one shared uniform
+direction $c$, i.i.d.\ Gaussian $g_i$, and spread $s = 0.01$ --- chosen
+because it lands the pocket in the \emph{near-duplicate regime} (median
+intra-pocket cosine $0.929$, i.e.\ items a retrieval system cannot rank
+apart) while leaving every global average essentially unmoved
+(\S\ref{sec:averages}): the hardest honest test of a local diagnostic. The
+uniform control is the same draw without the replacement. The wider family
+varies what the traced instance fixes: pocket count ($1$--$20$), size
+($20$--$800$), and tightness ($s = 0.005$--$0.06$, spanning near-duplicate
+to loose association); mean-shift cones; low-rank collapses; and pure nulls
+--- the grid behind the sensitivity, calibration, and power studies. All
+generators are stated in full above or beside their experiments; nothing is
+tuned to the instrument.
+
+\emph{(ii) A public real corpus --- realistic geometry at scale.} Synthetic
+corpora cannot exhibit the learned-embedding pathologies that motivate the
+instrument, so the case study (\S\ref{sec:instrument}) uses a public legal
+corpus of $10^6$ documents in four subsets spanning distinct legal genres
+(regulatory text, case-law summaries, question--answer pairs, statutory
+code), embedded at $d = 1024$ by an instruction-tuned text encoder,
+L2-normalized, stored as sharded Parquet with stable document ids. It
+supplies what the benchmark cannot: a genuine anisotropy cone (mean pair
+cosine $+0.236$), \emph{diffuse} within-subset crowding rather than planted
+pockets, subset labels used only to \emph{condition} one readout (never
+consumed by a measurement), and corpus scale that exercises the streaming
+path. The two regimes are deliberately complementary: the benchmark makes
+claims falsifiable, the corpus makes them representative.
+
+\paragraph{Standard settings.}
+Unless an experiment sweeps them: pair statistics use $2 \times 10^5$
+sampled distinct pairs; whole-curve inference uses the global rank-envelope
+test at $199$ null curves ($99$ inside report figures); the
+anisotropy-conditioned reference is sampled from the corpus's own covariance
+eigenvalues at matched pair count; the DTM field uses mass fraction
+$m = 0.02$; the merge tree uses minimum pocket size $8$; the discrepancy
+$z$ uses $64$ null replicates. Each of these defaults is itself validated
+by a sweep reported in the section that uses it.
 
 \paragraph{Per-experiment protocols.}
 \emph{Lattice fragility} (Table~\ref{tab:maup}): $4{,}000$ synthetic 2-D
@@ -452,8 +475,13 @@ $20$ seeds and reported as mean $\pm$ sd; calibration and power studies use
 the replicate counts stated with them ($400$ nulls, $50$ per pathology
 cell, $199$-null rank envelopes, $64$-replicate discrepancy nulls);
 single-seed values appear only for deterministic or concentration-driven
-demonstrations and are marked by the absence of a spread. The case study
-(\S\ref{sec:instrument}) provides the complementary real-corpus run.
+demonstrations and are marked by the absence of a spread. \emph{Figures}
+follow one rule: every data-bearing plot embeds unmodified experimental
+outputs as its coordinates (the crowding curve, the DTM field, the collision
+curves, the lattice demonstration --- whose highlighted peak cells are
+computed from the figure's own points --- and the merge-tree anatomy, whose
+values are the benchmark's measured ones); the remaining figures are
+intuition schematics and are captioned as such.
 
 % =========================================================================
 \section{The Fragility of Binned Occupancy}
@@ -1514,6 +1542,25 @@ only when its designers say what it cannot do.
 The design benefited from adversarial self-review; the redundancy and
 certificate results of \S\ref{sec:negative} are the surviving record of
 proposals that did not.
+
+% =========================================================================
+\appendix
+\section{Test Environments}
+\label{app:env}
+% =========================================================================
+
+Two CPU-only Linux hosts, described by their properties. The
+\emph{measurement host} (validation battery, scaling study): a
+16-core/32-thread x86-64 workstation, $123$\,GB RAM, NVMe storage with
+$\approx 2$\,GB/s measured streaming reads, Python~3.13, \textsf{numpy}~2.5
+with multi-threaded OpenBLAS, and the \emph{numpy-only core install} of the
+artifact --- deliberately, since that is the configuration the portability
+claim is about. The \emph{case-study host}: a 6-core/12-thread mobile-class
+x86-64 machine with $27$\,GB RAM, exercising the optional tabular-IO path
+(sharded Parquet with decode overhead). Every statistic is computed by the
+released library (the training experiments additionally use \textsf{torch}
+on CPU); no experiment uses code outside the artifact; random seeds are
+fixed and stated per experiment.
 
 % =========================================================================
 \begin{thebibliography}{99}
