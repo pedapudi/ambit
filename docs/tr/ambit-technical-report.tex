@@ -105,7 +105,14 @@ sign-test $p < 10^{-100}$) whose aggregate retrieval effect a label-blind
 evaluation bounds as positive in point estimate but not significant at
 $10^{3}$ queries --- while the capacity ladder (adapter, LoRA, full
 fine-tune) shows that the corpus's duplicate pathology is a data problem no
-training can repair, exactly as the staged protocol routes it. \textsf{ambit} is unsupervised by design --- no labels,
+training can repair, exactly as the staged protocol routes it. Executing
+that routing label-blind then delivers the significant gain training could
+not (confusable-window deduplication: $12$ queries fixed, none broken, $p =
+5 \times 10^{-4}$, with a measured double dissociation across repair scales),
+and the same measurements used as \emph{guardrails} on a label-supervised
+fine-tune halve its collateral multi-hop damage at no cost to its gains ---
+the label-free held-out gate selecting the better model before any judgment
+is consulted. \textsf{ambit} is unsupervised by design --- no labels,
 gold pairs, or ground truth --- and its core depends only on \textsf{numpy}.
 \end{abstract}
 
@@ -1677,6 +1684,82 @@ clumping licenses guarded training at the measured $\sstar$, verified on
 held-out measurements with a pre-registered continuation rule; per-item
 collision counts triage which documents to repair or re-chunk first; and
 $\sstar$ itself sets the query-noise budget an application may spend.
+
+\subsection{The routing rule, executed and scored}
+\label{sec:routing}
+
+The claim that duplicate pathology is a data problem was then tested
+directly: the repair the measurement prescribed was executed blind to all
+labels ---
+near-duplicate groups identified purely from geometry (pairs above a stated
+cosine threshold, grouped by connectivity), each group reduced to one
+canonical member chosen by identifier order, and relevance judgments mapped
+through that reduction mechanically --- then scored on the frozen
+evaluation. Two
+repair sites and two thresholds give a double dissociation
+(Table~\ref{tab:routing}): removing \emph{foreign} near-duplicates inside
+the confusable window (the liftoff scale) fixes $12$ queries and breaks
+none (McNemar exact $p = 5 \times 10^{-4}$) --- the significant retrieval
+gain that training could not deliver --- while merging \emph{within} the
+formulaic target corpus at that same scale is significantly harmful
+($57$ broken), because the confusable window there contains legally
+distinct sections; only merging at the true-duplicate scale ($\cos \ge
+0.95$) helps in-corpus. The instrument's scale structure --- liftoff marks
+the onset of confusability, not the duplicate boundary --- prescribes
+different repairs at different scales, and the held-out labels confirm each
+mapping in both directions.
+
+\begin{table}[t]
+\centering
+\caption{Dedup routing, scored blind on $1{,}000$ frozen queries
+(fixed/broken $=$ queries whose failure status at rank $10$ changed).
+Confusable-window cleanup applies to foreign distractors; only
+true-duplicate merging applies within the formulaic corpus.}
+\label{tab:routing}
+\small
+\begin{tabular}{lcc}
+\toprule
+threshold & foreign distractors removed & target corpus merged\\
+\midrule
+liftoff ($0.82$) & $+12/-0$ fixed, $p = 0.0005$ & $+26/-57$, $p = 0.0009$ (harmful)\\
+duplicates ($0.95$) & $0/0$ (no effect) & $+9/-2$, $p = 0.065$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Guardrails for supervised fine-tuning}
+\label{sec:guardrail}
+
+The strongest test of the training layer reverses its role: rather than
+driving an unsupervised objective, the measurements \emph{guard} a
+label-supervised one. A prior supervised fine-tune of the case-study
+encoder had gained first-rank retrieval while silently collapsing an
+untargeted multi-hop evaluation --- the failure class $\mathcal
+L_{\mathrm{pres}}$ and the false-negative guard exist to prevent. We ran
+the identical supervised recipe (in-batch contrastive loss on $45{,}465$
+question--section pairs, two epochs) in two arms differing only in the
+guardrails: a \emph{control} (task loss alone) and a \emph{guarded} arm
+(task loss $+\ \lambda_p \mathcal L_{\mathrm{pres}}$ against the frozen
+base on identical truncated views, with batch documents whose base-model
+cosine to the anchor's positive exceeds the measured liftoff masked out of
+the contrastive denominator).
+
+The held-out measurement gate, read before any judgment, ranked the arms:
+the guarded model dominates on every label-free readout (neighbor overlap
+$0.650$ against $0.537$; $\sstar$ $0.146$ against $0.136$, the base being
+$0.134$; flagged-cohort collisions $0.47$ against $2.10$). The frozen
+evaluations then confirmed the prediction. On the targeted task the
+guardrails cost nothing (MRR@10 $0.503$ against $0.501$; both arms far
+above the base $0.467$). On the untargeted open evaluation the guarded arm
+wins everywhere: single-document MRR@10 $0.597$ against $0.563$, and on
+the multi-hop metric where the historical regression lived, all-gold@10
+$0.339$ against $0.223$ --- a $52\%$ relative improvement over the control
+($1{,}496$ held-out queries; the gap exceeds five standard errors). The
+control reproduces the historical collapse; the guard halves the damage
+while improving every other number. Two conclusions follow: the
+measurement-derived guardrails make supervised domain adaptation safer at
+no cost to its gains, and the instrument's label-free held-out gate
+selects the better model before any label is consulted.
 
 % =========================================================================
 \section{Limitations and Future Work}
