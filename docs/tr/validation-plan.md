@@ -148,7 +148,14 @@ null replicates.
 
 | E3 | **accept** | scan linear in bytes at ~2 GB/s (10⁷×1024, 41 GB in 18.6 s on raw npy; Parquet decode dominates the case-study path); everything downstream reservoir-bound and **constant in n** (ctx ~3 s, continuous layer ~1.8 s from 10⁵ to 10⁷ rows); dimension enters via d² scan / d³ eigendecomposition (52.6 s at d=4096), continuous layer nearly flat (1.8→3.4 s). Sorted-shards failure mode demonstrated: full scan detects the last-rows pocket (p=0.010) while 50k–300k-row approximate scans all miss it (p=0.18–0.45) — approximate mode is for iteration, never verdicts, on layout-correlated data. |
 
-Remaining: E6 (deferred; needs sign-off — large-scale embedding boundary), Part II pilot (unblocked; query-precision decision pending).
+## Tier E6 results (run 2026-08-01/02; signed off; 4-GPU host + CPU measurement)
+
+| exp | verdict | result |
+|---|---|---|
+| E6 | **accept — loop demonstrated; effect marginal by design** | Full measure→train→re-measure loop on the case-study corpus (200k stratified subset, 20% held out) with the real 0.6B encoder. Unsupervised objective (L_conf at measured σ\*=0.134, guarded; λ_p·L_pres vs truncation-matched base refs; half of each batch mined window pairs). **Round 1 (mismatched refs) rejected by the licensing rule** — σ\* fell, cohort collisions +17%, overlap 0.924; training loss meanwhile decreased (the instrument caught what the loss hid). Corrected rounds safe: LoRA and full FT both keep overlap ≥0.965, cohort −2–3%, σ\* flat. Capacity ladder (adapter no-op at 2048-batch / LoRA / full-FT ≈ equal) ⇒ capacity is not binding; the top pocket is textual near-duplication ⇒ confirms the routing rule (duplicates → data repair). Blind-then-score: full FT R@1 0.288→0.301, MRR@10 0.467→0.475 with zero labels in training (supervised ceiling 0.355); H2 preview AUC 0.578 (collisions) vs 0.551 (top-1-cos control), n=953 gold docs. Engineering findings shipped: pair losses need large in-batch pair sets (small pair batches overfit batch pairs and destroy global geometry); DDP with cross-rank gathered embeddings scales pair statistics with world size. |
+
+Remaining: Part II pilot (unblocked; query-precision decision pending). The E6
+blind-then-score run doubles as a single-corpus preview of Part II's H2.
 
 ## Part II — External validation methodology (to be run independently)
 
