@@ -116,6 +116,32 @@ over-merges and only the true-duplicate scale helps. The instrument's scale
 structure — liftoff = confusable onset, ≈0.95+ = duplicate boundary —
 prescribes different repairs, and the frozen labels confirm each mapping.
 
+## Guardrail experiment (run 2026-08-02, `train_guardrail.py`)
+
+Identical supervised recipe (in-batch InfoNCE on 45k question/section pairs,
+2 epochs, lr 2e-5, DDP world 2) in two arms: **control** (task loss only) vs
+**guarded** (+ λ_p·L_pres against the frozen base on the same truncated
+views, + in-batch false-negative guard masking batch documents whose BASE
+cosine to the anchor's positive ≥ liftoff 0.8165).
+
+**Label-free gates (held-out 200k subset), read before any qrel:** guarded
+dominates control on every readout — overlap@10 0.650 vs 0.537, σ* 0.1459
+vs 0.1360 (base 0.1337 — first genuine σ* gain in the program), flagged-
+cohort collisions 0.47 vs 2.10 (base 2.58), z −1515 vs −2217.
+
+**Labels (frozen evals):**
+- Set A (closed, 1000 q): control R@1 .303 / MRR .501; guarded .299 / .503
+  (base .288/.467) — the guardrails cost nothing on the target task.
+- Set B (open, 1496 q): guarded wins everywhere — single R@1 .382 vs .340,
+  MRR .597 vs .563; **multi-doc all-gold@10 .339 vs .223 (+52% rel., z≈5)**;
+  set-R@10 .593 vs .489. The unguarded arm reproduces the historical v1
+  multi-hop collapse (base ≈.48 → .22); the guard halves the damage while
+  improving everything else.
+
+**Conclusion:** ambit's guardrails make supervised domain fine-tuning safer
+at zero cost to the supervised gain, and the instrument's label-free
+held-out gates select the better model before any label is consulted.
+
 ## Significance tests (run 2026-08-02, `/tmp/sig_tests.py` on the GPU host)
 
 - **Cohort collision reduction: significant and uniform.** Paired per-item on
