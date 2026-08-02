@@ -24,8 +24,8 @@ after all rounds are frozen — blind-then-score.
 | 0-s | base (200k subset) | 0.1337 | 0.84 | 0.769 | 0.010 | −3565 | 0.085 (n=294) | 1.00 | 2.58 (408 held-out) | baseline for all loop rounds |
 | A0 | adapter (stored vectors) | | | | | | | | | |
 | 1 | LoRA (σ=0.1337, λ_p=0.3, batch 256, 625 steps) | 0.1324 | 0.83 | 0.758 | 0.010 | −3775 | 0.091 (n=319) | 0.924 | 3.01 | **REJECTED** — σ* fell, cohort collisions rose |
-| 2 | LoRA + fixes (matched refs, mined pairs) | | | | | | | | | |
-| F | full FT | | | | | | | | | |
+| 2 | LoRA + fixes (matched refs, mined pairs) | 0.1339 | 0.84 | 0.763 | 0.010 | −3545 | 0.082 (n=307) | 0.973 | 2.51 | **accepted, marginal** — cohort −2.8%, no degradation; σ* flat → capacity/step-limited; Stage A closed |
+| F | full FT (same objective) | | | | | | | | | |
 
 **Round-1 post-mortem.** Training loss decomposed as conf ≈ 1e-5 (≈2 active
 window pairs per 256-row batch — the confusion term was starved) against
