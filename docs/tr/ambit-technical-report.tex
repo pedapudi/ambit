@@ -99,11 +99,13 @@ nonetheless operationally informative. A case study on a public million-document
 measurement-driven training recipe with a gradient-locality guarantee
 complete the report; the recipe is exercised end to end on the case-study
 corpus and its production encoder, where the held-out measurements reject a
-misspecified round outright, verify the corrected rounds as safe, and a
-label-blind evaluation then confirms an unsupervised retrieval improvement
---- while the capacity ladder (adapter, LoRA, full fine-tune) shows that the
-corpus's duplicate pathology is a data problem no training can repair,
-exactly as the staged protocol routes it. \textsf{ambit} is unsupervised by design --- no labels,
+misspecified round outright and verify the corrected rounds as safe, with a
+uniform per-item reduction in held-out cohort collisions ($406/408$ items,
+sign-test $p < 10^{-100}$) whose aggregate retrieval effect a label-blind
+evaluation bounds as positive in point estimate but not significant at
+$10^{3}$ queries --- while the capacity ladder (adapter, LoRA, full
+fine-tune) shows that the corpus's duplicate pathology is a data problem no
+training can repair, exactly as the staged protocol routes it. \textsf{ambit} is unsupervised by design --- no labels,
 gold pairs, or ground truth --- and its core depends only on \textsf{numpy}.
 \end{abstract}
 
@@ -1602,8 +1604,14 @@ pocket enlarged). The licensing rule caught this from the held-out
 measurements alone. Second, with references matched to the trainer's own
 views and the confusable window placed in every batch, both LoRA and full
 fine-tuning are \emph{safe but marginal}: no readout degrades, held-out
-overlap stays at $0.97$, the flagged cohort improves by $2$--$3\%$, and
-$\sstar$ is unchanged --- despite the full fine-tune moving roughly $40\times$
+overlap stays at $0.97$, and the flagged cohort improves by $2$--$3\%$ in
+the median --- a small effect that is nonetheless \emph{uniform}: $406/408$
+(LoRA) and $356/408$ (full fine-tune) of held-out flagged items individually
+reduce their expected collisions (paired sign tests, $p < 10^{-100}$ and
+$p < 10^{-56}$). $\sstar$ is measured as genuinely unchanged rather than
+noisily so: the paired difference across eight independent pair samples is
+$+0.00007$ against a per-sample standard deviation of $0.00012$. All of
+this despite the full fine-tune moving roughly $40\times$
 the parameters of the LoRA round on a doubled pair batch. Third, the
 capacity ladder --- linear adapter, LoRA, full fine-tune --- shows that
 \emph{capacity is not the binding constraint}: the linear adapter, which
@@ -1637,19 +1645,29 @@ once, after all rounds are frozen, to \emph{score} the frozen predictions
 (the blind-then-score discipline of the validation plan). On the corpus's
 citation-grounded question-to-section retrieval set ($1{,}000$ held-out
 questions against a $35{,}173$-section sub-corpus, exact search), the
-unsupervised full fine-tune improves recall@1 from $0.288$ to $0.301$ and
+unsupervised full fine-tune moves recall@1 from $0.288$ to $0.301$ and
 MRR@10 from $0.467$ to $0.475$; the LoRA round is flat ($0.286$, $0.466$).
-For context, a label-supervised fine-tune measured under the same harness
-reaches recall@1 $0.355$ --- the supervised ceiling the unsupervised loop
+The recall gain does not reach significance at this query count: McNemar's
+exact test on the paired outcomes gives $p = 0.45$ ($118$ against $131$
+discordant queries), and the bootstrap interval on the MRR@10 difference,
+$[-0.008, +0.023]$, spans zero. The correct reading is therefore
+\emph{retrieval-neutral-to-positive}: a per-item-significant geometry
+improvement whose aggregate task effect is bounded near zero, consistent
+with the duplication finding --- most failures are not caused by the
+crowding the objective can legally repair. For context, a label-supervised
+fine-tune measured under the same harness reaches recall@1 $0.355$ --- the
+supervised ceiling the unsupervised loop
 does not claim to reach. The per-item layer makes a sharper, item-level
 prediction: documents with high base-model expected collisions should be the
 ones that \emph{fail at their own queries} (a judged-relevant document
 outranked by non-relevant neighbors). Scored blind, base expected-collision
 counts predict failure participation at AUC $0.578$ against $0.551$ for the
-natural control (top-$1$ neighbor cosine) over $953$ gold documents ---
-per-item geometry carries signal about which documents will fail that raw
-proximity does not, though the margin on this single corpus is modest and
-its cohort-level repair is limited by the duplication finding above.
+natural control (top-$1$ neighbor cosine) over $953$ gold documents. The
+signal is significantly better than chance (bootstrap $95\%$ interval
+$[0.536, 0.622]$) but the margin over the proximity control is not
+individually significant on this single corpus ($+0.028$, paired bootstrap
+interval $[-0.017, +0.073]$) --- establishing the cross-corpus version of
+this comparison is precisely hypothesis H2 of the external validation plan.
 
 In operational terms the instrument drives retrieval behavior through the
 readout-to-intervention map exercised end to end in this section: the

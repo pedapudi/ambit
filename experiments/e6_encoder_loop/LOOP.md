@@ -98,6 +98,24 @@ n-dependence of the collision budget).
 - Regression check (open-eval multi-hop): not run — deferred; the geometry
   parity result (identical map) bounds the regression risk that motivated it.
 
+## Significance tests (run 2026-08-02, `/tmp/sig_tests.py` on the GPU host)
+
+- **Cohort collision reduction: significant and uniform.** Paired per-item on
+  the 408 held-out flagged items at fixed σ: LoRA improved 406/408 (sign-test
+  p = 2.5e-118), median Δ −0.071, bootstrap 95% CI [−0.076, −0.067]; full FT
+  356/408 (p = 8.4e-57), median Δ −0.056, CI [−0.062, −0.049].
+- **Retrieval gain: not significant.** McNemar exact on paired R@1 outcomes:
+  118 vs 131 discordant, p = 0.447; R@10 identical (6 vs 6, p = 1.0); ΔMRR@10
+  +0.0075, bootstrap 95% CI [−0.008, +0.023]. Read as
+  retrieval-neutral-to-positive at n = 1,000 queries.
+- **Collision→failure AUC: above chance, not above control.** AUC 0.578,
+  bootstrap 95% CI [0.536, 0.622] (excludes 0.5); margin over top-1-cosine
+  control +0.028, paired CI [−0.017, +0.073]. Cross-corpus H2 (Part II) is
+  the designed test of the control comparison.
+- **σ\* invariance is measured, not noise-masked.** Eight independent
+  200k-pair samples: base 0.13361 ± 0.00012, full FT 0.13368 ± 0.00013,
+  paired Δ +0.00007 (paired sd ≈ 0).
+
 ## Gate discipline
 
 No GPU job (training or embedding) is launched without the operator's explicit
