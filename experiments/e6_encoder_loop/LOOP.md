@@ -21,6 +21,7 @@ after all rounds are frozen — blind-then-score.
 | round | vehicle | σ* | σ*/uniform | liftoff | env p | z | top pocket prom | overlap@10 (held-out) | flagged-cohort med. collisions | verdict |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 0 | base (measured, 1M) | 0.1226 | 0.83 | ≈0.82 | 0.005 | −4211 | 0.090 | 1.00 | — | licenses training (beyond-cone clumping) |
+| 0-s | base (200k subset) | 0.1337 | 0.84 | 0.769 | 0.010 | −3565 | 0.085 (n=294) | 1.00 | 2.58 (408 held-out) | baseline for all loop rounds |
 | A0 | adapter (stored vectors) | | | | | | | | | |
 | 1 | LoRA r1 | | | | | | | | | |
 | 2 | (per rule) | | | | | | | | | |
