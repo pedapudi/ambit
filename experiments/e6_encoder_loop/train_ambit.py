@@ -71,6 +71,17 @@ def main():
     stage.add_argument("--full", action="store_true")
     ap.add_argument("--lr", type=float, default=None, help="default: 1e-4 lora / 2e-5 full")
     ap.add_argument("--lambda-p", type=float, default=0.3)
+    ap.add_argument("--ref-npy", default=None,
+                    help="preservation references aligned to the manifest (use "
+                         "truncation-matched base embeddings — see make_refs.py; "
+                         "default: the subset base.npy, which embeds FULL texts "
+                         "and turns preservation into a length distillation)")
+    ap.add_argument("--mined-frac", type=float, default=0.5,
+                    help="fraction of each batch drawn as mined confusable "
+                         "anchor/negative pairs (guarded window pairs), so the "
+                         "confusion term sees in-window pairs every step; the "
+                         "rest is resolution-weighted")
+    ap.add_argument("--mine-window-hi", type=float, default=0.98)
     ap.add_argument("--guard-top-m", type=int, default=5)
     ap.add_argument("--epochs", type=float, default=1.0)
     ap.add_argument("--batch", type=int, default=256,
@@ -106,7 +117,22 @@ def main():
     topk = knn.topk_cosine(base[train_rows], a.guard_top_m)
     texts = load_texts(a.data, manifest, a.max_chars)
     train_uuid = [manifest["uuid"][i] for i in train_rows]
-    ref_all = torch.tensor(base[train_rows])
+    if a.ref_npy:
+        refs = np.load(a.ref_npy).astype(np.float32)
+        if len(refs) != len(manifest["uuid"]):
+            raise SystemExit("--ref-npy must be aligned to the manifest")
+        ref_all = torch.tensor(refs[train_rows])
+    else:
+        ref_all = torch.tensor(base[train_rows])
+
+    # mined confusable pairs (train-row indices), from the measured window
+    liftoff = float(json.load(open(os.path.join(a.subset, "round0.json")))["liftoff_cos"]) \
+        if os.path.exists(os.path.join(a.subset, "round0.json")) else 0.77
+    m_a, m_n = tr.mine_confusable_negatives(
+        base[train_rows], cos_window=(liftoff, a.mine_window_hi),
+        guard_top_m=a.guard_top_m, per_anchor=4, seed=a.seed)
+    print(f"mined {len(m_a)} guarded window pairs "
+          f"(window {liftoff:.3f}-{a.mine_window_hi})", flush=True)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     tok = AutoTokenizer.from_pretrained(a.model, padding_side="right")
@@ -136,7 +162,14 @@ def main():
     for step in range(steps):
         opt.zero_grad()
         for _ in range(a.accum):
-            rows = sampler.choice(len(train_rows), a.batch, replace=False, p=w)
+            n_pair_rows = int(a.mined_frac * a.batch) if len(m_a) else 0
+            picks = sampler.choice(len(m_a), n_pair_rows // 2, replace=False) \
+                if n_pair_rows else np.empty(0, np.int64)
+            pair_rows = np.concatenate([m_a[picks], m_n[picks]]) if n_pair_rows else \
+                np.empty(0, np.int64)
+            rest = sampler.choice(len(train_rows), a.batch - len(pair_rows),
+                                  replace=False, p=w)
+            rows = np.unique(np.concatenate([pair_rows, rest]))[:a.batch]
             batch_texts = [texts[train_uuid[r]] for r in rows]
             enc = tok(batch_texts, padding=True, truncation=True,
                       max_length=a.max_tokens, return_tensors="pt").to(device)

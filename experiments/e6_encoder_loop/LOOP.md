@@ -23,9 +23,20 @@ after all rounds are frozen — blind-then-score.
 | 0 | base (measured, 1M) | 0.1226 | 0.83 | ≈0.82 | 0.005 | −4211 | 0.090 | 1.00 | — | licenses training (beyond-cone clumping) |
 | 0-s | base (200k subset) | 0.1337 | 0.84 | 0.769 | 0.010 | −3565 | 0.085 (n=294) | 1.00 | 2.58 (408 held-out) | baseline for all loop rounds |
 | A0 | adapter (stored vectors) | | | | | | | | | |
-| 1 | LoRA r1 | | | | | | | | | |
-| 2 | (per rule) | | | | | | | | | |
+| 1 | LoRA (σ=0.1337, λ_p=0.3, batch 256, 625 steps) | 0.1324 | 0.83 | 0.758 | 0.010 | −3775 | 0.091 (n=319) | 0.924 | 3.01 | **REJECTED** — σ* fell, cohort collisions rose |
+| 2 | LoRA + fixes (matched refs, mined pairs) | | | | | | | | | |
 | F | full FT | | | | | | | | | |
+
+**Round-1 post-mortem.** Training loss decomposed as conf ≈ 1e-5 (≈2 active
+window pairs per 256-row batch — the confusion term was starved) against
+pres ≈ 0.03; and the preservation reference was the stored base vectors of
+*full* documents while the trainer embeds 512-token truncations, so the
+gradient was dominated by a text-length distillation rather than geometry
+repair. Round-2 fixes: (a) truncation-matched references — base model embeds
+the same 512-token views, via the running base server; (b) pair-aware
+batching — half of each batch drawn from `mine_confusable_negatives`
+(window = liftoff cosine to 0.98, guarded), so the confusion term sees real
+in-window pairs every step.
 
 Round-0 numbers are the base 1M measurements from the TR case study; subset
 (200k) round-0 numbers are re-measured by `measure_round.py --round 0
