@@ -17,6 +17,7 @@ import numpy as np
 
 DOC_PREFIX = {
     "e5": "passage: ",
+    "gemma": "title: none | text: ",
     "bge": "", "arctic": "", "minilm": "", "mpnet": "", "qwen3": "",
 }
 

@@ -23,6 +23,7 @@ import numpy as np
 
 QUERY_PREFIX = {
     "e5": "query: ",
+    "gemma": "task: search result | query: ",
     "bge": "Represent this sentence for searching relevant passages: ",
     "arctic": "Represent this sentence for searching relevant passages: ",
     "minilm": "", "mpnet": "",
