@@ -264,3 +264,8 @@ motivate the structured-noise extension already sketched in §9. Total
 failure of H1/H2 would mean the geometry-to-outcome link is weaker than the
 theory suggests — which would be the most publishable finding of all, and
 would be reported as such.
+
+**Deferred (2026-08-02):** the HotpotQA grid row (5.2M docs × 7 encoders,
+the largest corpus) is deferred by decision; queue preserved at the GPU
+host's `~/validation-runs/q-hotpotqa-deferred.txt`. The grid proceeds with
+five corpora + legal, meeting the ≥5-collection bar.
