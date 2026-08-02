@@ -22,7 +22,7 @@ after all rounds are frozen — blind-then-score.
 |---|---|---|---|---|---|---|---|---|---|---|
 | 0 | base (measured, 1M) | 0.1226 | 0.83 | ≈0.82 | 0.005 | −4211 | 0.090 | 1.00 | — | licenses training (beyond-cone clumping) |
 | 0-s | base (200k subset) | 0.1337 | 0.84 | 0.769 | 0.010 | −3565 | 0.085 (n=294) | 1.00 | 2.58 (408 held-out) | baseline for all loop rounds |
-| A0 | adapter (stored vectors) | | | | | | | | | |
+| A0 | adapter (stored vectors, batch 2048, 300 steps) | 0.1331 | 0.83 | 0.770 | 0.010 | −3665 | 0.064 (n=17; pocket split) | 0.979 | 2.82 | **REJECTED** — σ* fell, cohort +9%; a single linear map cannot serve the mixture of scales |
 | 1 | LoRA (σ=0.1337, λ_p=0.3, batch 256, 625 steps) | 0.1324 | 0.83 | 0.758 | 0.010 | −3775 | 0.091 (n=319) | 0.924 | 3.01 | **REJECTED** — σ* fell, cohort collisions rose |
 | 2 | LoRA + fixes (matched refs, mined pairs) | 0.1339 | 0.84 | 0.763 | 0.010 | −3545 | 0.082 (n=307) | 0.973 | 2.51 | **accepted, marginal** — cohort −2.8%, no degradation; σ* flat → capacity/step-limited; Stage A closed |
 | F | full FT (same objective, DDP world 2, pair batch 512) | 0.1338 | 0.84 | 0.763 | 0.010 | −3552 | 0.083 (n=275) | 0.965 | 2.53 | **accepted, marginal** — matches LoRA; capacity is not the binding constraint |
