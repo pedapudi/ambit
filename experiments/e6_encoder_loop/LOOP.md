@@ -98,6 +98,24 @@ n-dependence of the collision budget).
 - Regression check (open-eval multi-hop): not run — deferred; the geometry
   parity result (identical map) bounds the regression risk that motivated it.
 
+## Dedup routing experiment (run 2026-08-02, `dedup_routing.py`)
+
+The repair the measurement prescribed, executed label-blind (canonical =
+lexicographically-first uuid per near-dup group; qrels mapped mechanically)
+and scored on the frozen eval. **Double dissociation across ambit's scales:**
+
+| threshold | distractor arm (foreign near-dups removed) | in-corpus arm (eCFR merged) |
+|---|---|---|
+| 0.8165 = liftoff (confusable window) | **+12 fixed / 0 broken, McNemar p = 0.0005; R@10 0.727→0.739** | 26 fixed / 57 broken, p = 0.0009 — *harmful* (merges legally distinct formulaic sections; 11.6k of 35k docs) |
+| 0.95 (true duplicates) | 0 / 0 — no effect | **9 fixed / 2 broken, p = 0.065; R@10 0.750→0.757** |
+
+Reading: interference from *foreign* material lives in the confusable
+window (69,445 of 555k distractors!) and removing it yields the significant
+gain training could not; *within* a formulaic corpus the liftoff scale
+over-merges and only the true-duplicate scale helps. The instrument's scale
+structure — liftoff = confusable onset, ≈0.95+ = duplicate boundary —
+prescribes different repairs, and the frozen labels confirm each mapping.
+
 ## Significance tests (run 2026-08-02, `/tmp/sig_tests.py` on the GPU host)
 
 - **Cohort collision reduction: significant and uniform.** Paired per-item on
