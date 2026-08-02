@@ -20,7 +20,7 @@ def main():
     ap.add_argument("--sigma", type=float, required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--device", default="cuda:0")
-    ap.add_argument("--block", type=int, default=4096)
+    ap.add_argument("--block", type=int, default=1024)
     a = ap.parse_args()
 
     import pyarrow.parquet as pq
@@ -38,14 +38,18 @@ def main():
     n = len(X)
     s2 = 2.0 * a.sigma
     cc = torch.zeros(n, dtype=torch.float64, device=a.device)
+    inv = -1.0 / (s2 * np.sqrt(2.0))
     for s in range(0, n, a.block):
         e = min(s + a.block, n)
-        g = (Xt[s:e] @ Xt.T).clamp(-1, 1)
-        r = (2.0 - 2.0 * g).clamp_min(0).sqrt()
-        p = 0.5 * (1.0 + torch.erf((-r / s2) / np.sqrt(2.0)))
-        p[torch.arange(e - s, device=a.device),
+        # single (block x n) buffer, chained in place: gram -> chord -> phi
+        g = Xt[s:e] @ Xt.T
+        g.clamp_(-1.0, 1.0).mul_(-2.0).add_(2.0).clamp_min_(0).sqrt_()
+        g.mul_(inv)
+        torch.erf_(g)
+        g.add_(1.0).mul_(0.5)
+        g[torch.arange(e - s, device=a.device),
           torch.arange(s, e, device=a.device)] = 0.0
-        cc[s:e] = p.sum(1, dtype=torch.float64)
+        cc[s:e] = g.sum(1, dtype=torch.float64)
     os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     np.savez(a.out, uuid=np.array(us), cc=cc.cpu().numpy(),
              sigma=a.sigma)

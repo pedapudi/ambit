@@ -55,6 +55,9 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--device", default="cuda:0")
     ap.add_argument("--batch", type=int, default=256)
+    ap.add_argument("--max-tokens", type=int, default=1024,
+                    help="cap on model.max_seq_length (some ST configs default "
+                         "to 32k, which OOMs at batch size)")
     ap.add_argument("--max-chars", type=int, default=8000)
     ap.add_argument("--rows-per-file", type=int, default=100_000)
     a = ap.parse_args()
@@ -66,6 +69,7 @@ def main():
 
     model = SentenceTransformer(a.model, device=a.device,
                                 model_kwargs={"torch_dtype": "bfloat16"})
+    model.max_seq_length = min(model.max_seq_length or a.max_tokens, a.max_tokens)
     prefix = DOC_PREFIX[a.model_key]
     buf_u, buf_t, shard, total = [], [], 0, 0
 
