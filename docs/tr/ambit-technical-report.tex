@@ -1865,163 +1865,228 @@ operation means. Entries follow the order of first appearance.
 
 \paragraph{Unit vectors and cosine similarity: $c_{ij} = \langle x_i, x_j
 \rangle$, points on $\sphere$.}
-\emph{What it says.} Every document is represented as an arrow of length one
-in $d$-dimensional space (a point on the unit sphere $\sphere$, the set of
-all such arrows), and the similarity of two documents is the cosine of the
-angle between their arrows.
-\emph{Why it matters.} Cosine is the score retrieval systems actually rank
+\begin{itemize}
+  \item \textbf{What it says:} Every document is represented as a
+length-one arrow in $d$-dimensional space (a point on the unit sphere
+$\sphere$, the set of all such arrows), and the similarity of two documents
+is the cosine of the angle between their arrows.
+  \item \textbf{Why it matters:} Cosine is the score retrieval systems actually rank
 by, so all geometry in the report is expressed in the same units the system
 uses.
-\emph{How it is used.} Every statistic in the report is a function of these
+  \item \textbf{How it is used:} Every statistic in the report is a function of these
 pairwise cosines.
-\emph{Term by term.} $x_i$ --- the embedding vector of item $i$, rescaled to
-length $1$; $\langle \cdot, \cdot \rangle$ --- the dot product (multiply
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item $x_i$ --- the embedding vector of item $i$, rescaled to
+length $1$
+    \item $\langle \cdot, \cdot \rangle$ --- the dot product (multiply
 matching coordinates, add them up), which for length-one vectors equals the
-cosine of the angle between them; $c_{ij}$ --- that cosine: $+1$ means
+cosine of the angle between them
+    \item $c_{ij}$ --- that cosine: $+1$ means
 identical direction, $0$ means unrelated (perpendicular), $-1$ means
 opposite.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{Chord distance: $r_{ij} = \lVert x_i - x_j \rVert = \sqrt{2 - 2
 c_{ij}}$.}
-\emph{What it says.} The straight-line distance between two points on the
+\begin{itemize}
+  \item \textbf{What it says:} The straight-line distance between two points on the
 sphere, computed directly from their cosine.
-\emph{Why it matters.} The query-noise law below is exact in chord distance,
+  \item \textbf{Why it matters:} The query-noise law below is exact in chord distance,
 not in cosine, so the report converts between the two constantly; the
 formula is the dictionary.
-\emph{Term by term.} $\lVert \cdot \rVert$ --- Euclidean length (square
-root of the sum of squared coordinates); $x_i - x_j$ --- the vector from one
-point to the other; the identity follows by expanding $\lVert x_i - x_j
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item $\lVert \cdot \rVert$ --- Euclidean length (square
+root of the sum of squared coordinates)
+    \item $x_i - x_j$ --- the vector from one
+point to the other
+    \item the identity follows by expanding $\lVert x_i - x_j
 \rVert^2 = \lVert x_i\rVert^2 + \lVert x_j \rVert^2 - 2\langle x_i,
-x_j\rangle = 1 + 1 - 2c_{ij}$. Identical items have $r = 0$; perpendicular
-ones $r = \sqrt 2$; opposite ones $r = 2$.
+x_j\rangle = 1 + 1 - 2c_{ij}$. Identical items have $r = 0$
+    \item perpendicular
+ones $r = \sqrt 2$
+    \item opposite ones $r = 2$.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{The null cosine scale: coordinates $\sim \mathcal N(0, 1/d)$,
 typical cosine $\approx 1/\sqrt d$.}
-\emph{What it says.} If points are spread uniformly over a high-dimensional
+\begin{itemize}
+  \item \textbf{What it says:} If points are spread uniformly over a high-dimensional
 sphere, each coordinate behaves like a Gaussian random number with variance
 $1/d$, and the cosine between two random points is almost always within a
 few multiples of $1/\sqrt d$ of zero (at $d = 768$, about $\pm 0.036$).
-\emph{Why it matters.} This is the baseline against which ``suspiciously
+  \item \textbf{Why it matters:} This is the baseline against which ``suspiciously
 similar'' is judged: in high dimension, unrelated items are \emph{very}
 nearly perpendicular, so even modest cosines are extremely surprising under
 the null.
-\emph{Term by term.} $\mathcal N(0, 1/d)$ --- the normal (bell-curve)
-distribution with mean $0$ and variance $1/d$; $d$ --- the embedding
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item $\mathcal N(0, 1/d)$ --- the normal (bell-curve)
+distribution with mean $0$ and variance $1/d$
+    \item $d$ --- the embedding
 dimension.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{Pair-closeness curve: $K(t) = \Pr_{(i,j)}[\, c_{ij} \ge t\,]$.}
-\emph{What it says.} For every similarity threshold $t$ simultaneously, the
+\begin{itemize}
+  \item \textbf{What it says:} For every similarity threshold $t$ simultaneously, the
 fraction of document pairs that are at least $t$-similar.
-\emph{Why it matters.} It is the report's primary object: a complete,
+  \item \textbf{Why it matters:} It is the report's primary object: a complete,
 bin-free record of how much of the corpus sits at every closeness scale.
 Crowding appears as an excess of very close pairs --- the curve ``lifting
 off'' above its reference at high $t$.
-\emph{How it is used.} Estimated exactly by sorting a large random sample of
+  \item \textbf{How it is used:} Estimated exactly by sorting a large random sample of
 pair cosines; compared against the two null curves below; the comparison is
 tested with the rank-envelope test.
-\emph{Term by term.} $t$ --- a similarity threshold, swept from low to high;
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item $t$ --- a similarity threshold, swept from low to high;
 $\Pr_{(i,j)}[\cdot]$ --- the probability over a uniformly chosen pair of
 distinct items, i.e.\ simply the fraction of pairs satisfying the condition;
 $c_{ij} \ge t$ --- the pair is at least $t$-similar.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{The uniform null for pair cosines: $c = 2B - 1$ with $B \sim
 \mathrm{Beta}\!\big(\tfrac{d-1}{2}, \tfrac{d-1}{2}\big)$.}
-\emph{What it says.} If points were spread perfectly evenly on the sphere,
+\begin{itemize}
+  \item \textbf{What it says:} If points were spread perfectly evenly on the sphere,
 the cosine of a random pair would follow this exact, known distribution ---
 a Beta distribution stretched from $[0,1]$ to $[-1,1]$.
-\emph{Why it matters.} It gives the ``perfectly spread corpus'' reference
+  \item \textbf{Why it matters:} It gives the ``perfectly spread corpus'' reference
 curve in closed form: no simulation of fake corpora is needed (one draws
 random \emph{numbers}, not random \emph{vectors}), which is what makes
 $199$-replicate null bands cheap.
-\emph{Term by term.} $B$ --- a random draw from the Beta distribution, which
-lives on $[0,1]$; $\mathrm{Beta}(a, a)$ with $a = (d-1)/2$ --- a symmetric
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item $B$ --- a random draw from the Beta distribution, which
+lives on $[0,1]$
+    \item $\mathrm{Beta}(a, a)$ with $a = (d-1)/2$ --- a symmetric
 bell around $1/2$ that narrows as dimension grows (the concentration
-phenomenon above); $2B - 1$ --- the rescaling of $[0,1]$ to $[-1,1]$ so the
+phenomenon above)
+    \item $2B - 1$ --- the rescaling of $[0,1]$ to $[-1,1]$ so the
 result is a cosine.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{The anisotropy-matched reference (ACG): $x =
 \sqrt{\lambda} \odot g \,/\, \lVert \sqrt{\lambda} \odot g \rVert$.}
-\emph{What it says.} A second reference corpus that copies the real
+\begin{itemize}
+  \item \textbf{What it says:} A second reference corpus that copies the real
 corpus's overall \emph{shape} --- its elongation along some directions and
 flattening along others, summarized by the covariance eigenvalues
 $\lambda$ --- but contains no clustering whatsoever.
-\emph{Why it matters.} Learned embeddings almost always occupy a narrow cone
+  \item \textbf{Why it matters:} Learned embeddings almost always occupy a narrow cone
 (the ``cone effect''), which inflates all cosines benignly. Comparing the
 data against this reference, instead of against the uniform null alone,
 separates crowding the cone explains (benign) from crowding it cannot
 (genuine pockets).
-\emph{Term by term.} $g$ --- a vector of independent standard Gaussian
-random numbers; $\lambda$ --- the list of covariance eigenvalues (how much
-variance the corpus has along each principal direction); $\sqrt\lambda
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item $g$ --- a vector of independent standard Gaussian
+random numbers
+    \item $\lambda$ --- the list of covariance eigenvalues (how much
+variance the corpus has along each principal direction)
+    \item $\sqrt\lambda
 \odot g$ --- multiply each coordinate of $g$ by the corresponding
 $\sqrt{\lambda_k}$ (the symbol $\odot$ is coordinate-wise multiplication),
-stretching the random cloud into the corpus's ellipsoid; dividing by the
+stretching the random cloud into the corpus's ellipsoid
+    \item dividing by the
 length projects the result back onto the sphere. Only the eigenvalues
 matter --- rotations do not change pairwise cosines.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{The global rank-envelope test and the liftoff cosine.}
-\emph{What it says.} To decide whether the data curve $K(t)$ genuinely
+\begin{itemize}
+  \item \textbf{What it says:} To decide whether the data curve $K(t)$ genuinely
 exceeds the null band --- across \emph{all} thresholds at once, not
 cherry-picking one --- the test simulates many null curves, ranks the data
 curve among them at every threshold simultaneously, and returns one global
 $p$-value. The \emph{liftoff cosine} is the smallest similarity at which the
 data curve exits the envelope, reported only when the global test rejects.
-\emph{Why it matters.} Reading exceedance off a pointwise band at each
+  \item \textbf{Why it matters:} Reading exceedance off a pointwise band at each
 threshold separately commits a multiple-comparison error --- on pure noise
 it fires essentially always (measured: every one of $40$ null corpora). The
 global test's false alarms match its nominal rate.
-\emph{How it is used.} Every liftoff claim in the report is gated on this
+  \item \textbf{How it is used:} Every liftoff claim in the report is gated on this
 global $p$; extreme-rank-length (ERL) ordering breaks ties among simulated
 curves.
-\emph{Term by term.} envelope --- the band spanned by the simulated null
-curves; global $p$ --- the probability, under the null, of a curve as
-extreme as the data's anywhere along its length; liftoff --- the onset
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item envelope --- the band spanned by the simulated null
+curves
+    \item global $p$ --- the probability, under the null, of a curve as
+extreme as the data's anywhere along its length
+    \item liftoff --- the onset
 similarity of genuine tight-pair structure.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{Stolarsky invariance and the occupancy discrepancy $z$:
 $\text{cap discrepancy} = \text{const} - \frac{1}{n^2} \sum_{i,j} \lVert
 x_i - x_j \rVert$.}
-\emph{What it says.} Take every possible ``cap'' on the sphere (every
+\begin{itemize}
+  \item \textbf{What it says:} Take every possible ``cap'' on the sphere (every
 center, every radius), compare how many points each cap holds against how
 many it should hold, square the errors, and add them all up. Stolarsky's
 theorem says this total --- which looks uncomputable --- equals a constant
 minus the average distance between pairs of points.
-\emph{Why it matters.} It is the exact completion of what binned occupancy
+  \item \textbf{Why it matters:} It is the exact completion of what binned occupancy
 displays approximate: \emph{every} lattice at \emph{every} scale
 simultaneously, with no lattice to choose. A corpus that under-spreads
 (crowds anywhere, at any scale) has a smaller average pairwise distance.
-\emph{How it is used.} The report computes the mean pairwise chord and
+  \item \textbf{How it is used:} The report computes the mean pairwise chord and
 standardizes it against the uniform null at matched sample size, giving the
 occupancy discrepancy $z$: how many standard deviations of null sampling
 noise the corpus's average distance sits below the well-spread value. On
 the benchmark, uniform controls score $z \approx 0$ and the planted pocket
 scores $z = -47$.
-\emph{Term by term.} $\frac{1}{n^2}\sum_{i,j}$ --- the average over all
-ordered pairs; $\lVert x_i - x_j \rVert$ --- the chord distance; $z$-score
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item $\frac{1}{n^2}\sum_{i,j}$ --- the average over all
+ordered pairs
+    \item $\lVert x_i - x_j \rVert$ --- the chord distance
+    \item $z$-score
 --- (observed $-$ null mean) $/$ null standard deviation.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{Distance to a measure: $\dtm_m(x_i) = \big( \tfrac1k
 \sum_{j=1}^{k} r_{i,(j)}^2 \big)^{1/2}$ with $k = \lceil m n \rceil$.}
-\emph{What it says.} For each item: the typical distance it must reach to
+\begin{itemize}
+  \item \textbf{What it says:} For each item: the typical distance it must reach to
 gather the nearest $m$-fraction of the corpus around it --- a per-item
 crowding radius. Small radius $=$ crowded; large radius $=$ isolated.
-\emph{Why it matters.} It descends from corpus-level statistics to
+  \item \textbf{Why it matters:} It descends from corpus-level statistics to
 \emph{named items}, which is what makes findings actionable, and it is
 provably stable: outliers and small perturbations of the corpus move it
 only slightly (the Wasserstein-stability guarantee).
-\emph{How it is used.} Computed for every reservoir item; its low tail
+  \item \textbf{How it is used:} Computed for every reservoir item; its low tail
 (the most crowded items) is compared against the uniform corpus's band;
 the report lists the most-crowded and most-isolated items by identifier.
-\emph{Term by term.} $m$ --- the mass fraction, the method's one knob (e.g.\
-$0.02$: gather $2\%$ of the corpus), scale-free in corpus size; $k = \lceil
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item $m$ --- the mass fraction, the method's one knob (e.g.\
+$0.02$: gather $2\%$ of the corpus), scale-free in corpus size
+    \item $k = \lceil
 m n \rceil$ --- that fraction as a count of neighbors ($\lceil\cdot\rceil$
-rounds up); $r_{i,(j)}$ --- the distance from item $i$ to its $j$th nearest
-neighbor (the subscript $(j)$ means sorted ascending); squaring, averaging
+rounds up)
+    \item $r_{i,(j)}$ --- the distance from item $i$ to its $j$th nearest
+neighbor (the subscript $(j)$ means sorted ascending)
+    \item squaring, averaging
 the $k$ nearest, and taking the square root gives a root-mean-square radius
 --- an average that is robust rather than dominated by any single neighbor.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{The merge tree: mutual reachability, birth, death, prominence.}
-\emph{What it says.} Connect items by their shortest bridges (single
+\begin{itemize}
+  \item \textbf{What it says:} Connect items by their shortest bridges (single
 linkage) under the \emph{mutual-reachability} distance --- the ordinary
 distance, floored by each endpoint's distance to its own $k$th neighbor, so
 that two points are only ``close'' if each is also locally dense. As the
@@ -2030,98 +2095,138 @@ A pocket's \emph{birth} is the scale at which it first holds together, its
 \emph{death} the scale at which it merges into something larger (the elder
 rule: when two groups meet, the younger dies), and its \emph{prominence} =
 death $-$ birth is how long it exists as its own entity.
-\emph{Why it matters.} Prominence replaces every flat clustering threshold:
+  \item \textbf{Why it matters:} Prominence replaces every flat clustering threshold:
 a pocket is reported not because it passed a cutoff but because it persists
 across a wide range of scales. A null-calibrated prominence floor (the
 $99$th percentile of prominence produced by pure noise at matched size and
 dimension) suppresses spurious pockets.
-\emph{Term by term.} single linkage --- merge the two closest groups,
-repeatedly; mutual reachability of $a, b$ --- $\max\{d(a,b),
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item single linkage --- merge the two closest groups,
+repeatedly
+    \item mutual reachability of $a, b$ --- $\max\{d(a,b),
 \mathrm{core}(a), \mathrm{core}(b)\}$ where $\mathrm{core}(\cdot)$ is the
-distance to the point's $k$th nearest neighbor; excess of mass --- the
+distance to the point's $k$th nearest neighbor
+    \item excess of mass --- the
 selection rule choosing, on each branch, the cluster that persists longest.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{The query-noise model: $q = x + \sigma g$, $g \sim \mathcal N(0,
 I_d)$.}
-\emph{What it says.} A query aimed at item $x$ lands nearby rather than
+\begin{itemize}
+  \item \textbf{What it says:} A query aimed at item $x$ lands nearby rather than
 exactly on it: $x$ plus Gaussian noise of scale $\sigma$ in every direction.
-\emph{Why it matters.} It converts geometry into operational risk. Real
+  \item \textbf{Why it matters:} It converts geometry into operational risk. Real
 queries paraphrase, truncate, and typo; $\sigma$ is the abstract knob for
 all such imprecision, and every downstream quantity is a function of it.
-\emph{Term by term.} $q$ --- the query vector; $g$ --- a fresh standard
-Gaussian vector ($I_d$: independent unit-variance coordinates); $\sigma$
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item $q$ --- the query vector
+    \item $g$ --- a fresh standard
+Gaussian vector ($I_d$: independent unit-variance coordinates)
+    \item $\sigma$
 --- the noise scale, in the same units as chord distance.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{The exact flip law: $\Pr[\langle q, y \rangle > \langle q, x
 \rangle] = \Phi(-r / 2\sigma)$.}
-\emph{What it says.} The probability that a noisy query aimed at $x$
+\begin{itemize}
+  \item \textbf{What it says:} The probability that a noisy query aimed at $x$
 scores a competitor $y$ higher than $x$ itself depends on nothing but the
 chord distance $r$ between $x$ and $y$, through one evaluation of the
 standard normal tail. Exactly --- in any dimension.
-\emph{Why it matters.} It is the bridge between geometry and retrieval
+  \item \textbf{Why it matters:} It is the bridge between geometry and retrieval
 errors, and it explains why near-duplicates are catastrophic: as $r \to 0$
 the probability approaches $\Phi(0) = 1/2$ --- a duplicated document loses
 half its queries to its twin \emph{no matter how small the noise is}.
-\emph{How it is used.} Verified by direct simulation to Monte-Carlo
+  \item \textbf{How it is used:} Verified by direct simulation to Monte-Carlo
 precision (max deviation $9 \times 10^{-4}$); summed over competitors to
 give $C(\sigma)$; used as the training loss kernel.
-\emph{Term by term.} $\Phi$ --- the standard normal cumulative distribution
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item $\Phi$ --- the standard normal cumulative distribution
 function: $\Phi(u)$ is the probability that a standard Gaussian is below
-$u$ (computed via the error function $\operatorname{erf}$); $-r/2\sigma$
+$u$ (computed via the error function $\operatorname{erf}$)
+    \item $-r/2\sigma$
 --- the decision boundary between $x$ and $y$ is the perpendicular bisector
-of the segment joining them, at distance $r/2$ from $x$; noise of scale
+of the segment joining them, at distance $r/2$ from $x$
+    \item noise of scale
 $\sigma$ crosses a boundary $r/2$ away with probability
 $\Phi(-(r/2)/\sigma)$.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{Expected collisions: $C(\sigma) = \sum_{j \ne i} \Phi(-r_{ij} /
 2\sigma) \approx (n{-}1) \int \Phi(-r/2\sigma)\, dK(r)$.}
-\emph{What it says.} For an average item, the expected number of wrong
+\begin{itemize}
+  \item \textbf{What it says:} For an average item, the expected number of wrong
 competitors that a noisy query would rank above it: add the flip
 probability over every competitor.
-\emph{Why it matters.} By Boole's inequality (the probability of \emph{any}
+  \item \textbf{Why it matters:} By Boole's inequality (the probability of \emph{any}
 of several events is at most the sum of their probabilities), $C(\sigma)$
 bounds the probability of \emph{any} retrieval error, no matter how the
 competitors are correlated --- so it is conservative: crowding can make it
 loose, never wrong.
-\emph{Term by term.} $\sum_{j \ne i}$ --- sum over all competitors of item
-$i$; the integral form --- the same sum computed from the pair-distance
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item $\sum_{j \ne i}$ --- sum over all competitors of item
+$i$
+    \item the integral form --- the same sum computed from the pair-distance
 distribution $K$ alone ($dK(r)$: the fraction of pairs at distance $r$),
-which is why a pair sample suffices; $(n-1)$ --- the number of competitors.
+which is why a pair sample suffices
+    \item $(n-1)$ --- the number of competitors.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{Resolution bandwidth: $\sstar = \max\{\sigma : C(\sigma) \le
 1\}$.}
-\emph{What it says.} The largest amount of query noise the corpus can
+\begin{itemize}
+  \item \textbf{What it says:} The largest amount of query noise the corpus can
 absorb before, in expectation, one wrong item outranks the right one.
-\emph{Why it matters.} It is the report's headline operational scalar: a
+  \item \textbf{Why it matters:} It is the report's headline operational scalar: a
 noise \emph{budget} in retrieval units. Comparing $\sstar$ against the
 same corpus size spread uniformly (the ratio reported alongside it) says
 what fraction of the theoretically available budget the embedding retains.
-\emph{Term by term.} $C$ is monotone in $\sigma$ (more noise, more
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item $C$ is monotone in $\sigma$ (more noise, more
 collisions), so the largest admissible $\sigma$ is well defined and found
 by bisection --- repeatedly halving an interval known to contain the
 crossing.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{Uniformity as a collision bound: $U_t = \log \E\, e^{-t \lVert x
 - y \rVert^2}$ and $C(\sigma) \le (n{-}1)\, e^{U_t}$ at $t = 1/(8
 \sigma^2)$.}
-\emph{What it says.} The widely used Wang--Isola ``uniformity'' loss ---
+\begin{itemize}
+  \item \textbf{What it says:} The widely used Wang--Isola ``uniformity'' loss ---
 the log of the average of $e^{-t r^2}$ over pairs --- is, at the right
 temperature, exactly the logarithm of a Chernoff upper bound on the
 collision count $C(\sigma)$.
-\emph{Why it matters.} It gives the popular loss operational units: its
+  \item \textbf{Why it matters:} It gives the popular loss operational units: its
 temperature knob $t$ is not folklore but a choice of query-noise scale
 ($t = 2$ corresponds to $\sigma = 0.25$). It also explains when uniformity
 misleads --- it is a bound, and the report measures where the bound's
 ordering and the exact functional's ordering disagree.
-\emph{Term by term.} $\E$ --- the average over random pairs; $e^{-t r^2}$
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item $\E$ --- the average over random pairs
+    \item $e^{-t r^2}$
 --- a Gaussian-shaped penalty that is $1$ for coincident pairs and decays
-with distance at rate $t$; the proof is one line: the normal tail bound
+with distance at rate $t$
+    \item the proof is one line: the normal tail bound
 $\Phi(-z) \le e^{-z^2 / 2}$ applied to $z = r/2\sigma$, which turns each
 flip probability into $e^{-r^2 / 8\sigma^2}$.
+  \end{itemize}
+\end{itemize}
 
 \paragraph{The global suite: mean pair cosine, IsoScore, effective rank,
 hubness skew.}
-\emph{What it says.} Four whole-corpus summaries used as context and as
+\begin{itemize}
+  \item \textbf{What it says:} Four whole-corpus summaries used as context and as
 baselines: the average pairwise cosine (how coned the corpus is); IsoScore
 (how close the covariance is to perfectly isotropic --- equal variance in
 all directions --- on a $0$-to-$1$ scale); effective rank (the exponential
@@ -2130,74 +2235,92 @@ many directions carry meaningful variance); and hubness skew (the skewness
 of the count of how often each item appears in others' $k$-nearest-neighbor
 lists --- heavy skew means a few ``hub'' items intrude into everyone's
 neighborhoods).
-\emph{Why it matters.} These are the statistics practitioners already
+  \item \textbf{Why it matters:} These are the statistics practitioners already
 consult. The report's point is measured, not rhetorical: they are global
 averages, and the detection-power study shows them blind to small pockets
 that the continuous layer detects at full power.
+\end{itemize}
 
 \paragraph{Training losses: $\mathcal L_{\mathrm{conf}} = \mathrm{mean}_{(i,j)
 \notin \mathcal E}\, \Phi\!\big({-\lVert z_i - z_j \rVert}/{2\sigma}\big)$
 and $\mathcal L_{\mathrm{pres}} = \mathrm{mean}_i\,
 \mathrm{KL}\big(p_i^{\mathrm{base}} \,\|\, p_i\big)$.}
-\emph{What it says.} Two differentiable objectives built from the
+\begin{itemize}
+  \item \textbf{What it says:} Two differentiable objectives built from the
 measurements. The first is the batch version of the collision count: the
 average flip probability over batch pairs, at the \emph{measured} noise
 scale $\sigma = \sstar$, excluding a set $\mathcal E$ of protected pairs.
 The second pins local semantics: for each anchor, the distribution ``who in
 this batch is similar to me'' under the model being trained must stay close
 to the same distribution under the frozen base model.
-\emph{Why it matters.} $\mathcal L_{\mathrm{conf}}$ spends gradient only
+  \item \textbf{Why it matters:} $\mathcal L_{\mathrm{conf}}$ spends gradient only
 where confusion actually lives, and $\mathcal L_{\mathrm{pres}}$ prevents
 the repair from destroying meaning. Their balance ($\lambda_p$) is the
 loop's honest tension: recovery against fidelity.
-\emph{Term by term.} $z_i$ --- the embedding of batch item $i$ under the
-model being trained; $\mathcal E$ --- excluded pairs: known positives and
+  \item \textbf{Term by term:}
+  \begin{itemize}
+    \item $z_i$ --- the embedding of batch item $i$ under the
+model being trained
+    \item $\mathcal E$ --- excluded pairs: known positives and
 the false-negative guard (each anchor's top-$m$ base-model neighbors, which
-are likely unlabeled true relatives); $\mathrm{KL}(p \| q)$ --- the
+are likely unlabeled true relatives)
+    \item $\mathrm{KL}(p \| q)$ --- the
 Kullback--Leibler divergence, the standard measure of how much distribution
-$q$ misrepresents distribution $p$ (zero exactly when they agree); $p_i$
+$q$ misrepresents distribution $p$ (zero exactly when they agree)
+    \item $p_i$
 --- the softmax over cosines of item $i$ to the rest of the batch at
-temperature $0.05$ (softmax: exponentiate and normalize to sum to one; low
+temperature $0.05$ (softmax: exponentiate and normalize to sum to one
+    \item low
 temperature sharpens it toward the nearest neighbors).
+  \end{itemize}
+\end{itemize}
 
 \paragraph{Gradient locality: $\partial \Phi(-r/2\sigma) / \partial r
 \propto e^{-r^2 / 8\sigma^2}$.}
-\emph{What it says.} The derivative of the flip probability with respect to
+\begin{itemize}
+  \item \textbf{What it says:} The derivative of the flip probability with respect to
 pair distance dies off as a Gaussian in $r$: pairs farther apart than about
 $3\sigma$ receive exponentially negligible gradient.
-\emph{Why it matters.} It is a structural safety guarantee: minimizing
+  \item \textbf{Why it matters:} It is a structural safety guarantee: minimizing
 $\mathcal L_{\mathrm{conf}}$ \emph{cannot} disturb the corpus's far-pair
 (dissimilarity) structure, by construction rather than by tuning. The test
 suite enforces it (a near pair receives more than $10^3$ times the gradient
 of an orthogonal pair).
+\end{itemize}
 
 \paragraph{Neighbor overlap at $k$.}
-\emph{What it says.} For each item, the fraction of its $k$ nearest
+\begin{itemize}
+  \item \textbf{What it says:} For each item, the fraction of its $k$ nearest
 neighbors that two embeddings (base and tuned) have in common; the report
 uses $k = 10$ and averages over held-out items.
-\emph{Why it matters.} It is the retrieval-relevant measure of ``did the
+  \item \textbf{Why it matters:} It is the retrieval-relevant measure of ``did the
 model change who is similar to whom'' --- comparing neighbor
 \emph{identities}, which global similarity statistics can miss --- and it
 is the loop's licensing criterion ($\ge 0.90$).
+\end{itemize}
 
 \paragraph{Significance machinery of the loop section.}
-\emph{McNemar's exact test} asks whether a model change helped or hurt on
-\emph{paired} outcomes: it looks only at the discordant queries (helped by
-one model, failed by the other --- here $118$ against $131$) and asks
-whether that split is farther from $50{:}50$ than coin flips would produce.
-\emph{The paired sign test} does the same for per-item quantities: of $408$
-held-out flagged items, $406$ improved --- the probability of a split that
-lopsided under ``no effect'' is astronomically small ($p \approx
-10^{-118}$), which is how a tiny median effect can still be unambiguous.
-\emph{Bootstrap confidence intervals} quantify uncertainty without
-distributional assumptions: resample the data with replacement many times,
-recompute the statistic each time, and read the spread; an interval
-containing zero means the sign of the effect is not established.
-\emph{AUC} (area under the ROC curve, equivalently the Mann--Whitney
-statistic) measures a predictor's ability to rank: the probability that a
-randomly chosen failing document scores higher on the predictor than a
-randomly chosen non-failing one --- $0.5$ is chance, $1.0$ is perfect
-ordering.
+\begin{itemize}
+  \item \textbf{McNemar's exact test} asks whether a model change helped or
+  hurt on \emph{paired} outcomes: it looks only at the discordant queries
+  (helped by one model, failed by the other --- here $118$ against $131$)
+  and asks whether that split is farther from $50{:}50$ than coin flips
+  would produce.
+  \item \textbf{The paired sign test} does the same for per-item
+  quantities: of $408$ held-out flagged items, $406$ improved --- the
+  probability of a split that lopsided under ``no effect'' is
+  astronomically small ($p \approx 10^{-118}$), which is how a tiny median
+  effect can still be unambiguous.
+  \item \textbf{Bootstrap confidence intervals} quantify uncertainty
+  without distributional assumptions: resample the data with replacement
+  many times, recompute the statistic each time, and read the spread; an
+  interval containing zero means the sign of the effect is not established.
+  \item \textbf{AUC} (area under the ROC curve, equivalently the
+  Mann--Whitney statistic) measures a predictor's ability to rank: the
+  probability that a randomly chosen failing document scores higher on the
+  predictor than a randomly chosen non-failing one --- $0.5$ is chance,
+  $1.0$ is perfect ordering.
+\end{itemize}
 
 % =========================================================================
 \begin{thebibliography}{99}
