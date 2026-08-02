@@ -42,9 +42,19 @@ def load_map(map_dir):
     return us, np.vstack(vs)
 
 
-def load_queries(qdir):
-    files = sorted(glob.glob(os.path.join(qdir, "*.parquet"))) or \
-        sorted(glob.glob(os.path.join(qdir, "queries", "*.parquet")))
+def load_queries(qpath):
+    if qpath.endswith((".jsonl", ".jsonl.gz")):        # e.g. ESCI dev-us.jsonl.gz
+        import gzip
+        op = gzip.open if qpath.endswith(".gz") else open
+        ids, texts = [], []
+        with op(qpath, "rt") as fh:
+            for line in fh:
+                d = json.loads(line)
+                ids.append(str(d.get("qid") or d.get("_id") or d.get("id")))
+                texts.append(str(d.get("query") or d.get("text")))
+        return ids, texts
+    files = sorted(glob.glob(os.path.join(qpath, "*.parquet"))) or \
+        sorted(glob.glob(os.path.join(qpath, "queries", "*.parquet")))
     import pyarrow.parquet as pq
     ids, texts = [], []
     for f in files:
