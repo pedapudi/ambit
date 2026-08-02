@@ -79,11 +79,24 @@ n-dependence of the collision budget).
    statistics). train_ambit.py therefore defaults to batch 256 per forward with
    gradient checkpointing, and larger is better where memory allows.
 
-## Final (1M, TR parity)
+## Final (1M, TR parity) — complete 2026-08-02
 
-- full re-embed + report: pending
-- blind-then-score (`score_final.py`): pending
-- regression check (open-eval multi-hop all-gold@10): pending
+- **Full 1M re-embed** with the accepted full fine-tune (two vllm replicas,
+  ~500k docs/stream, same sampling as the base map). Parity measurement
+  (`measure_map.py`, reservoir 20k): σ* 0.1227 (base 0.1226), liftoff 0.817
+  (envelope p = 0.01), z −3554, effective rank 728, IsoScore 0.089, mean pair
+  cos 0.2354, hubness 1.88, top pocket 198 @ prominence 0.090 (base 204 @
+  0.090). **Every readout reproduces base within noise** — the tuned model is
+  geometry-preserving at 10⁶ docs and the 200k held-out loop verdicts
+  transfer to full scale.
+- **Blind-then-score** (labels used here only): full FT R@1 0.288→0.301,
+  MRR@10 0.467→0.475; LoRA flat (0.286, 0.466); supervised ceiling 0.355.
+  H2 preview: base collision counts predict failure participation AUC 0.578
+  vs 0.551 top-1-cosine control (n=953 gold docs, fail = rank>10, σ=0.145
+  eCFR-matched); cohort-level repair limited — consistent with the
+  duplication finding.
+- Regression check (open-eval multi-hop): not run — deferred; the geometry
+  parity result (identical map) bounds the regression risk that motivated it.
 
 ## Gate discipline
 

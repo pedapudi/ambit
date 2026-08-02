@@ -97,7 +97,13 @@ negative results, including a measured near-redundancy between the
 confusion functional and uniformity ($r = 0.978$) whose single order-flip is
 nonetheless operationally informative. A case study on a public million-document legal corpus and a
 measurement-driven training recipe with a gradient-locality guarantee
-complete the report. \textsf{ambit} is unsupervised by design --- no labels,
+complete the report; the recipe is exercised end to end on the case-study
+corpus and its production encoder, where the held-out measurements reject a
+misspecified round outright, verify the corrected rounds as safe, and a
+label-blind evaluation then confirms an unsupervised retrieval improvement
+--- while the capacity ladder (adapter, LoRA, full fine-tune) shows that the
+corpus's duplicate pathology is a data problem no training can repair,
+exactly as the staged protocol routes it. \textsf{ambit} is unsupervised by design --- no labels,
 gold pairs, or ground truth --- and its core depends only on \textsf{numpy}.
 \end{abstract}
 
@@ -1544,6 +1550,116 @@ overlap, exactly as designed. The guard matters empirically: without it,
 window mining drafts unlabeled true relatives as negatives --- the classic
 silent failure of hard-negative mining.
 
+\subsection{Closing the loop on a production encoder}
+\label{sec:loop}
+
+The synthetic example establishes the mechanism; the remaining question is
+whether the loop --- measure, construct the objective from the measurements,
+train, re-embed, re-measure --- operates on a production encoder and a real
+corpus, with the measurements adjudicating every round. We ran this loop on
+the case-study corpus (\S\ref{sec:instrument}) and its $0.6$-billion-parameter
+instruction-tuned encoder. A fixed, stratified $200{,}000$-document
+measurement subset (proportional across the four subsets) was drawn once;
+$20\%$ was held out and never touched by mining, sampling weights, or
+training. The objective is fully unsupervised: $\mathcal L_{\mathrm{conf}}$
+at the subset's measured $\sstar = 0.134$ under the false-negative guard,
+plus $\lambda_p \mathcal L_{\mathrm{pres}} $ against frozen base-model
+references, with batches composed half from collision-weighted sampling and
+half from guarded confusable-window pairs (window $=$ the measured liftoff
+cosine $0.769$ to $0.98$). Between rounds, a pre-registered licensing rule
+decides continuation: $\sstar$ must not fall and held-out neighbor overlap
+must remain at least $0.90$.
+
+\begin{table}[t]
+\centering
+\caption{The loop on the case-study corpus ($200$k measurement subset;
+verdicts from the held-out $20\%$ only; flagged cohort $=$ top $1\%$ of items
+by base-model expected collisions, tracked at fixed $\sigma = 0.134$ across
+rounds). The misspecified first round is \emph{rejected by measurement};
+the corrected rounds are safe but marginal at every capacity.}
+\label{tab:loop}
+\small
+\begin{tabular}{lcccccc}
+\toprule
+round & $\sstar$ & liftoff & $z$ & pocket (size) & overlap & cohort med.\\
+\midrule
+base & 0.1337 & 0.769 & $-3565$ & 0.085 (294) & 1.00 & 2.58\\
+linear adapter & 0.1331 & 0.770 & $-3665$ & 0.064 (17) & 0.979 & 2.82\\
+LoRA, mismatched refs & 0.1324 & 0.758 & $-3775$ & 0.091 (319) & 0.924 & 3.01\\
+LoRA, corrected & 0.1339 & 0.763 & $-3545$ & 0.082 (307) & 0.973 & 2.51\\
+full fine-tune & 0.1338 & 0.763 & $-3552$ & 0.083 (275) & 0.965 & 2.53\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:loop} summarizes the rounds; three findings follow. First,
+\emph{the instrument rejects a misspecified round}. The initial LoRA round
+computed $\mathcal L_{\mathrm{pres}}$ against stored embeddings of full
+documents while the trainer embedded token-truncated views, so the gradient
+was dominated by a length distillation; training losses fell while every
+global readout degraded ($\sstar$ down, cohort collisions up $17\%$, the
+pocket enlarged). The licensing rule caught this from the held-out
+measurements alone. Second, with references matched to the trainer's own
+views and the confusable window placed in every batch, both LoRA and full
+fine-tuning are \emph{safe but marginal}: no readout degrades, held-out
+overlap stays at $0.97$, the flagged cohort improves by $2$--$3\%$, and
+$\sstar$ is unchanged --- despite the full fine-tune moving roughly $40\times$
+the parameters of the LoRA round on a doubled pair batch. Third, the
+capacity ladder --- linear adapter, LoRA, full fine-tune --- shows that
+\emph{capacity is not the binding constraint}: the linear adapter, which
+halved collisions on the synthetic single-pocket benchmark
+(Table~\ref{tab:training}), is itself rejected on the real corpus ($\sstar$
+falls and cohort collisions worsen $9\%$ --- a single linear map cannot
+serve the mixture of scales), while LoRA and the full fine-tune land within
+noise of one another. The corpus's dominant
+pocket is textual near-duplication, and the preservation term correctly
+refuses to separate items whose inputs are near-identical. This is the
+training-side confirmation of the staged protocol's routing rule: duplicate
+pathology is a data-repair problem, and no training objective that preserves
+base-model semantics can substitute for deduplication. Training at the
+measured scale is safe; it is not a shortcut around the data.
+
+As a final check that the subset verdicts transfer, the full corpus was
+re-embedded with the accepted fine-tune and measured at full scale with the
+identical pipeline as the base case study. Every readout reproduces within
+measurement noise --- $\sstar\ 0.1227$ against the base $0.1226$, liftoff
+$0.817$, effective rank $728$, IsoScore $0.089$, mean pair cosine $0.235$,
+hubness skew $1.88$, top pocket $198$ items at prominence $0.090$ against
+the base $204$ at $0.090$ --- so the fine-tune that improves retrieval
+(below) is confirmed geometry-preserving at $10^6$ documents, and the
+$200$k held-out measurement is a faithful proxy for the full corpus.
+
+\subsection{Driving retrieval behavior}
+\label{sec:driving}
+
+The loop above never touches a relevance judgment; judgments enter exactly
+once, after all rounds are frozen, to \emph{score} the frozen predictions
+(the blind-then-score discipline of the validation plan). On the corpus's
+citation-grounded question-to-section retrieval set ($1{,}000$ held-out
+questions against a $35{,}173$-section sub-corpus, exact search), the
+unsupervised full fine-tune improves recall@1 from $0.288$ to $0.301$ and
+MRR@10 from $0.467$ to $0.475$; the LoRA round is flat ($0.286$, $0.466$).
+For context, a label-supervised fine-tune measured under the same harness
+reaches recall@1 $0.355$ --- the supervised ceiling the unsupervised loop
+does not claim to reach. The per-item layer makes a sharper, item-level
+prediction: documents with high base-model expected collisions should be the
+ones that \emph{fail at their own queries} (a judged-relevant document
+outranked by non-relevant neighbors). Scored blind, base expected-collision
+counts predict failure participation at AUC $0.578$ against $0.551$ for the
+natural control (top-$1$ neighbor cosine) over $953$ gold documents ---
+per-item geometry carries signal about which documents will fail that raw
+proximity does not, though the margin on this single corpus is modest and
+its cohort-level repair is limited by the duplication finding above.
+
+In operational terms the instrument drives retrieval behavior through the
+readout-to-intervention map exercised end to end in this section: the
+anisotropy layer licenses linear post-processing; named near-duplicate
+pockets route to data repair before any training; genuine beyond-cone
+clumping licenses guarded training at the measured $\sstar$, verified on
+held-out measurements with a pre-registered continuation rule; per-item
+collision counts triage which documents to repair or re-chunk first; and
+$\sstar$ itself sets the query-noise budget an application may spend.
+
 % =========================================================================
 \section{Limitations and Future Work}
 % =========================================================================
@@ -1648,6 +1764,18 @@ envelope test, the discrepancy $z$, the confusion functional $C(\sigma)$,
 and $\sstar$. The continuous layer therefore costs one pass over a
 fixed-size array per statistic, and all reported statistics refer to the
 same measured sample.
+
+\paragraph{Distributed training and pair-batch statistics.}
+The encoder-loop trainer (\S\ref{sec:loop}) runs data-parallel: each rank
+embeds its own rows and the embeddings are gathered across ranks (the local
+slice retaining its gradient) before the pair losses, so pair statistics
+scale with world size at fixed per-device memory. This matters beyond
+throughput: the pair losses see only within-batch pairs, and small pair
+batches permit batch-level overfitting --- the model separates the pairs it
+is shown while degrading out-of-batch structure, a failure the loop's
+held-out measurements catch. Gathered batches must be identically shaped on
+every rank; the batch builder emits a fixed count of distinct rows per rank
+for this reason.
 
 \paragraph{Optional acceleration tiers.}
 The core is \textsf{numpy}-only, with the heavy kernels routed through
