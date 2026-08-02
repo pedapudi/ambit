@@ -25,7 +25,17 @@ after all rounds are frozen — blind-then-score.
 | A0 | adapter (stored vectors) | | | | | | | | | |
 | 1 | LoRA (σ=0.1337, λ_p=0.3, batch 256, 625 steps) | 0.1324 | 0.83 | 0.758 | 0.010 | −3775 | 0.091 (n=319) | 0.924 | 3.01 | **REJECTED** — σ* fell, cohort collisions rose |
 | 2 | LoRA + fixes (matched refs, mined pairs) | 0.1339 | 0.84 | 0.763 | 0.010 | −3545 | 0.082 (n=307) | 0.973 | 2.51 | **accepted, marginal** — cohort −2.8%, no degradation; σ* flat → capacity/step-limited; Stage A closed |
-| F | full FT (same objective) | | | | | | | | | |
+| F | full FT (same objective, DDP world 2, pair batch 512) | 0.1338 | 0.84 | 0.763 | 0.010 | −3552 | 0.083 (n=275) | 0.965 | 2.53 | **accepted, marginal** — matches LoRA; capacity is not the binding constraint |
+
+**Stage B post-mortem.** Full fine-tuning with the same guarded objective
+reproduces the LoRA result (cohort −2%, σ* flat, no degradation) despite ~40×
+the trainable parameters and a 512-row pair batch. Capacity is therefore not
+what limits resolution recovery on this corpus: the top pocket is textual
+near-duplication, and the preservation constraint (correctly) refuses to
+separate items whose inputs are near-identical. This is the training-side
+confirmation of the staged protocol's routing rule — duplicate pathology is a
+data-repair problem; training at the measured scale is safe but cannot
+substitute for deduplication.
 
 **Round-1 post-mortem.** Training loss decomposed as conf ≈ 1e-5 (≈2 active
 window pairs per 256-row batch — the confusion term was starved) against
