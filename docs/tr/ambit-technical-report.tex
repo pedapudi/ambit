@@ -90,8 +90,7 @@ at scale. A grid of five public corpora and seven public encoders, scored
 blind against relevance judgments, confirms the per-item collision field
 in every informative cell and bounds the corpus-level scalar to
 comparative use. The measurements then drive interventions end to end:
-label-blind deduplication at the measured scales yields a significant
-retrieval gain with zero regressions; measurement-derived guardrails halve
+label-blind deduplication succeeds only at the site and scale the measurements prescribe --- fixing twelve queries with zero regressions there, and demonstrably harmful when the same operation is applied at the wrong scale; measurement-derived guardrails halve
 the collateral damage of supervised fine-tuning at no cost to its gains;
 and a held-out geometric gate rejects a misspecified training round that
 its own loss curve endorsed --- selecting the better model before any
@@ -127,17 +126,19 @@ density --- histograms, hexbin lattices, voxel grids, fixed-$k$ neighbor
 counts --- carry hidden discretization parameters whose values change the
 answer (\S\ref{sec:binned}). This report describes \textsf{ambit}, an
 instrument built to measure occupancy and crowding without either failure.
-Its contributions:
+Three commitments organize its design: occupancy is measured continuously
+over all scales; every statistic is calibrated against a stated null; and
+diagnosis descends to named items.
+\S\ref{sec:geometry}--\S\ref{sec:power} build and validate the
+instrument under these commitments; \S\ref{sec:training} and
+\S\ref{sec:external} use its measurements to drive training,
+deduplication, and fine-tuning guardrails.
+(\S\ref{sec:geometry} and \S\ref{sec:binned} first develop, with
+controlled experiments, why crowding hides from global averages and why
+binned occupancy statistics are properties of the lattice rather than of
+the data.) Its contributions are the following.
 
 \begin{enumerate}
-\item \textbf{A first-principles account of why crowding hides}
-  (\S\ref{sec:geometry}): items as directions, retrieval neighborhoods as
-  spherical caps, the concentration of measure that empties the null's tail,
-  and the arithmetic by which a pathological pocket vanishes into a mean.
-\item \textbf{A quantitative critique of binned occupancy}
-  (\S\ref{sec:binned}), with controlled experiments on the tool's own binned
-  displays: headline lattice statistics are substantially properties of the
-  lattice, not the data.
 \item \textbf{A continuous, null-calibrated measurement layer}
   (\S\ref{sec:continuous}): the exact pair-closeness curve against a uniform
   and an anisotropy-conditioned null; a one-number occupancy discrepancy via
@@ -157,15 +158,15 @@ Its contributions:
   toolkit delivers its measurements through a self-contained HTML report;
   that artifact is engineering, not a contribution, and is documented
   separately in \ref{sec:report}.)
-\item \textbf{A demonstration that the measurements drive interventions}
-  (\S\ref{sec:loop}--\S\ref{sec:guardrail}): a measurement-gated
-  fine-tuning loop on the case-study encoder whose held-out readouts reject
-  a misspecified round that training loss endorsed; a label-blind execution
-  of the instrument's repair prescription whose two scales produce opposite,
-  significant outcomes exactly as prescribed (a double dissociation); and
-  measurement-derived guardrails that halve the collateral damage of
-  supervised fine-tuning at no cost to its gains, with the label-free gate
-  selecting the better model before any judgment is consulted.
+\item \textbf{Measurement-driven interventions}:
+  (i) a measurement-gated fine-tuning loop (\S\ref{sec:loop}) whose
+  held-out readouts reject a misspecified round that training loss
+  endorsed; (ii) label-blind execution of the instrument's deduplication
+  prescription (\S\ref{sec:routing}), whose two scales produce opposite,
+  significant outcomes exactly as prescribed; and (iii)
+  measurement-derived guardrails (\S\ref{sec:guardrail}) that halve the
+  collateral damage of supervised fine-tuning at no cost to its gains,
+  with a label-free model-selection gate.
 \item \textbf{External validation with a measured scope law}
   (\S\ref{sec:external}): across $28$ public corpus--encoder cells scored
   blind against relevance judgments, the per-item collision field predicts
@@ -260,8 +261,7 @@ $8\sigma$ event for unrelated items. Second, the well-spread null's
 small-distance tail is \emph{empty} --- in $19$ of $19$ simulated uniform
 corpora of this size, the fraction of pairs with $\cos \ge 0.30$ is exactly
 zero --- so \emph{any} observed mass there is unambiguous structure. Distance
-concentration, the classical curse of high dimension \cite{beyer1999}, is for
-a null-calibrated instrument a blessing: every close pair is a finding.
+concentration, the classical curse of high dimension \cite{beyer1999}, is, for a null-calibrated instrument, an asset: every close pair is a finding.
 Third, because almost every pair is a near-orthogonal
 background pair, \emph{averages over pairs are dominated by the background} ---
 the observation the next subsection makes precise.
@@ -295,7 +295,7 @@ the null is empty --- and the average is dominated by the needle.}
 \subsection{Why averages cannot see crowding}
 \label{sec:averages}
 
-Consider the benchmark corpus used throughout this report: $n = 4{,}000$
+Consider the benchmark corpus used throughout this report (full construction in \S\ref{sec:method}): $n = 4{,}000$
 items at $d = 768$, uniform except for a planted pocket of $k = 200$
 near-duplicates (median intra-pocket cosine $0.929$) --- five percent of the
 corpus rendered mutually interchangeable, a catastrophic defect for any
@@ -402,9 +402,7 @@ converges at $O(n^{-4/(4+d)})$ --- vacuous at $d$ in the hundreds
 % =========================================================================
 
 Every claim marked \emph{measured} in this report follows one protocol,
-stated here once. The test environments are uninteresting and are described
-by their properties in \ref{app:env}; what matters scientifically
-is the data.
+stated here once. The test environments are scientifically incidental and are described by their properties in \ref{app:env}; the data are what matter.
 
 \paragraph{Datasets.}
 Two complementary data regimes carry the evidence, chosen so that between
@@ -419,12 +417,11 @@ the instrument ever consuming labels. The traced benchmark of
 encoder width), drawn as normalized standard Gaussians (exactly uniform on
 $\sphere$); the pocket replaces the last $k = 200$ points ($5\%$) with
 $x_i = (c + s\, g_i)/\lVert c + s\, g_i\rVert$ for one shared uniform
-direction $c$, i.i.d.\ Gaussian $g_i$, and spread $s = 0.01$ --- chosen
-because it lands the pocket in the \emph{near-duplicate regime} (median
-intra-pocket cosine $0.929$, i.e.\ items a retrieval system cannot rank
-apart) while leaving every global average essentially unmoved
-(\S\ref{sec:averages}): a stringent test for a local diagnostic: the pathology is severe, yet no
-global statistic responds. The
+direction $c$, i.i.d.\ Gaussian $g_i$, and spread $s = 0.01$. This spread
+places the pocket in the near-duplicate regime (median intra-pocket cosine
+$0.929$: items a retrieval system cannot rank apart) while leaving every
+global average essentially unmoved (\S\ref{sec:averages}), the property
+that makes it a stringent test for a local diagnostic. The
 uniform control is the same draw without the replacement. The wider family
 varies what the traced instance fixes: pocket count ($1$--$20$), size
 ($20$--$800$), and tightness ($s = 0.005$--$0.06$, spanning near-duplicate
@@ -654,8 +651,7 @@ exactly this way, captioned as a view, not a measurement.
 
 \subsection{One hidden scale each; duplicate blindness}
 
-Crowding is multi-scale: near-duplicate pockets live at tiny angles, topical
-clumps at moderate ones, the anisotropy cone at large ones. Every bin width,
+Crowding is multi-scale: near-duplicate pockets live at tiny angles, topical clusters at moderate ones, the anisotropy cone at large ones. Every bin width,
 shell count, and fixed neighbor count $k$ silently commits to one scale.
 Injecting $200$ near-identical points inside an already-dense cell moves the
 hexbin peak from $340$ to $540$ --- indistinguishable from a benign hot cell
@@ -680,7 +676,7 @@ diagnosis is a list of ids. \emph{Projection:} binning a 2-D layout measures
 the shadow --- far-apart groups collide in a cell, orthogonal crowding
 vanishes, and nonlinear layouts actively destroy density
 \cite{wattenberg2016}. The repair is not a better ambient density estimate
-(kernel density estimation is hopeless at $d$ in the hundreds
+(kernel density estimation is vacuous at $d$ in the hundreds
 \cite{silverman1986}) but the abandonment of partitions for scale-free
 functionals of interpoint distances, whose guarantees carry no dimension
 factor.
@@ -690,6 +686,10 @@ factor.
 \label{sec:continuous}
 % =========================================================================
 
+This section presents the measurement layer: four instruments --- a
+whole-curve statistic, a one-number discrepancy, a per-item field, and a
+structural tree --- answering, in order, the desiderata of
+\S\ref{sec:averages}.
 Let $x_1,\dots,x_n \in \sphere$ (unit-normalized; cosine
 $c_{ij} = \langle x_i,x_j\rangle$; chord $r_{ij} = \lVert x_i - x_j\rVert =
 \sqrt{2 - 2 c_{ij}}$). \textsf{ambit} computes exact full-corpus second
@@ -704,7 +704,7 @@ the falsifiable counterpart for every layer in the text.
 \label{sec:kcurve}
 
 \begin{definition}[Pair-closeness curve]
-$K(t) = \Pr_{(i,j)}[\, c_{ij} \ge t \,]$: the fraction of distinct pairs at
+$K(t) = \Pr_{(i,j)}[\, c_{ij} \ge t \,]$, hereafter the crowding curve: the fraction of distinct pairs at
 least $t$-similar, estimated \emph{exactly} from the pair sample by sorting
 --- no bins, no origin, no width.
 \end{definition}
@@ -716,8 +716,7 @@ coordinates. Two references with matched sample size accompany it
 \emph{(i) The uniform null, tested globally.} For i.i.d.\ uniform points the
 pair cosine satisfies $c = 2B - 1$, $B \sim
 \mathrm{Beta}\!\big(\tfrac{d-1}{2},\tfrac{d-1}{2}\big)$, so null pair samples
-are drawn directly --- no $d$-dimensional vectors are materialized. The
-sphere being boundaryless, no edge correction exists to get wrong
+are drawn directly --- no $d$-dimensional vectors are materialized. The sphere is boundaryless, so no edge correction is required and none can be misapplied
 \cite{robeson2014}. Inference over the whole curve is a one-sided global
 \emph{rank-envelope} test \cite{myllymaki2017} with extreme-rank-length tie
 breaking (a one-sided $K$ test is massively tied where every null is exactly
@@ -945,14 +944,15 @@ $k=800$ ($k/n{=}0.200$) & \textbf{3.75} & \textbf{3.74} & \textbf{3.74} & \textb
 \end{tabular}
 \end{table} The estimator inherits
 the stability theorem $\lVert \dtm^P_m - \dtm^Q_m\rVert_\infty \le
-m^{-1/2}\, W_2(P, Q)$ \cite{chazal2011}: a small perturbation of the corpus
-provably moves every item's score a small amount --- the guarantee step
-functions lack, and measured: jittering every coordinate by $10^{-3}$ leaves
-the field $0.997$-correlated with itself, and against a fixed $10^6$-row
-corpus the field's first percentile is invariant to the reservoir drawn
-($0.365$--$0.366$ across reservoirs of $10^3$--$1.6{\times}10^4$ rows, ten
-seeds each), as is every other headline readout --- $\sstar$ spans
-$0.0559$--$0.0562$ against $0.0564$ at a $3.2{\times}10^4$ reference. On
+m^{-1/2}\, W_2(P, Q)$ \cite{chazal2011}: a small perturbation of the
+corpus provably moves every item's score a small amount, the guarantee
+that step functions lack. The guarantee also holds empirically: jittering
+every coordinate by $10^{-3}$ leaves the field $0.997$-correlated with
+itself. Against a fixed $10^6$-row corpus, the field's first percentile is
+invariant to the reservoir drawn ($0.365$--$0.366$ across reservoirs of
+$10^3$--$1.6{\times}10^4$ rows, ten seeds each), as is every other
+headline readout ($\sstar$ spans $0.0559$--$0.0562$ against $0.0564$ at a
+$3.2{\times}10^4$ reference). On
 the traced benchmark the planted pocket drags the low tail to $0.364$
 against a bulk at $1.35$ --- the $3.7\times$ separation behind the
 detection-power results of \S\ref{sec:power}.
@@ -1278,7 +1278,7 @@ where retrieval operates, pulling the tolerance crossing from
 $\sstar = 0.148$ to $0.123$: the corpus retains $83\%$ of a well-spread
 corpus's noise budget. At large $\sigma$ the curves converge (every pair
 confuses) and at tiny $\sigma$ both vanish; the tolerance crossing is determined where
-they differ. The lower panel overlays the five corpora under the same encoder: the ordering and spacing of their tolerance crossings ($\sstar$ from $0.090$ to $0.129$) is the corpus-side noise-budget comparison the instrument is designed to support. On the traced benchmark the same construction attributes a cost of $26\%$ of the budget to the
+they differ. The lower panel overlays the five corpora under the same encoder: the ordering and spacing of their $\sstar$ values ($0.090$ to $0.129$) is the corpus-side noise-budget comparison the instrument is designed to support. On the traced benchmark the same construction attributes a cost of $26\%$ of the budget to the
 planted $5\%$ pocket
 ($\sstar\!: 0.203 \to 0.150$).}
 \label{fig:csigma}
@@ -1346,8 +1346,8 @@ confusion ordering is the operationally correct one.}
 corpus type & $C(0.25)$ & $U_{t=2}$\\
 \midrule
 uniform & 4.86 & $-3.97$\\
-one clump of 50 & 4.90 & $-3.96$\\
-twenty clumps of 40 & 5.41 & $-3.90$\\
+one cluster of 50 & 4.90 & $-3.96$\\
+twenty clusters of 40 & 5.41 & $-3.90$\\
 one clump of 200 & 5.58 & $-3.87$\\
 five clumps of 100 & 5.80 & $-3.84$\\
 anisotropic cone & 8.38 & $-3.48$\\
@@ -1389,7 +1389,7 @@ against $400$ pure-null corpora, then compared for detection power against a
 suite of standard diagnostics with \emph{every} threshold set on the same
 nulls at a matched $1\%$ false-alarm rate --- a comparison at fixed specificity across all detectors.
 
-\paragraph{Null calibration (E4b).}
+\paragraph{Null calibration.}
 On pure nulls ($n = 2{,}000$, $d = 256$; the benchmark family's generators
 with no pathology): the global rank test rejects at $p \le 0.01$ in $1.25\%$
 of nulls (nominal $1\%$); the gated liftoff fires in $6\%$ at
@@ -1569,8 +1569,7 @@ IsoScore $0.090$) yet spectrally rich (effective rank $728/1024$); the
 occupancy discrepancy sits at $z = -4{,}211$, and the whole-curve rank test
 rejects uniformity at the minimum attainable $p = 0.005$ with liftoff at
 $\cos \approx 0.82$ --- genuine tight-pair excess, at the near-duplicate
-scale. (A correction attributable to the calibration study: an earlier
-pointwise reading placed the liftoff at $\cos \approx +0.07$; that reading
+scale. One correction is attributable to the calibration study: an earlier pointwise reading placed the liftoff at $\cos \approx +0.07$; that reading
 was precisely the bulk-edge multiple-comparison artifact the null
 calibration exposed, and the corrected test relocates the significant excess to
 the high-similarity scale. The bulk of the discrepancy $z$ remains the cone,
@@ -1592,6 +1591,14 @@ cone --- a reading no single number provides.
 \label{sec:training}
 % =========================================================================
 
+The preceding sections establish that the instrument detects, localizes,
+and prices crowding. This section and the next test a stronger claim: that
+the measurements suffice to \emph{drive} interventions --- a
+measurement-derived training objective (below), a measurement-gated
+fine-tuning loop on the case-study encoder (\S\ref{sec:loop}), execution
+of the instrument's deduplication prescription (\S\ref{sec:routing}), and
+measurement-derived guardrails for supervised fine-tuning
+(\S\ref{sec:guardrail}).
 The confusion kernel is differentiable, so the measurement layer doubles as
 a training-time regularizer with a stated guarantee.
 
@@ -1642,8 +1649,7 @@ derivative poisons masked entries with $0 \cdot \infty$ NaN gradients.)
 \caption{The confusion loss's gradient locality at a measured
 $\sigma = 0.15$ (the benchmark's $\sstar$): all gradient lives inside the
 confusable window; pairs beyond $\approx 3\sigma$ are exponentially
-untouched. ``Improve resolution without disturbing dissimilarity'' is a
-property of the kernel, not a hope.}
+untouched. ``Improve resolution without disturbing dissimilarity'' is guaranteed by the kernel.}
 \label{fig:gradwin}
 \end{figure}
 
@@ -1652,12 +1658,14 @@ property of the kernel, not a hope.}
 Batch composition is driven by the measurements: sampling weights
 proportional to per-item collision counts (with a uniform floor so the bulk
 anchors the geometry), and negatives drafted from the \emph{confusable
-window} --- between the measured liftoff and the alignment scale of true
-pairs --- under a false-negative guard: an anchor's top-$m$ base-model
+window} --- cosines between the measured liftoff (the onset of
+confusability) and the duplicate scale (the onset of identity,
+operationalized as $\cos \approx 0.98$ throughout) --- under a
+false-negative guard: an anchor's top-$m$ base-model
 neighbors are never negatives, because the window is precisely where
 unlabeled true relatives live. The protocol is staged: diagnose and take the
 cheapest licensed fix (cone $\Rightarrow$ linear post-processing; duplicates
-$\Rightarrow$ data repair; only genuine beyond-cone clumping licenses
+$\Rightarrow$ data repair; only genuine beyond-cone clustering licenses
 training); train with $\mathcal L_{\mathrm{task}} + \lambda_c \mathcal
 L_{\mathrm{conf}} + \lambda_p \mathcal L_{\mathrm{pres}}$ at the measured
 $\sigma$; verify on a held-out reservoir never seen by mining, and never
@@ -1694,13 +1702,12 @@ overlap, exactly as designed. The guard matters empirically: without it,
 window mining drafts unlabeled true relatives as negatives --- the classic
 silent failure of hard-negative mining.
 
-\subsection{Closing the loop on a production encoder}
+\subsection{Closing the loop on a full-scale encoder}
 \label{sec:loop}
 
 The synthetic example establishes the mechanism; the remaining question is
 whether the loop --- measure, construct the objective from the measurements,
-train, re-embed, re-measure --- operates on a production encoder and a real
-corpus, with the measurements adjudicating every round. We ran this loop on
+train, re-embed, re-measure --- operates on a contemporary public encoder and a million-document corpus, with the measurements adjudicating every round. We ran this loop on
 the case-study corpus (\S\ref{sec:instrument}) and its $0.6$-billion-parameter
 instruction-tuned encoder. A fixed, stratified $200{,}000$-document
 measurement subset (proportional across the four subsets) was drawn once;
@@ -1709,8 +1716,7 @@ training. The objective is fully unsupervised: $\mathcal L_{\mathrm{conf}}$
 at the subset's measured $\sstar = 0.134$ under the false-negative guard,
 plus $\lambda_p \mathcal L_{\mathrm{pres}} $ against frozen base-model
 references, with batches composed half from collision-weighted sampling and
-half from guarded confusable-window pairs (window $=$ the measured liftoff
-cosine $0.769$ to $0.98$). Between rounds, a pre-registered licensing rule
+half from guarded confusable-window pairs (the confusable window of \S\ref{sec:training}: liftoff $0.769$ to $0.98$). Between rounds, a pre-registered licensing rule
 decides continuation: $\sstar$ must not fall and held-out neighbor overlap
 must remain at least $0.90$.
 
@@ -1826,16 +1832,11 @@ $200$k held-out measurement is a faithful proxy for the full corpus.
 
 \emph{Reading Figure~\ref{fig:loopfig}.} The left panel is the
 counterfactual the instrument prevented: both rejected rounds sit
-\emph{above} the baseline --- the tuned models made the crowded cohort
-worse --- while their own training losses were falling monotonically. A
-practitioner watching only the loss would have shipped that round. The
-right panel shows the gate that caught it: the rejected LoRA round is the
+\emph{above} the baseline --- the tuned models made the flagged cohort worse --- while their own training losses were falling monotonically. Training loss alone endorsed that round; only the held-out geometric readouts identified the regression. The right panel shows the gate that caught it: the rejected LoRA round is the
 only point below the
 pre-registered overlap floor, and the accepted rounds cluster near the
 baseline's neighborhood structure. The instrument's contribution here is
-not the (marginal) improvement of the accepted rounds; it is that the
-\emph{ordering} of rounds by held-out geometry matched the ordering a
-label-based evaluation would later assign, at zero label cost.
+not the (marginal) improvement of the accepted rounds; it is that on every round the labels did score, the held-out geometric verdict agreed in sign with the later label-based evaluation, at zero label cost.
 
 \subsection{Driving retrieval behavior}
 \label{sec:driving}
@@ -1855,9 +1856,7 @@ $[-0.008, +0.023]$, spans zero. The correct reading is therefore
 improvement whose aggregate task effect is bounded near zero, consistent
 with the duplication finding --- most failures are not caused by the
 crowding the objective can legally repair. For context, a label-supervised
-fine-tune measured under the same harness reaches recall@1 $0.355$ --- the
-supervised ceiling the unsupervised loop
-does not claim to reach. The per-item layer makes a sharper, item-level
+fine-tune measured under the same harness reaches recall@1 $0.355$, an upper reference point that supervision, not geometry, supplies. The per-item layer makes a sharper, item-level
 prediction: documents with high base-model expected collisions should be the
 ones that \emph{fail at their own queries} (a judged-relevant document
 outranked by non-relevant neighbors). Scored blind, base expected-collision
@@ -1882,9 +1881,7 @@ $\sstar$ itself sets the query-noise budget an application may spend.
 \subsection{Executing the routing rule}
 \label{sec:routing}
 
-The claim that duplicate pathology is a data problem was then tested
-directly: the repair the measurement prescribed was executed blind to all
-labels ---
+We tested the routing claim directly, executing the repair the measurement prescribed blind to all labels ---
 near-duplicate groups identified purely from geometry (pairs above a stated
 cosine threshold, grouped by connectivity), each group reduced to one
 canonical member chosen by identifier order, and relevance judgments mapped
@@ -1946,18 +1943,12 @@ one site --- the mapping the instrument's readouts prescribe.}
 \label{fig:routingfig}
 \end{figure}
 
-\emph{Reading Figure~\ref{fig:routingfig}.} The four bar groups form a
-$2 \times 2$ design --- repair site $\times$ repair scale --- and only
-one cell is cleanly positive. Without the instrument there is no way to
-know which cell to act in: ``deduplicate the corpus'' sounds like one
-operation, but executed at the confusable-window scale inside the target
-corpus it breaks $57$ queries, and executed at the duplicate scale on the
-distractors it does nothing. The measurement supplied the two numbers that
-disambiguate the operation --- the liftoff cosine (where confusion begins)
-and the duplicate scale (where identity begins) --- and the frozen labels
-then confirmed that acting on each number in its proper site produces the
-predicted sign. This is the practical meaning of the claim that the
-readouts carry units: each scale licenses a different intervention.
+\emph{Reading Figure~\ref{fig:routingfig}.} ``Deduplicate the corpus''
+names a single operation, but its effect depends on site and scale: of the
+four cells in the figure, only one is cleanly positive. The measurement
+supplied the two numbers that disambiguate the operation --- the liftoff
+cosine, where confusion begins, and the duplicate scale, where identity
+begins --- and each licenses a different intervention.
 
 \subsection{Guardrails for supervised fine-tuning}
 \label{sec:guardrail}
@@ -2036,9 +2027,7 @@ because the guard's masked pairs and the preservation term are both
 relational objects. The mechanism is visible in the label-free gate that
 preceded scoring: the control had reshuffled $46\%$ of held-out
 neighborhoods (overlap $0.537$), the guarded arm $35\%$ --- and neighbor
-identity is what multi-hop retrieval consumes. The instrument helped twice:
-its terms caused the protection, and its gate detected the difference
-before any label was consulted.
+identity is what multi-hop retrieval consumes.
 
 % =========================================================================
 \section{External Validation Across Corpora and Encoders}
@@ -2046,22 +2035,10 @@ before any label was consulted.
 % =========================================================================
 
 The preceding sections validate the instrument internally and on one
-corpus. This section reports a first cross-corpus, cross-encoder slice of
-the external-validation design: four public retrieval collections with
-relevance judgments, in their BEIR form \cite{thakur2021} ---
-TREC-COVID \cite{voorhees2020} ($171$k biomedical documents, $50$ densely
-judged topics), Quora duplicate questions \cite{iyer2017} ($523$k, duplicate
-annotations),
-Natural Questions \cite{kwiatkowski2019} ($2.7$M encyclopedia passages),
-and the Shopping Queries / ESCI product-search collection
-\cite{reddy2022} ($1.2$M products, graded judgments) --- crossed with
-seven public encoders spanning $22$M to $0.6$B parameters, three output
-dimensionalities, and distinct training lineages: all-MiniLM-L6-v2 \cite{reimers2019,wang2020minilm} and
-all-mpnet-base-v2 \cite{reimers2019,song2020}, E5-base-v2 \cite{wang2022e5},
-BGE-large-en-v1.5 \cite{xiao2023}, Arctic-Embed-m-v1.5
-\cite{merrick2024}, EmbeddingGemma-300m \cite{gemmateam2025}, and the
-case study's Qwen3-Embedding-0.6B \cite{qwen3embedding}. This yields $28$
-corpus--encoder cells, plus the legal case study. Per cell, the corpus is
+corpus. This section reports a first cross-corpus, cross-encoder slice of the
+external-validation design: the four judged collections and seven encoders
+of Tables~\ref{tab:corpora} and~\ref{tab:encoders}, yielding $28$
+corpus--encoder cells plus the legal case study. Per cell, the corpus is
 embedded, the full readout set is computed and its hash recorded
 \emph{before} any judgment file is opened, the per-document collision field
 is computed at the cell's measured $\sstar$, and only then are the queries
