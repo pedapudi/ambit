@@ -11,6 +11,14 @@
 \usepackage{microtype}
 \usepackage[hidelinks]{hyperref}
 \usepackage{graphicx}
+\usepackage[section]{placeins}
+% keep floats near their prose: allow float-heavy pages, discourage drift
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.8}
+\setcounter{topnumber}{3}
+\setcounter{totalnumber}{5}
 \usepackage{xcolor}
 \usepackage{tikz}
 \usepackage{pgfplots}
