@@ -197,8 +197,9 @@ tool's own displays.}
 \end{figure} This report describes \textsf{ambit}, an
 instrument built to measure occupancy and crowding without either failure.
 Three commitments organize its design: occupancy is measured continuously
-over all scales; every statistic is calibrated against a stated null; and
-diagnosis descends to named items.
+over all scales; every statistic is calibrated against a stated null (a
+matched model of a corpus with no crowding); and diagnosis descends to
+named items.
 \S\ref{sec:geometry}--\S\ref{sec:power} build and validate the
 instrument under these commitments; \S\ref{sec:training} and
 \S\ref{sec:external} use its measurements to drive training,
@@ -217,18 +218,25 @@ the data.) Its contributions are the following.
   single number summarizing deviation from a well-spread corpus at all
   scales simultaneously; a per-item crowding radius with a stability guarantee; and a
   threshold-free catalogue of tight document groups. Every component is
-  exercised on a single traced benchmark --- a planted $5\%$
-  near-duplicate pocket --- so the layers can be read against one
-  another.
-\item \textbf{Operational semantics} (\S\ref{sec:semantics}): an exact
-  Gaussian confusion law, verified to Monte-Carlo precision; the resolution
-  bandwidth $\sstar$; a Chernoff identity giving the Wang--Isola uniformity
-  functional operational units; a precise scope statement; and two negative
-  results recorded with the reasons for their failure.
+  exercised on one benchmark with a known planted defect (a $5\%$
+  near-duplicate pocket), so the layers can be read against one another.
+\item \textbf{Operational semantics} (\S\ref{sec:semantics}). An
+  exact formula converts the distance between any two documents into the
+  probability that an imprecise query confuses them; summing it over a
+  corpus yields the resolution bandwidth $\sstar$, the largest query
+  imprecision the corpus tolerates before retrieval errors are expected.
+  We also show that a widely used training objective, the uniformity loss
+  of Wang and Isola \cite{wang2020}, bounds this same error count at the
+  right temperature --- giving its temperature parameter a concrete
+  meaning. The section closes with a precise statement of the model's
+  assumptions and two negative results recorded with the reasons for
+  their failure.
 \item \textbf{An open instrument and a training recipe}
   (\S\ref{sec:instrument}, \S\ref{sec:training}): a streaming numpy-only
   measurement core, a public million-document case study, and
-  measurement-driven regularizers with a gradient-locality guarantee. (The
+  training penalties built from the measurements, with a guarantee that
+  their gradients act only on confusable pairs and provably leave distant
+  pairs untouched. (The
   toolkit delivers its measurements through a self-contained HTML report;
   that artifact is engineering, not a contribution, and is documented
   separately in \ref{sec:report}.)
