@@ -201,7 +201,7 @@ with stated guarantees, stated nulls, and stated scope --- together with the
 negative results that pruned its design space.
 
 % =========================================================================
-\section{The Geometry of Crowding, From First Principles}
+\section{Geometry of Crowding}
 \label{sec:geometry}
 % =========================================================================
 
@@ -454,14 +454,66 @@ instrument, so the case study (\S\ref{sec:instrument}) uses
 (CC-BY-4.0) legal corpus published by NVIDIA: $10^6$ documents drawn from
 four of its thirteen subsets --- the California Code of Regulations,
 case-law summaries, CaseHOLD, and eCFR question--answer pairs --- embedded
-at $d = 1024$ by an instruction-tuned text encoder, L2-normalized, stored as
+at $d = 1024$ by the Qwen3-Embedding-0.6B instruction-tuned encoder
+\cite{qwen3embedding}, L2-normalized, stored as
 sharded Parquet with stable document ids. It
 supplies what the benchmark cannot: a genuine anisotropy cone (mean pair
 cosine $+0.236$), \emph{diffuse} within-subset crowding rather than planted
 pockets, subset labels used only to \emph{condition} one readout (never
 consumed by a measurement), and corpus scale that exercises the streaming
-path. The two regimes are deliberately complementary: the benchmark makes
-claims falsifiable, the corpus makes them representative.
+path.
+
+\emph{(iii) A public evaluation grid --- external outcomes.} The external
+study (\S\ref{sec:external}) and the retrieval-facing experiments
+(\S\ref{sec:routing}--\S\ref{sec:guardrail}) additionally use four public
+retrieval collections with relevance judgments and seven public encoders,
+enumerated with citations in Tables~\ref{tab:corpora}
+and~\ref{tab:encoders}. Judgments are quarantined: every readout is
+computed and hash-frozen before any judgment file is opened, and judgments
+are consumed exclusively by scoring code. The three regimes are
+deliberately complementary: the benchmark makes claims falsifiable, the
+corpus makes them representative, and the grid makes them externally
+scored.
+
+\begin{table}[t]
+\centering
+\caption{Evaluation corpora. All are public; the first four are used in
+their BEIR form \cite{thakur2021}.}
+\label{tab:corpora}
+\small
+\begin{tabular}{lrrl}
+\toprule
+corpus & documents & judged queries & task\\
+\midrule
+TREC-COVID \cite{voorhees2020} & $171{,}332$ & $50$ (dense, graded) & biomedical search\\
+Quora \cite{iyer2017} & $522{,}931$ & $10{,}000$ & duplicate matching\\
+Natural Questions \cite{kwiatkowski2019} & $2{,}681{,}468$ & $3{,}452$ & open-domain QA\\
+ESCI / Shopping Queries \cite{reddy2022} & $1{,}215{,}854$ & $8{,}956$ (graded) & product search\\
+Nemotron-Legal \cite{nemotronlegal} & $1{,}000{,}000$ & $1{,}000$ + $1{,}496$ & statute/case retrieval\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Encoders. Dimensions are output embedding widths; all corpora are
+embedded with each model's documented document/query prompt conventions.}
+\label{tab:encoders}
+\small
+\begin{tabular}{lrrl}
+\toprule
+encoder & params & dim & lineage\\
+\midrule
+all-MiniLM-L6-v2 \cite{reimers2019,wang2020minilm} & $22$M & $384$ & distilled BERT\\
+all-mpnet-base-v2 \cite{reimers2019,song2020} & $110$M & $768$ & MPNet\\
+E5-base-v2 \cite{wang2022e5} & $110$M & $768$ & weak-supervision contrastive\\
+Arctic-Embed-m-v1.5 \cite{merrick2024} & $110$M & $768$ & retrieval-specialized\\
+EmbeddingGemma-300m \cite{gemmateam2025} & $300$M & $768$ & Gemma\\
+BGE-large-en-v1.5 \cite{xiao2023} & $335$M & $1024$ & C-Pack\\
+Qwen3-Embedding-0.6B \cite{qwen3embedding} & $0.6$B & $1024$ & instruction-tuned decoder\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \paragraph{Standard settings.}
 Unless an experiment sweeps them: pair statistics use $2 \times 10^5$
@@ -497,7 +549,21 @@ on the same nulls (the rank test self-calibrates via its $p$); replicate
 seeds are disjoint from threshold seeds. \emph{Sensitivity sweeps}
 (reservoir, pair-sample, mass-fraction, min-size, null-replicate count,
 noise-model robustness): grids and seed counts as stated inline where each
-result is used.
+result is used. \emph{Encoder loop} (\S\ref{sec:loop}): a fixed stratified
+$200{,}000$-document subset of the legal corpus, $20\%$ held out and never
+touched by mining, weights, or training; verdicts from held-out
+measurements only, with a pre-registered continuation rule.
+\emph{Routing} (\S\ref{sec:routing}): duplicate groups from geometry alone
+(exact GPU $k$NN, connectivity, identifier-order canonicalization);
+judgments mapped through the canonicalization mechanically and consumed
+only by scoring. \emph{Guardrails} (\S\ref{sec:guardrail}): two arms of an
+identical supervised recipe differing only in the guard terms; the
+measurement gate is read and recorded before any judgment.
+\emph{External grid} (\S\ref{sec:external}): per corpus--encoder cell,
+embed with the encoder's documented prompt conventions, compute and
+hash-freeze all readouts, compute the per-document collision field at the
+cell's measured $\sstar$, and only then score against the judgments
+(nDCG@10, recall@100, per-relevant-document failure at rank $10$).
 
 \paragraph{Reporting conventions.}
 Aggregates are reported with their null value at matched sample size
@@ -634,7 +700,7 @@ functionals of interpoint distances, whose guarantees carry no dimension
 factor.
 
 % =========================================================================
-\section{Continuous, Null-Calibrated Occupancy}
+\section{Continuous Occupancy}
 \label{sec:continuous}
 % =========================================================================
 
@@ -672,7 +738,7 @@ breaking (a one-sided $K$ test is massively tied where every null is exactly
 zero): the data curve is ranked among $199$ null curves, a single global $p$
 covers all scales at once, and \emph{liftoff} --- the highest cosine at
 which the data exceed the $\alpha$-critical envelope --- is annotated only
-when the global test rejects. Calibration is measured, not assumed: on $40$
+when the global test rejects. On $40$
 pure-null corpora the gated test reported $0$ liftoffs, whereas the naive
 pointwise band (the max of the null curves) fired on \emph{every} null seed
 at the bulk edge --- a direct demonstration of the multiple-comparison failure --- and
@@ -722,7 +788,7 @@ excess mass exactly matching the planted pocket's pair share
 \end{axis}
 \end{tikzpicture}
 \caption{The crowding curve on the real corpus (Nemotron-Legal
-\cite{nemotronlegal}, measured from the report's own $2{\times}10^5$-pair
+\cite{nemotronlegal}, computed from the report's own $2{\times}10^5$-pair
 sample). Through mid-similarities the data track the anisotropy-matched
 reference --- that excess over uniformity is the cone, benign --- but above
 $\cos \approx 0.8$ the curve rises above both references: genuine
@@ -765,7 +831,7 @@ $\mathrm{sd}(\sstar)$ falls $0.0126 \to 0.0013$ over
 $P = 10^4 \to 10^6$). Second, the null's spread must itself be estimated
 well: with $24$ null replicates $|z|$ is inflated $\approx 20\%$ and
 reproduces with $\mathrm{sd} \approx 8$; the default is $64$ replicates
-($z = -43 \pm 4.5$ on the benchmark), measured across a replicate sweep.
+($z = -43 \pm 4.5$ on the benchmark), estimated from a replicate sweep.
 
 \subsection{Localization: the distance-to-measure field}
 \label{sec:dtm}
@@ -827,7 +893,7 @@ needs to gather an $m$-share of the corpus.
 Small radius means crowded; large, isolated (Figure~\ref{fig:dtm}). The one
 knob $m$ is a \emph{mass fraction} --- scale-free in $n$ --- and replaces
 bin width, grid origin, and fixed $k$ simultaneously. Its one trade-off is
-measured rather than asserted (Table~\ref{tab:mrule}): separation between a
+quantified in Table~\ref{tab:mrule}: separation between a
 planted pocket and the bulk collapses almost exactly at the predicted blur
 boundary $m \approx k/n$, so the reporting rule is ``choose $m$ below the
 smallest pocket share you care about,'' and the default $m = 0.02$ resolves
@@ -1549,7 +1615,7 @@ grade with the functional that was optimized.
 
 \begin{table}[t]
 \centering
-\caption{The worked training example, measured (a planted $300$-item pocket
+\caption{The worked training example (a planted $300$-item pocket
 in $4{,}000$ items at $d = 64$; a linear adapter as the model stand-in; all
 verdicts from a held-out slice unseen by mining or batching). A linear
 adapter roughly halves flagged-item collisions at high structure
@@ -1619,6 +1685,51 @@ full fine-tune & 0.1338 & 0.763 & $-3552$ & 0.083 (275) & 0.965 & 2.53\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+Figure~\ref{fig:loopfig} plots the loop's held-out verdicts per round.
+
+\begin{figure}[t]
+\centering
+\begin{minipage}{0.48\textwidth}
+\begin{tikzpicture}
+\begin{axis}[width=\textwidth, height=4.6cm,
+  ylabel={\scriptsize flagged-cohort median collisions},
+  xmin=0.5, xmax=5.5, ymin=2.2, ymax=3.2,
+  xtick={1,2,3,4,5},
+  xticklabels={base, adapter, LoRA r1, LoRA r2, full FT},
+  x tick label style={font=\tiny, rotate=28, anchor=east},
+  tick label style={font=\tiny}, label style={font=\tiny}]
+\addplot[acc, thick, mark=*, mark size=1.8pt] coordinates
+  {(1,2.584) (2,2.821) (3,3.013) (4,2.512) (5,2.530)};
+\node[font=\tiny, red!70!black] at (axis cs:2,2.95) {rejected};
+\node[font=\tiny, red!70!black] at (axis cs:3,3.11) {rejected};
+\end{axis}
+\end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}
+\begin{tikzpicture}
+\begin{axis}[width=\textwidth, height=4.6cm,
+  ylabel={\scriptsize held-out neighbor overlap@10},
+  xmin=0.5, xmax=5.5, ymin=0.90, ymax=1.02,
+  xtick={1,2,3,4,5},
+  xticklabels={base, adapter, LoRA r1, LoRA r2, full FT},
+  x tick label style={font=\tiny, rotate=28, anchor=east},
+  tick label style={font=\tiny}, label style={font=\tiny}]
+\addplot[dashed, gray] coordinates {(0.5,0.90) (5.5,0.90)};
+\addplot[acc, thick, mark=*, mark size=1.8pt] coordinates
+  {(1,1.000) (2,0.979) (3,0.924) (4,0.973) (5,0.965)};
+\node[font=\tiny, gray, anchor=west] at (axis cs:0.6,0.912) {licensing floor};
+\end{axis}
+\end{tikzpicture}
+\end{minipage}
+\caption{The encoder loop's held-out verdicts by round (values from
+Table~\ref{tab:loop}). Left: median expected collisions of the flagged
+cohort, tracked at fixed $\sigma$ --- the two rejected rounds \emph{worsen}
+the cohort while their training losses decreased; the corrected rounds
+improve it. Right: neighbor overlap against the base model, with the
+pre-registered licensing floor; every accepted round stays above it.}
+\label{fig:loopfig}
+\end{figure}
 
 Table~\ref{tab:loop} summarizes the rounds; three findings follow. First,
 \emph{the instrument rejects a misspecified round}. The initial LoRA round
@@ -1704,7 +1815,7 @@ held-out measurements with a pre-registered continuation rule; per-item
 collision counts triage which documents to repair or re-chunk first; and
 $\sstar$ itself sets the query-noise budget an application may spend.
 
-\subsection{The routing rule, executed and scored}
+\subsection{Executing the routing rule}
 \label{sec:routing}
 
 The claim that duplicate pathology is a data problem was then tested
@@ -1726,11 +1837,11 @@ distinct sections; only merging at the true-duplicate scale ($\cos \ge
 0.95$) helps in-corpus. The instrument's scale structure --- liftoff marks
 the onset of confusability, not the duplicate boundary --- prescribes
 different repairs at different scales, and the held-out labels confirm each
-mapping in both directions.
+mapping in both directions (Figure~\ref{fig:routingfig}).
 
 \begin{table}[t]
 \centering
-\caption{Dedup routing, scored blind on $1{,}000$ frozen queries
+\caption{Dedup routing scored blind on $1{,}000$ frozen queries
 (fixed/broken $=$ queries whose failure status at rank $10$ changed).
 Confusable-window cleanup applies to foreign distractors; only
 true-duplicate merging applies within the formulaic corpus.}
@@ -1745,6 +1856,31 @@ duplicates ($0.95$) & $0/0$ (no effect) & $+9/-2$, $p = 0.065$\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.86\textwidth, height=5cm, ybar, bar width=10pt,
+  ylabel={\scriptsize queries changed at rank $10$}, ymin=0, ymax=62,
+  symbolic x coords={{distractors @ liftoff},{corpus @ liftoff},{distractors @ 0.95},{corpus @ 0.95}},
+  xtick=data, tick label style={font=\scriptsize},
+  label style={font=\scriptsize}, enlarge x limits=0.15,
+  legend style={font=\tiny, at={(0.03,0.97)}, anchor=north west}, legend cell align=left]
+\addplot[fill=acc!80] coordinates
+  {({distractors @ liftoff},12) ({corpus @ liftoff},26) ({distractors @ 0.95},0) ({corpus @ 0.95},9)};
+\addplot[fill=red!45] coordinates
+  {({distractors @ liftoff},0) ({corpus @ liftoff},57) ({distractors @ 0.95},0) ({corpus @ 0.95},2)};
+\legend{fixed, broken}
+\end{axis}
+\end{tikzpicture}
+\caption{The routing dissociation as counts (values from
+Table~\ref{tab:routing}). At the liftoff scale, removing \emph{foreign}
+confusable material only fixes; merging \emph{within} the formulaic corpus
+at that same scale mostly breaks. At the true-duplicate scale the pattern
+reverses in both sites. Each repair is licensed at exactly one scale and
+one site --- the mapping the instrument's readouts prescribe.}
+\label{fig:routingfig}
+\end{figure}
 
 \subsection{Guardrails for supervised fine-tuning}
 \label{sec:guardrail}
@@ -1779,6 +1915,38 @@ while improving every other number. Two conclusions follow: the
 measurement-derived guardrails make supervised domain adaptation safer at
 no cost to its gains, and the instrument's label-free held-out gate
 selects the better model before any label is consulted.
+Figure~\ref{fig:guardfig} presents the comparison.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.9\textwidth, height=5.6cm, ybar, bar width=9pt,
+  ylabel={\scriptsize score}, ymin=0, ymax=0.75,
+  symbolic x coords={SetA MRR@10, open MRR@10, set-R@10, all-gold@10},
+  xtick=data, tick label style={font=\scriptsize},
+  label style={font=\scriptsize},
+  enlarge x limits=0.16,
+  legend style={font=\tiny, at={(0.98,0.97)}, anchor=north east,
+    /tikz/every even column/.append style={column sep=4pt}},
+  legend cell align=left]
+\addplot[fill=gray!35] coordinates
+  {(SetA MRR@10,0.467) (open MRR@10,0) (set-R@10,0) (all-gold@10,0.48)};
+\addplot[fill=red!45] coordinates
+  {(SetA MRR@10,0.5006) (open MRR@10,0.563) (set-R@10,0.489) (all-gold@10,0.223)};
+\addplot[fill=acc!80] coordinates
+  {(SetA MRR@10,0.5032) (open MRR@10,0.597) (set-R@10,0.593) (all-gold@10,0.339)};
+\legend{base, control (unguarded), guarded}
+\end{axis}
+\end{tikzpicture}
+\caption{The guardrail experiment on the frozen evaluations. On the target
+task (Set A MRR@10) the guarded arm matches the control --- the guardrails
+are free. On the untargeted open evaluation the guarded arm wins every
+metric, most sharply on the multi-hop all-gold@10 where the control
+reproduces the historical regression (base $\approx 0.48$, historical
+baseline; base bars for the open single/set metrics were not measured
+under this harness and are omitted).}
+\label{fig:guardfig}
+\end{figure}
 
 % =========================================================================
 \section{External Validation Across Corpora and Encoders}
@@ -1790,24 +1958,25 @@ corpus. This section reports a first cross-corpus, cross-encoder slice of
 the external-validation design: four public retrieval collections with
 relevance judgments, in their BEIR form \cite{thakur2021} ---
 TREC-COVID \cite{voorhees2020} ($171$k biomedical documents, $50$ densely
-judged topics), Quora duplicate questions ($523$k, duplicate annotations),
+judged topics), Quora duplicate questions \cite{iyer2017} ($523$k, duplicate
+annotations),
 Natural Questions \cite{kwiatkowski2019} ($2.7$M encyclopedia passages),
 and the Shopping Queries / ESCI product-search collection
 \cite{reddy2022} ($1.2$M products, graded judgments) --- crossed with
 seven public encoders spanning $22$M to $0.6$B parameters, three output
-dimensionalities, and distinct training lineages: all-MiniLM-L6-v2 and
-all-mpnet-base-v2 \cite{reimers2019}, E5-base-v2 \cite{wang2022e5},
+dimensionalities, and distinct training lineages: all-MiniLM-L6-v2 \cite{reimers2019,wang2020minilm} and
+all-mpnet-base-v2 \cite{reimers2019,song2020}, E5-base-v2 \cite{wang2022e5},
 BGE-large-en-v1.5 \cite{xiao2023}, Arctic-Embed-m-v1.5
 \cite{merrick2024}, EmbeddingGemma-300m \cite{gemmateam2025}, and the
-$0.6$B instruction-tuned encoder of the case study. This yields $28$
+case study's Qwen3-Embedding-0.6B \cite{qwen3embedding}. This yields $28$
 corpus--encoder cells, plus the legal case study. Per cell, the corpus is
 embedded, the full readout set is computed and its hash recorded
 \emph{before} any judgment file is opened, the per-document collision field
 is computed at the cell's measured $\sstar$, and only then are the queries
 run and scored (nDCG@10, recall@100, and per-relevant-document failure
 labels). One pipeline check: BGE-large's nDCG@10 on TREC-COVID reproduces
-its published benchmark value. Table~\ref{tab:external} summarizes the
-grid's two findings, elaborated below.
+its published benchmark value. Table~\ref{tab:external} and Figure~\ref{fig:external} present every
+cell; the grid's two findings are elaborated below.
 
 \begin{table}[t]
 \centering
@@ -1832,6 +2001,73 @@ legal (case study) & --- & --- & --- & $0.58$ & $1/1$\\
 \end{tabular}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\begin{minipage}{0.245\textwidth}
+\begin{tikzpicture}
+\begin{axis}[width=\textwidth, height=3.6cm, title={\scriptsize Quora\ \ $\rho=+0.75$},
+  xlabel={\scriptsize $\sstar$}, ylabel={\scriptsize nDCG@10},
+  tick label style={font=\tiny}, label style={font=\tiny}, title style={yshift=-4pt},
+  xtick={0.08,0.12}, scaled ticks=false]
+\addplot[only marks, mark=*, mark size=1.6pt, acc] coordinates {(0.1200,0.8900) (0.0870,0.8658) (0.1056,0.8660) (0.0730,0.8604) (0.1235,0.8713) (0.1431,0.8756) (0.1439,0.8744)};
+\end{axis}
+\end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}{0.245\textwidth}
+\begin{tikzpicture}
+\begin{axis}[width=\textwidth, height=3.6cm, title={\scriptsize ESCI\ \ $\rho=-0.07$},
+  xlabel={\scriptsize $\sstar$},
+  tick label style={font=\tiny}, label style={font=\tiny}, title style={yshift=-4pt},
+  xtick={0.08,0.12}, scaled ticks=false]
+\addplot[only marks, mark=*, mark size=1.6pt, acc] coordinates {(0.1011,0.1999) (0.1091,0.2185) (0.1151,0.2226) (0.0713,0.1964) (0.0886,0.1575) (0.1226,0.1458) (0.1146,0.1446)};
+\end{axis}
+\end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}{0.245\textwidth}
+\begin{tikzpicture}
+\begin{axis}[width=\textwidth, height=3.6cm, title={\scriptsize NQ\ \ $\rho=-0.54$},
+  xlabel={\scriptsize $\sstar$},
+  tick label style={font=\tiny}, label style={font=\tiny}, title style={yshift=-4pt},
+  xtick={0.08,0.12}, scaled ticks=false]
+\addplot[only marks, mark=*, mark size=1.6pt, acc] coordinates {(0.1083,0.5500) (0.1166,0.6247) (0.1292,0.6260) (0.0790,0.5809) (0.1286,0.5459) (0.1368,0.4400) (0.1352,0.5043)};
+\end{axis}
+\end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}{0.245\textwidth}
+\begin{tikzpicture}
+\begin{axis}[width=\textwidth, height=3.6cm, title={\scriptsize TREC-COVID\ \ $\rho=-0.32$},
+  xlabel={\scriptsize $\sstar$},
+  tick label style={font=\tiny}, label style={font=\tiny}, title style={yshift=-4pt},
+  xtick={0.08,0.12}, scaled ticks=false]
+\addplot[only marks, mark=*, mark size=1.6pt, acc] coordinates {(0.0991,0.7428) (0.1045,0.8462) (0.1215,0.7426) (0.0729,0.7079) (0.1192,0.8410) (0.1256,0.4697) (0.1185,0.5123)};
+\end{axis}
+\end{tikzpicture}
+\end{minipage}
+
+\vspace{4pt}
+\begin{tikzpicture}
+\begin{axis}[width=0.97\textwidth, height=3.4cm,
+  ylabel={\scriptsize H2 AUC}, ymin=0.38, ymax=0.80,
+  xmin=0, xmax=29,
+  xtick={4,11,18,25},
+  xticklabels={Quora, ESCI, NQ, TREC-COVID (saturated)},
+  tick label style={font=\tiny}, label style={font=\tiny}]
+\addplot[dashed, gray] coordinates {(0,0.5) (29,0.5)};
+\addplot[only marks, mark=*, mark size=1.7pt, acc] coordinates {(1,0.741) (2,0.674) (3,0.681) (4,0.703) (5,0.658) (6,0.693) (7,0.708) (8,0.594) (9,0.572) (10,0.616) (11,0.600) (12,0.691) (13,0.622) (14,0.618) (15,0.606) (16,0.509) (17,0.547) (18,0.541) (19,0.581) (20,0.621) (21,0.608) (22,0.483) (23,0.433) (24,0.502) (25,0.487) (26,0.423) (27,0.480) (28,0.528)};
+\end{axis}
+\end{tikzpicture}
+\caption{Every grid cell, plotted. Top: within each corpus, the seven
+encoders' $\sstar$ against their nDCG@10 --- rank correlation is strongly
+positive only where relevance is geometric matching (Quora), null on
+product search, and negative where semantic competence gaps dominate.
+Bottom: the per-document collision field's failure-prediction AUC for all
+$28$ cells, grouped by corpus, against the chance line --- above $0.5$ in
+every informative cell; the TREC-COVID group is uninformative because its
+outcome label saturates ($98\%$ of judged documents past rank $10$).}
+\label{fig:external}
+\end{figure}
+
+
 \textbf{The per-item claim is confirmed across corpora.} In every cell
 whose outcome variable is informative, expected-collision counts predict
 which judged-relevant documents fail at their own queries: $7/7$ encoders
@@ -1853,13 +2089,13 @@ correlation is null ($-0.07$; graded shopping relevance mixes attribute
 matching with intent the geometry cannot see), and on open-domain QA and
 biomedical search it reverses ($-0.54$, $-0.32$): the smallest encoder
 attains the best geometry and the worst retrieval. The mechanism is the
-alignment--uniformity decomposition made empirical: retrieval quality
+alignment--uniformity decomposition observed directly: retrieval quality
 factors into semantic alignment and geometric headroom; \textsf{ambit}
 measures only the second (it is unsupervised by construction and cannot
 see alignment), so $\sstar$ ranks encoders only where alignment is
 essentially constant across them --- and a semantically weak encoder can
 win geometry by spreading documents it does not understand. The
-operational reading, now measured rather than asserted: the corpus-level
+operational conclusion: the corpus-level
 $\sstar$ is a \emph{budget} for comparative use --- the same corpus under
 encoder variants, repair, or drift, as the guardrail gate used it --- not
 a leaderboard; the externally validated cross-encoder readout is the
@@ -1874,7 +2110,35 @@ duplicate scale is low because annotated duplicates are mostly
 paraphrases living in the confusable window. This is item-level
 confirmation of the two-scale reading --- confusable onset versus duplicate
 boundary --- that the routing experiment (\S\ref{sec:routing}) turned into
-opposite repair prescriptions.
+opposite repair prescriptions. Figure~\ref{fig:dedupf1} plots the ladder.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.8\textwidth, height=5.4cm,
+  xlabel={\scriptsize cosine threshold for predicting ``duplicate''},
+  ylabel={\scriptsize score}, xmin=0.78, xmax=1.0, ymin=0, ymax=1.05,
+  tick label style={font=\tiny}, label style={font=\scriptsize},
+  legend style={font=\tiny, at={(0.5,0.5)}, anchor=west}, legend cell align=left]
+\addplot[acc, thick, mark=*, mark size=1.6pt] coordinates
+  {(0.80,0.288) (0.85,0.517) (0.90,0.759) (0.95,0.927) (0.98,0.976)};
+\addplot[gray, thick, mark=square*, mark size=1.5pt] coordinates
+  {(0.80,0.801) (0.85,0.604) (0.90,0.340) (0.95,0.088) (0.98,0.005)};
+\draw[dashed, red!60] (axis cs:0.816,0) -- (axis cs:0.816,1.05)
+  node[pos=0.93, right, font=\tiny] {liftoff};
+\draw[dashed, red!60] (axis cs:0.95,0) -- (axis cs:0.95,1.05)
+  node[pos=0.93, left, font=\tiny] {duplicate scale};
+\legend{precision, recall}
+\end{axis}
+\end{tikzpicture}
+\caption{Duplicate prediction from pair cosine alone on Quora's annotated
+duplicate pairs (case-study encoder; $15{,}675$ gold pairs). Precision
+rises monotonically toward the duplicate scale --- the ground-truth reading
+of ``the closer to one, the more surely duplicate'' --- while recall falls,
+because annotated duplicates are mostly paraphrases living between the
+liftoff and duplicate scales: the confusable window.}
+\label{fig:dedupf1}
+\end{figure}
 
 % =========================================================================
 \section{Limitations and Future Work}
@@ -2577,9 +2841,9 @@ hubness skew.}
   $k$-nearest-neighbor lists --- heavy right skew means a few ``hub'' items
   intrude into everyone's neighborhoods.
   \item \textbf{Why it matters:} These are the statistics practitioners
-  already consult. The report's point is measured, not rhetorical: they are
-  global averages, and the detection-power study shows them blind to small
-  pockets that the continuous layer detects at full power.
+  already consult; the detection-power study shows them blind to small
+  pockets that the continuous layer detects at full power, because they
+  are global averages.
 \end{itemize}
 
 \paragraph{Training losses: $\mathcal L_{\mathrm{conf}} = \mathrm{mean}_{(i,j)
@@ -2855,6 +3119,21 @@ Similarity of neural network representations revisited. \emph{ICML}, 2019.
 \bibitem{papyan2020} V.~Papyan, X.~Y.~Han, D.~L.~Donoho. Prevalence of
 neural collapse during the terminal phase of deep learning training.
 \emph{PNAS} 117(40), 2020.
+
+\bibitem{qwen3embedding} Qwen Team. Qwen3 Embedding: advancing text
+embedding and reranking through foundation models.
+\emph{arXiv:2506.05176}, 2025.
+
+\bibitem{iyer2017} S. Iyer, N. Dandekar, K. Csernai. First Quora dataset
+release: question pairs. Quora Engineering Blog, 2017.
+
+\bibitem{wang2020minilm} W. Wang, F. Wei, L. Dong, H. Bao, N. Yang,
+M. Zhou. MiniLM: deep self-attention distillation for task-agnostic
+compression of pre-trained transformers. \emph{NeurIPS}, 2020.
+
+\bibitem{song2020} K. Song, X. Tan, T. Qin, J. Lu, T.-Y. Liu. MPNet:
+masked and permuted pre-training for language understanding.
+\emph{NeurIPS}, 2020.
 
 \bibitem{thakur2021} N. Thakur, N. Reimers, A. R\"uckl\'e, A. Srivastava,
 I. Gurevych. BEIR: a heterogeneous benchmark for zero-shot evaluation of
