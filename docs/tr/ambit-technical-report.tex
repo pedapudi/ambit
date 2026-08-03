@@ -667,108 +667,158 @@ Each experiment below is stated as: the hypothesis under test; the design,
 with the reason it takes that shape; the control it is read against; and
 the measure that decides. Full parameter values appear beside each result.
 
-\emph{Lattice fragility} (Table~\ref{tab:maup}). Hypothesis: the headline
+\paragraph{Lattice fragility (Table~\ref{tab:maup}).}
+\begin{itemize}
+  \item \textbf{Hypothesis:} the headline
 statistics of binned displays are properties of the lattice, not of the
-data. Design: hold $4{,}000$ synthetic 2-D points fixed and perturb only
+data.
+  \item \textbf{Design:} hold $4{,}000$ synthetic 2-D points fixed and perturb only
 the lattice --- shift its origin by fractions of one cell, change its
 column count --- because any resulting change can then be charged to the
-partition alone. Control: an isotropic jitter of the \emph{data} by
+partition alone.
+  \item \textbf{Control:} an isotropic jitter of the \emph{data} by
 $0.1\%$ of their span, the honest magnitude of change a data perturbation
-of comparable size produces. Measure: the change in the display's peak
+of comparable size produces.
+  \item \textbf{Measure:} the change in the display's peak
 cell count and peak location under each perturbation, lattice against
 control.
+\end{itemize}
 
-\emph{Confusion-law verification} (Table~\ref{tab:flip}). Hypothesis: the
+\paragraph{Confusion-law verification (Table~\ref{tab:flip}).}
+\begin{itemize}
+  \item \textbf{Hypothesis:} the
 closed-form probability that noise flips a ranking is exact in any
-dimension. Design: two fixed unit vectors at a known angle, $3 \times
+dimension.
+  \item \textbf{Design:} two fixed unit vectors at a known angle, $3 \times
 10^5$ independent noise draws per cell of a $6 \times 4$ grid of angles
 and noise scales --- direct simulation of the law's own setting, with no
-modeling assumptions to hide in. Control: the closed form itself; under
+modeling assumptions to hide in.
+  \item \textbf{Control:} the closed form itself; under
 the hypothesis the residual is pure Monte-Carlo noise of predictable
-size. Measure: the maximum absolute deviation between empirical flip rate
+size.
+  \item \textbf{Measure:} the maximum absolute deviation between empirical flip rate
 and formula over the grid.
+\end{itemize}
 
-\emph{Redundancy of the confusion and uniformity functionals}
-(Table~\ref{tab:redundancy}). Hypothesis: the two functionals may order
-corpora identically, making one redundant. Design: eight synthetic corpus
+\paragraph{Redundancy of the confusion and uniformity functionals (Table~\ref{tab:redundancy}).}
+\begin{itemize}
+  \item \textbf{Hypothesis:} the two functionals may order
+corpora identically, making one redundant.
+  \item \textbf{Design:} eight synthetic corpus
 generators spanning the pathology families, both functionals computed on
 each --- redundancy is a claim about \emph{orderings across corpora}, so
-the design produces orderings, not values. Control: perfect rank
-agreement, the outcome under full redundancy. Measure: the rank
+the design produces orderings, not values.
+  \item \textbf{Control:} perfect rank
+agreement, the outcome under full redundancy.
+  \item \textbf{Measure:} the rank
 correlation and, more importantly, each disagreement, inspected
 individually.
+\end{itemize}
 
-\emph{Calibration and detection power} (\S\ref{sec:power}). Hypothesis:
-the instrument's alarms fire at their nominal rates on healthy corpora
-and detect planted pathologies that standard summaries miss. Design:
-$400$ pure-null corpora first, to measure false-alarm rates and to set
+\paragraph{Calibration and detection power (\S\ref{sec:power}).}
+\begin{itemize}
+  \item \textbf{Hypothesis:} the instrument's alarms fire at their nominal rates on healthy corpora
+and detect planted pathologies that standard summaries miss.
+  \item \textbf{Design:} $400$ pure-null corpora first, to measure false-alarm rates and to set
 every detector's threshold at the same $1\%$ specificity --- power
 comparisons are meaningless unless all detectors are equally trigger-shy
 --- then a grid of planted pathologies, $50$ replicates per cell, with
-threshold seeds disjoint from test seeds. Control: the pure nulls, and
+threshold seeds disjoint from test seeds.
+  \item \textbf{Control:} the pure nulls, and
 the standard summaries (mean cosine, isotropy scores, effective rank,
 hubness, a neighbor-distance quantile) run under identical thresholds.
-Measure: empirical false-alarm rate against nominal; detection rate per
+  \item \textbf{Measure:} empirical false-alarm rate against nominal; detection rate per
 pathology cell at matched specificity.
+\end{itemize}
 
-\emph{Sensitivity sweeps}. Hypothesis: every default parameter sits on a
-plateau, so reasonable variation does not change conclusions. Design:
-sweep each knob (reservoir size, pair-sample size, mass fraction, minimum
+\paragraph{Sensitivity sweeps.}
+\begin{itemize}
+  \item \textbf{Hypothesis:} every default parameter sits on a
+plateau, so reasonable variation does not change conclusions.
+  \item \textbf{Design:} sweep each knob (reservoir size, pair-sample size, mass fraction, minimum
 pocket size, null-replicate count) one at a time over an order of
-magnitude or more. Control: the readout at the default, with seed-to-seed
-spread as the yardstick. Measure: readout drift across the sweep,
+magnitude or more.
+  \item \textbf{Control:} the readout at the default, with seed-to-seed
+spread as the yardstick.
+  \item \textbf{Measure:} readout drift across the sweep,
 compared to that spread.
+\end{itemize}
 
-\emph{The training example} (Table~\ref{tab:training}). Hypothesis:
-penalties built from the measurements reduce retrieval collisions without
-destroying the embedding's structure. Design: a planted pocket with a
+\paragraph{The training example (Table~\ref{tab:training}).}
+\begin{itemize}
+  \item \textbf{Hypothesis:} penalties built from the measurements reduce retrieval collisions without
+destroying the embedding's structure.
+  \item \textbf{Design:} a planted pocket with a
 linear map as the smallest possible trainee, and a $20\%$ slice held out
 from mining, weighting, and batching --- verdicts must come from data the
-training machinery never touched. Control: the corpus before training,
-and a structure-preservation score against the frozen base. Measure:
-held-out flagged-item collisions and neighbor overlap, per schedule.
+training machinery never touched.
+  \item \textbf{Control:} the corpus before training,
+and a structure-preservation score against the frozen base.
+  \item \textbf{Measure:} held-out flagged-item collisions and neighbor overlap, per schedule.
+\end{itemize}
 
-\emph{The encoder loop} (\S\ref{sec:loop}). Hypothesis: held-out
+\paragraph{The encoder loop (\S\ref{sec:loop}).}
+\begin{itemize}
+  \item \textbf{Hypothesis:} held-out
 geometric readouts alone can adjudicate fine-tuning rounds --- accepting
-safe ones and rejecting harmful ones --- with no labels. Design: a fixed
+safe ones and rejecting harmful ones --- with no labels.
+  \item \textbf{Design:} a fixed
 stratified $200{,}000$-document subset with $20\%$ held out, and a
 continuation rule registered before any round ran, so acceptance cannot
-be negotiated after seeing results. Control: the base model's readouts;
+be negotiated after seeing results.
+  \item \textbf{Control:} the base model's readouts;
 and the trainee's own loss curve, the signal a practitioner would
-otherwise trust. Measure: per-round held-out $\sstar$, flagged-cohort
+otherwise trust.
+  \item \textbf{Measure:} per-round held-out $\sstar$, flagged-cohort
 collisions, and neighbor overlap against the rule.
+\end{itemize}
 
-\emph{Routing} (\S\ref{sec:routing}). Hypothesis: a repair succeeds only
+\paragraph{Routing (\S\ref{sec:routing}).}
+\begin{itemize}
+  \item \textbf{Hypothesis:} a repair succeeds only
 at the site and scale the measurements prescribe --- not because
-deduplication is generically good. Design: the same label-blind
+deduplication is generically good.
+  \item \textbf{Design:} the same label-blind
 deduplication executed in all four combinations of two sites (foreign
 distractors; the target corpus) and two scales (the confusable window;
 the duplicate scale), because only the full $2 \times 2$ separates
-``the prescription was right'' from ``any cleanup helps.'' Control: the
-three cells the measurements warn against. Measure: frozen-query failures
+``the prescription was right'' from ``any cleanup helps.''
+  \item \textbf{Control:} the
+three cells the measurements warn against.
+  \item \textbf{Measure:} frozen-query failures
 fixed and introduced per cell, with an exact paired test.
+\end{itemize}
 
-\emph{Guardrails} (\S\ref{sec:guardrail}). Hypothesis:
-measurement-derived guard terms prevent the collateral damage of
-supervised fine-tuning without reducing its gains. Design: one supervised
+\paragraph{Guardrails (\S\ref{sec:guardrail}).}
+\begin{itemize}
+  \item \textbf{Hypothesis:} measurement-derived guard terms prevent the collateral damage of
+supervised fine-tuning without reducing its gains.
+  \item \textbf{Design:} one supervised
 recipe run twice, the arms differing \emph{only} in the guard terms, so
 any outcome difference is attributable to them; the held-out measurement
-gate is read and recorded before any judgment. Control: the unguarded
-arm. Measure: the targeted retrieval metric (where no cost is claimed)
+gate is read and recorded before any judgment.
+  \item \textbf{Control:} the unguarded
+arm.
+  \item \textbf{Measure:} the targeted retrieval metric (where no cost is claimed)
 and the untargeted open-corpus metrics (where protection is claimed),
 plus the pre-label gate's prediction.
+\end{itemize}
 
-\emph{The external grid} (\S\ref{sec:external}). Hypotheses: first, that
+\paragraph{The external grid (\S\ref{sec:external}).}
+\begin{itemize}
+  \item \textbf{Hypotheses:} first, that
 each document's expected-collision count predicts which judged-relevant
 documents fail at their own queries; second, that the corpus-level
-$\sstar$ ranks encoders within a corpus. Design: every corpus--encoder
+$\sstar$ ranks encoders within a corpus.
+  \item \textbf{Design:} every corpus--encoder
 cell is embedded and fully measured, and the readouts hash-frozen,
 \emph{before} any judgment file is opened --- the freeze makes leakage
 from labels into measurements impossible rather than merely disavowed.
-Control: for the per-document claim, the natural geometric baseline
+  \item \textbf{Control:} for the per-document claim, the natural geometric baseline
 (nearest-neighbor cosine); for the corpus-level claim, mean pair cosine.
-Measure: per-cell prediction quality (AUC) for the first; per-corpus rank
+  \item \textbf{Measure:} per-cell prediction quality (AUC) for the first; per-corpus rank
 correlation with nDCG@10 for the second.
+\end{itemize}
 
 \paragraph{Reporting conventions.}
 Aggregates are reported with their null value at matched sample size
