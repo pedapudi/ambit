@@ -62,8 +62,8 @@ deduplication, clustering --- depend on a single geometric property: items
 that must be distinguished must remain distinguishable under the similarity
 metric. We call the failure of this property \emph{crowding}. It is a local
 loss of resolution --- of the ability to keep distinct items
-distinguishable --- and it hides from the global statistics practitioners
-consult. This report describes \textsf{ambit}, an open instrument that
+distinguishable --- and the global statistics that practitioners
+routinely examine do not detect it. This report describes \textsf{ambit}, an open instrument that
 measures how a corpus occupies its embedding space.
 
 Three commitments organize the design. Occupancy is measured
@@ -140,7 +140,7 @@ instrument under these commitments; \S\ref{sec:training} and
 \S\ref{sec:external} use its measurements to drive training,
 deduplication, and fine-tuning guardrails.
 (\S\ref{sec:geometry} and \S\ref{sec:binned} first develop, with
-controlled experiments, why crowding hides from global averages and why
+controlled experiments, why global averages cannot detect crowding and why
 binned occupancy statistics are properties of the lattice rather than of
 the data.) Its contributions are the following.
 
@@ -341,7 +341,7 @@ actionable output is a list of ids. These four desiderata are the design of
   \node[faint, font=\small, anchor=north] at (-0.3,-2.45)
     {diffuse bulk: $95\%$ of items, $99.75\%$ of pairs};
 \end{tikzpicture}
-\caption{Crowding hides from averages (schematic; annotations from the
+\caption{Averages cannot detect crowding (schematic; annotations from the
 $d{=}768$ benchmark). The planted pocket is catastrophic --- $200$ items with
 median mutual cosine $0.93$ --- yet it owns only $0.25\%$ of pairs, so the
 corpus mean pair cosine moves from $0.000$ to $0.002$. No global number
@@ -2983,7 +2983,7 @@ hubness skew.}
   (asymmetry) of the count of how often each item appears in others'
   $k$-nearest-neighbor lists --- heavy right skew means a few ``hub'' items
   intrude into everyone's neighborhoods.
-  \item \textbf{Why it matters:} These are the statistics practitioners
+  \item \textbf{Why it matters:} These are the statistics that practitioners
   already consult; the detection-power study shows them blind to small
   pockets that the continuous layer detects at full power, because they
   are global averages.
