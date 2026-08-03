@@ -1762,16 +1762,80 @@ no cost to its gains, and the instrument's label-free held-out gate
 selects the better model before any label is consulted.
 
 % =========================================================================
+\section{External Validation Across Corpora and Encoders}
+\label{sec:external}
+% =========================================================================
+
+The preceding sections validate the instrument internally and on one
+corpus. This section reports a first cross-corpus, cross-encoder slice of
+the external-validation design: four public retrieval collections with
+relevance judgments (biomedical literature, $171$k documents; duplicate
+questions, $523$k; open-domain QA over encyclopedia passages, $2.7$M; and
+product search, $1.2$M) crossed with seven public encoders spanning $22$M
+to $0.6$B parameters, three dimensionalities, and four training lineages
+--- $28$ corpus--encoder cells, plus the legal case study. Per cell, the
+corpus is embedded, the full readout set is computed and its hash recorded
+\emph{before} any judgment file is opened, the per-document collision field
+is computed at the cell's measured $\sstar$, and only then are the queries
+run and scored (nDCG@10, recall@100, and per-relevant-document failure
+labels). One pipeline check: the strongest encoder's nDCG@10 on the
+biomedical collection reproduces its published benchmark value.
+
+\textbf{The per-item claim is confirmed across corpora.} In every cell
+whose outcome variable is informative, base-model expected-collision counts
+predict which judged-relevant documents fail at their own queries: $7/7$
+encoders on duplicate questions (AUC $0.66$--$0.74$), $7/7$ on open-domain
+QA ($0.51$--$0.62$), and the legal case study ($0.58$) --- $15/15$ positive
+cells (sign test $p \approx 3 \times 10^{-5}$). The biomedical collection
+is uninformative for this outcome by construction, not by counterexample:
+with $50$ queries carrying hundreds of relevant documents each, $98\%$ of
+judged documents exceed rank $10$ and the failure label saturates.
+
+\textbf{The corpus-level claim earns a scope law, not a blanket
+confirmation.} Within-corpus, across encoders, the rank correlation of
+$\sstar$ with nDCG@10 is $+0.75$ on duplicate questions and $+0.64$ on
+product search --- the two tasks where retrieval is a matching problem ---
+with the naive mean-cosine control \emph{inverted} ($-0.79$, $-0.50$). On
+open-domain QA and biomedical search the correlation reverses ($-0.54$,
+$-0.32$): the smallest encoder attains the best geometry and the worst
+retrieval. The mechanism is the alignment--uniformity decomposition made
+empirical: retrieval quality factors into semantic alignment and geometric
+headroom; \textsf{ambit} measures only the second (it is unsupervised by
+construction and cannot see alignment), so $\sstar$ ranks encoders exactly
+where alignment is roughly constant across them --- and a semantically weak
+encoder can win geometry by spreading documents it does not understand.
+The operational reading, now measured rather than asserted: $\sstar$ is a
+\emph{budget}, valid comparatively --- the same corpus under encoder
+variants, repair, or drift --- not a leaderboard.
+
+\textbf{Ground truth for the scale semantics.} On the duplicate-question
+collection, whose judgments annotate true duplicates, predicting
+``duplicate'' from pair cosine alone yields precision that rises
+monotonically along the threshold ladder ($0.29$ at $\cos 0.80$, $0.93$ at
+$0.95$, $0.98$ at $0.98$ for the case-study encoder), while recall at the
+duplicate scale is low because annotated duplicates are mostly
+paraphrases living in the confusable window. This is item-level
+confirmation of the two-scale reading --- confusable onset versus duplicate
+boundary --- that the routing experiment (\S\ref{sec:routing}) turned into
+opposite repair prescriptions.
+
+% =========================================================================
 \section{Limitations and Future Work}
 % =========================================================================
 
-\textbf{External validation.} The instrument's readouts are geometrically
-grounded and internally verified; the outstanding scientific step is a study
-correlating them with measured retrieval outcomes across corpora and
-encoders, using relevance judgments only to \emph{score} the unsupervised
-predictions. The confusion transform makes one falsifiable prediction its
-near-redundant sibling does not (Table~\ref{tab:redundancy}): duplicate
-pathology outranks diffuse collapse.
+\textbf{External validation.} A first cross-corpus slice now exists
+(\S\ref{sec:external}): the per-item claim is confirmed in $15/15$
+informative cells and the corpus-level claim received a measured scope law.
+The full preregistered study remains open --- more collections (one large
+multi-hop corpus is deferred with its queue preserved), encoder-degradation
+ladders (H3), preregistration, and independent replication --- and the
+scope law itself is a hypothesis to re-test: the alignment--uniformity
+split predicts that adding any alignment probe would restore ranking power
+on knowledge-limited tasks, but such a probe requires supervision the tool
+deliberately excludes. The confusion transform makes one falsifiable
+prediction its near-redundant sibling does not
+(Table~\ref{tab:redundancy}): duplicate pathology outranks diffuse
+collapse.
 \textbf{Query distributions.} Accepting an optional \emph{unlabeled} query
 set would replace the corpus-as-queries assumption with a measured cross-set
 confusion, within the tool's supervision constraint.

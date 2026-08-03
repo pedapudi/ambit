@@ -1,18 +1,18 @@
 {
  "h1": {
   "esci-us": {
-   "n": 6,
-   "sigma": 0.6,
-   "ratio": 0.6,
-   "meancos": -0.6,
-   "effrank": -0.14285714285714288
+   "n": 7,
+   "sigma": 0.642857142857143,
+   "ratio": 0.642857142857143,
+   "meancos": -0.5,
+   "effrank": -0.03571428571428572
   },
   "nq": {
-   "n": 5,
-   "sigma": -0.7,
-   "ratio": -0.7,
-   "meancos": 0.7,
-   "effrank": 0.3
+   "n": 7,
+   "sigma": -0.5357142857142858,
+   "ratio": -0.5357142857142858,
+   "meancos": 0.5357142857142858,
+   "effrank": 0.25
   },
   "quora": {
    "n": 7,
@@ -46,10 +46,24 @@
   },
   {
    "corpus": "nq",
+   "model": "google-embeddinggemma-300m",
+   "auc": 0.5471342758529139,
+   "n_fail": 729,
+   "n_ok": 3472
+  },
+  {
+   "corpus": "nq",
    "model": "intfloat-e5-base-v2",
    "auc": 0.5405493663130018,
    "n_fail": 964,
    "n_ok": 3237
+  },
+  {
+   "corpus": "nq",
+   "model": "qwen3-embedding-0.6b",
+   "auc": 0.5811865893716428,
+   "n_fail": 1110,
+   "n_ok": 3091
   },
   {
    "corpus": "nq",
