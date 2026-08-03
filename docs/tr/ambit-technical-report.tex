@@ -191,7 +191,7 @@ Its contributions:
 \item \textbf{External validation with a measured scope law}
   (\S\ref{sec:external}): across $28$ public corpus--encoder cells scored
   blind against relevance judgments, the per-item collision field predicts
-  failing documents in every informative cell ($22/22$, sign test
+  failing documents in every informative cell (sign test
   $p \approx 2 \times 10^{-7}$), while the corpus-level $\sstar$ ranks
   encoders only where relevance is geometric matching and inverts on
   knowledge-limited tasks --- an empirical statement of the
@@ -1447,7 +1447,7 @@ low-rank collapse         & 1.00 & 1.00 & 1.00 & 1.00 & .26 & 1.00 & 1.00 & \tex
 \end{tabular}
 \end{table}
 
-\paragraph{Detection power (E2).}
+\paragraph{Detection power.}
 Table~\ref{tab:power} reports the pathology grid. Three observations follow. First, the
 continuous layer --- the rank test, $\sstar$, the DTM tail ratio, and pocket
 prominence --- is at \emph{full power in every pocket cell}, including the
@@ -1768,7 +1768,7 @@ Figure~\ref{fig:loopfig} plots the loop's held-out verdicts per round.
   ylabel={\scriptsize flagged-cohort median collisions},
   xmin=0.5, xmax=5.5, ymin=2.2, ymax=3.2,
   xtick={1,2,3,4,5},
-  xticklabels={base, adapter, LoRA r1, LoRA r2, full FT},
+  xticklabels={base, adapter, {LoRA (rejected)}, {LoRA (corrected)}, full fine-tune},
   x tick label style={font=\tiny, rotate=28, anchor=east},
   tick label style={font=\tiny}, label style={font=\tiny}]
 \addplot[acc, thick, mark=*, mark size=1.8pt] coordinates
@@ -1784,7 +1784,7 @@ Figure~\ref{fig:loopfig} plots the loop's held-out verdicts per round.
   ylabel={\scriptsize held-out neighbor overlap@10},
   xmin=0.5, xmax=5.5, ymin=0.90, ymax=1.02,
   xtick={1,2,3,4,5},
-  xticklabels={base, adapter, LoRA r1, LoRA r2, full FT},
+  xticklabels={base, adapter, {LoRA (rejected)}, {LoRA (corrected)}, full fine-tune},
   x tick label style={font=\tiny, rotate=28, anchor=east},
   tick label style={font=\tiny}, label style={font=\tiny}]
 \addplot[dashed, gray] coordinates {(0.5,0.90) (5.5,0.90)};
@@ -1850,8 +1850,9 @@ $200$k held-out measurement is a faithful proxy for the full corpus.
 counterfactual the instrument prevented: both rejected rounds sit
 \emph{above} the baseline --- the tuned models made the crowded cohort
 worse --- while their own training losses were falling monotonically. A
-practitioner watching only the loss would have shipped round~1. The right
-panel shows the gate that caught it: round~1 is the only point below the
+practitioner watching only the loss would have shipped that round. The
+right panel shows the gate that caught it: the rejected LoRA round is the
+only point below the
 pre-registered overlap floor, and the accepted rounds cluster near the
 baseline's neighborhood structure. The instrument's contribution here is
 not the (marginal) improvement of the accepted rounds; it is that the
@@ -1888,7 +1889,8 @@ signal is significantly better than chance (bootstrap $95\%$ interval
 $[0.536, 0.622]$) but the margin over the proximity control is not
 individually significant on this single corpus ($+0.028$, paired bootstrap
 interval $[-0.017, +0.073]$) --- establishing the cross-corpus version of
-this comparison is precisely hypothesis H2 of the external validation plan.
+this comparison is a designated hypothesis of the preregistered
+external-validation plan.
 
 In operational terms the instrument drives retrieval behavior through the
 readout-to-intervention map exercised end to end in this section: the
@@ -2019,7 +2021,7 @@ Figure~\ref{fig:guardfig} presents the comparison.
 \begin{tikzpicture}
 \begin{axis}[width=0.9\textwidth, height=5.6cm, ybar, bar width=9pt,
   ylabel={\scriptsize score}, ymin=0, ymax=0.75,
-  symbolic x coords={SetA MRR@10, open MRR@10, set-R@10, all-gold@10},
+  symbolic x coords={{target MRR@10}, {open MRR@10}, {open set-R@10}, {multi-hop all-gold@10}},
   xtick=data, tick label style={font=\scriptsize},
   label style={font=\scriptsize},
   enlarge x limits=0.16,
@@ -2027,16 +2029,16 @@ Figure~\ref{fig:guardfig} presents the comparison.
     legend columns=3, /tikz/every even column/.append style={column sep=8pt}},
   legend cell align=left]
 \addplot[fill=gray!35] coordinates
-  {(SetA MRR@10,0.467) (open MRR@10,0) (set-R@10,0) (all-gold@10,0.48)};
+  {({target MRR@10},0.467) ({open MRR@10},0) ({open set-R@10},0) ({multi-hop all-gold@10},0.48)};
 \addplot[fill=red!45] coordinates
-  {(SetA MRR@10,0.5006) (open MRR@10,0.563) (set-R@10,0.489) (all-gold@10,0.223)};
+  {({target MRR@10},0.5006) ({open MRR@10},0.563) ({open set-R@10},0.489) ({multi-hop all-gold@10},0.223)};
 \addplot[fill=acc!80] coordinates
-  {(SetA MRR@10,0.5032) (open MRR@10,0.597) (set-R@10,0.593) (all-gold@10,0.339)};
+  {({target MRR@10},0.5032) ({open MRR@10},0.597) ({open set-R@10},0.593) ({multi-hop all-gold@10},0.339)};
 \legend{base, control (unguarded), guarded}
 \end{axis}
 \end{tikzpicture}
 \caption{The guardrail experiment on the frozen evaluations. On the target
-task (Set A MRR@10) the guarded arm matches the control --- the guardrails
+task (leftmost group) the guarded arm matches the control --- the guardrails
 are free. On the untargeted open evaluation the guarded arm wins every
 metric, most sharply on the multi-hop all-gold@10 where the control
 reproduces the historical regression (base $\approx 0.48$, historical
@@ -2095,20 +2097,21 @@ cell; the grid's two findings are elaborated below.
 \caption{The external grid at a glance ($7$ encoders per corpus; readouts
 frozen before judgments). $\rho$ is the within-corpus Spearman rank
 correlation across encoders between the readout and nDCG@10; ``control''
-is the same correlation for mean pair cosine. H2 AUC is the range, across
-encoders, of the per-document collision field's ability to predict which
-judged-relevant documents fail at their own queries (rank ${>}10$).}
+is the same correlation for mean pair cosine. The final columns give the
+range, across encoders, of the per-document collision field's
+failure-prediction AUC (a judged-relevant document ranked past $10$ at its
+own queries) and the count of encoders for which that AUC exceeds chance.}
 \label{tab:external}
 \small
 \begin{tabular}{lccccc}
 \toprule
-corpus & task type & $\rho(\sstar)$ & control & H2 AUC & H2 cells ${>}0.5$\\
+corpus & task type & $\rho(\sstar)$ & control & failure AUC & above chance\\
 \midrule
-Quora & duplicate matching & $+0.75$ & $-0.79$ & $0.66$--$0.74$ & $7/7$\\
-ESCI & product search & $-0.07$ & $+0.32$ & $0.57$--$0.69$ & $7/7$\\
-Natural Questions & open-domain QA & $-0.54$ & $+0.54$ & $0.51$--$0.62$ & $7/7$\\
+Quora & duplicate matching & $+0.75$ & $-0.79$ & $0.66$--$0.74$ & $7$ of $7$\\
+ESCI & product search & $-0.07$ & $+0.32$ & $0.57$--$0.69$ & $7$ of $7$\\
+Natural Questions & open-domain QA & $-0.54$ & $+0.54$ & $0.51$--$0.62$ & $7$ of $7$\\
 TREC-COVID & biomedical & $-0.32$ & $+0.39$ & (saturated) & ---\\
-legal (case study) & --- & --- & --- & $0.58$ & $1/1$\\
+legal (case study) & --- & --- & --- & $0.58$ & $1$ of $1$\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -2159,7 +2162,7 @@ legal (case study) & --- & --- & --- & $0.58$ & $1/1$\\
 \vspace{4pt}
 \begin{tikzpicture}
 \begin{axis}[width=0.97\textwidth, height=3.4cm,
-  ylabel={\scriptsize H2 AUC}, ymin=0.38, ymax=0.80,
+  ylabel={\scriptsize failure-prediction AUC}, ymin=0.38, ymax=0.80,
   xmin=0, xmax=29,
   xtick={4,11,18,25},
   xticklabels={Quora, ESCI, NQ, TREC-COVID (saturated)},
@@ -2221,11 +2224,12 @@ embedding rather than labeling corpora as intrinsically clean or dirty.
 
 \textbf{The per-item claim is confirmed across corpora.} In every cell
 whose outcome variable is informative, expected-collision counts predict
-which judged-relevant documents fail at their own queries: $7/7$ encoders
-on duplicate questions (AUC $0.66$--$0.74$), $7/7$ on product search
-($0.57$--$0.69$, including $0.69$ for the case-study encoder despite an
-$84\%$ base failure rate), $7/7$ on open-domain QA ($0.51$--$0.62$), and
-the legal case study ($0.58$) --- $22/22$ positive cells (sign test
+which judged-relevant documents fail at their own queries: all seven
+encoders on duplicate questions (AUC $0.66$--$0.74$), all seven on product
+search ($0.57$--$0.69$, including $0.69$ for the case-study encoder despite
+an $84\%$ base failure rate), all seven on open-domain QA
+($0.51$--$0.62$), and the legal case study ($0.58$) --- every one of the
+twenty-two informative cells is positive (sign test
 $p \approx 2 \times 10^{-7}$). The biomedical collection is uninformative
 for this outcome by construction, not by counterexample: with $50$ queries
 carrying hundreds of relevant documents each, $98\%$ of judged documents
@@ -2296,11 +2300,10 @@ liftoff and duplicate scales: the confusable window.}
 % =========================================================================
 
 \textbf{External validation.} A first cross-corpus slice now exists
-(\S\ref{sec:external}): the per-item claim is confirmed in $22/22$
-informative cells and the corpus-level claim received a measured scope law.
+(\S\ref{sec:external}): the per-item claim is confirmed in every
+informative cell and the corpus-level claim received a measured scope law.
 The full preregistered study remains open --- more collections (one large
-multi-hop corpus is deferred with its queue preserved), encoder-degradation
-ladders (H3), preregistration, and independent replication --- and the
+multi-hop corpus is deferred with its queue preserved), encoder-degradation ladders, preregistration, and independent replication --- and the
 scope law itself is a hypothesis to re-test: the alignment--uniformity
 split predicts that adding any alignment probe would restore ranking power
 on knowledge-limited tasks, but such a probe requires supervision the tool
