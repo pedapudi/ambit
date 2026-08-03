@@ -130,7 +130,71 @@ gradually in \S\ref{sec:geometry}: it is \emph{local} (a collapsing pocket
 barely moves any global average), and the standard instruments for localizing
 density --- histograms, hexbin lattices, voxel grids, fixed-$k$ neighbor
 counts --- carry hidden discretization parameters whose values change the
-answer (\S\ref{sec:binned}). This report describes \textsf{ambit}, an
+answer (\S\ref{sec:binned}). Figure~\ref{fig:introwhy} previews both
+difficulties.
+
+\begin{figure}[t]
+\centering
+\begin{minipage}{0.48\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.9]
+  % locality: global dial vs per-item readout, benchmark numbers
+  \node[font=\small\bfseries, anchor=west] at (-0.4,3.1) {locality};
+  % global average
+  \draw[->] (0,0) -- (0,2.5);
+  \node[font=\tiny, rotate=90, anchor=south] at (-0.3,1.25) {mean pair cosine};
+  \draw[fill=gray!40] (0.35,0) rectangle (0.75,0.02);
+  \draw[fill=gray!70] (1.15,0) rectangle (1.55,0.05);
+  \node[font=\tiny, anchor=north] at (0.55,-0.05) {before};
+  \node[font=\tiny, anchor=north] at (1.35,-0.05) {after};
+  \node[font=\tiny, anchor=west] at (0.0,2.15) {$0.0002 \to 0.0008$};
+  \node[font=\tiny, gray, anchor=west] at (0.0,1.8) {(scale $0$--$1$)};
+  % per-item
+  \draw[->] (3.0,0) -- (3.0,2.5);
+  \node[font=\tiny, rotate=90, anchor=south] at (2.7,1.25) {collisions per pocket item};
+  \draw[fill=gray!40] (3.35,0) rectangle (3.75,0.02);
+  \draw[fill=bad!70] (4.15,0) rectangle (4.55,2.1);
+  \node[font=\tiny, anchor=north] at (3.55,-0.05) {before};
+  \node[font=\tiny, anchor=north] at (4.35,-0.05) {after};
+  \node[font=\tiny, anchor=south] at (4.35,2.14) {$2.6$};
+\end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.9]
+  \node[font=\small\bfseries, anchor=west] at (-0.2,3.3) {discretization};
+  % the same seven points
+  \foreach \x in {0.55,0.8,0.95,1.75,1.9,2.05,2.2}
+    \fill (\x,2.55) circle (0.045);
+  \node[font=\tiny, anchor=west] at (2.55,2.55) {the same seven items};
+  % grating A
+  \foreach \x in {0,1,2,3} \draw[gray] (\x,1.55) -- (\x,2.15);
+  \draw[gray] (0,1.55) -- (3,1.55);
+  \node[font=\tiny, anchor=west] at (3.1,1.85) {bins at $0$: counts $3,4$};
+  \node[font=\tiny, gray] at (0.5,1.75) {3};
+  \node[font=\tiny, gray] at (1.95,1.75) {4};
+  % grating B (shifted by half a cell)
+  \foreach \x in {0.5,1.5,2.5} \draw[gray] (\x,0.45) -- (\x,1.05);
+  \draw[gray] (0,0.45) -- (3,0.45);
+  \node[font=\tiny, anchor=west] at (3.1,0.75) {shifted by half a bin: $1,2,4$};
+  \node[font=\tiny, gray] at (0.25,0.65) {1};
+  \node[font=\tiny, gray] at (1.0,0.65) {2};
+  \node[font=\tiny, gray] at (2.0,0.65) {4};
+  \node[font=\tiny, anchor=west] at (0,0.05) {peak count $4 \to 4$, peak \emph{location} moved};
+\end{tikzpicture}
+\end{minipage}
+\caption{The two measurement difficulties, previewed (schematic; the left
+panel's numbers are the traced benchmark's, \S\ref{sec:method}). Left:
+planting $200$ near-duplicates in $4{,}000$ items moves the corpus-wide
+average by $0.0006$ on a scale of $1$, while each planted item's expected
+retrieval collisions rise from $\approx 0$ to $2.6$ --- the pathology is
+severe and local, so per-item readouts see what averages cannot. Right:
+binning the same seven items with the same bin width but a half-bin origin
+shift changes the counts and relocates the peak --- the discretization, not
+the data, chose the answer. \S\ref{sec:binned} quantifies this on the
+tool's own displays.}
+\label{fig:introwhy}
+\end{figure} This report describes \textsf{ambit}, an
 instrument built to measure occupancy and crowding without either failure.
 Three commitments organize its design: occupancy is measured continuously
 over all scales; every statistic is calibrated against a stated null; and
@@ -146,11 +210,12 @@ the data.) Its contributions are the following.
 
 \begin{enumerate}
 \item \textbf{A continuous, null-calibrated measurement layer}
-  (\S\ref{sec:continuous}): the exact pair-closeness curve (the fraction
-  of document pairs at least $t$-similar, read at every threshold $t$ at
-  once) against two reference models of a well-spread corpus; a
-  one-number spread discrepancy that is exact by Stolarsky's invariance
-  principle; a per-item crowding radius with a stability guarantee; and a
+  (\S\ref{sec:continuous}): the exact pair-closeness curve (for each
+  similarity level $t$, the fraction of document pairs whose similarity is
+  $t$ or higher --- a full curve rather than a single count) against two
+  reference models of a well-spread corpus; a
+  single number summarizing deviation from a well-spread corpus at all
+  scales simultaneously; a per-item crowding radius with a stability guarantee; and a
   threshold-free catalogue of tight document groups. Every component is
   exercised on a single traced benchmark --- a planted $5\%$
   near-duplicate pocket --- so the layers can be read against one
