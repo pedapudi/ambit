@@ -60,6 +60,11 @@ def main():
                          "to 32k, which OOMs at batch size)")
     ap.add_argument("--max-chars", type=int, default=8000)
     ap.add_argument("--rows-per-file", type=int, default=100_000)
+    ap.add_argument("--start-shard", type=int, default=0,
+                    help="skip shards below this index (text iteration only, no "
+                         "encode) — lets a second GPU take a cell's tail while "
+                         "the first works from the head; per-shard exists-checks "
+                         "make the split collision-free")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
 
@@ -78,7 +83,7 @@ def main():
         if not buf_u:
             return
         out = os.path.join(a.out, f"map-{shard:05d}.parquet")
-        if not os.path.exists(out):
+        if shard >= a.start_shard and not os.path.exists(out):
             emb = model.encode([prefix + t for t in buf_t], batch_size=a.batch,
                                normalize_embeddings=True,
                                show_progress_bar=False).astype(np.float32)
