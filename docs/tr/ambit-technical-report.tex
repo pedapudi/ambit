@@ -997,7 +997,11 @@ least $t$-similar, estimated \emph{exactly} from the pair sample by sorting
 --- no bins, no origin, no width.
 \end{definition}
 
-$K$ is Ripley's $K$ function on the sphere \cite{ripley1976} in cosine
+Recall that Ripley's $K$ function is the spatial statistician's device
+for asking whether points cluster: for every radius at once, count the
+fraction of pairs that lie within that radius of each other, and compare
+the resulting curve against a random scatter. $K(t)$ is this function on
+the sphere \cite{ripley1976}, in cosine
 coordinates. Two references with matched sample size accompany it
 (Figure~\ref{fig:kcurve}):
 
