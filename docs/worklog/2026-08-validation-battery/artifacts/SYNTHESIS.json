@@ -1,0 +1,167 @@
+{
+ "h1": {
+  "esci-us": {
+   "n": 6,
+   "sigma": 0.6,
+   "ratio": 0.6,
+   "meancos": -0.6,
+   "effrank": -0.14285714285714288
+  },
+  "nq": {
+   "n": 5,
+   "sigma": -0.7,
+   "ratio": -0.7,
+   "meancos": 0.7,
+   "effrank": 0.3
+  },
+  "quora": {
+   "n": 7,
+   "sigma": 0.7500000000000002,
+   "ratio": 0.7500000000000002,
+   "meancos": -0.7857142857142859,
+   "effrank": 0.07142857142857144
+  },
+  "trec-covid": {
+   "n": 7,
+   "sigma": -0.3214285714285715,
+   "ratio": -0.3214285714285715,
+   "meancos": 0.39285714285714296,
+   "effrank": 0.4642857142857144
+  }
+ },
+ "h2": [
+  {
+   "corpus": "nq",
+   "model": "BAAI-bge-large-en-v1.5",
+   "auc": 0.6060177112429066,
+   "n_fail": 1059,
+   "n_ok": 3142
+  },
+  {
+   "corpus": "nq",
+   "model": "Snowflake-snowflake-arctic-embed-m-v1.5",
+   "auc": 0.509471028247087,
+   "n_fail": 762,
+   "n_ok": 3439
+  },
+  {
+   "corpus": "nq",
+   "model": "intfloat-e5-base-v2",
+   "auc": 0.5405493663130018,
+   "n_fail": 964,
+   "n_ok": 3237
+  },
+  {
+   "corpus": "nq",
+   "model": "sentence-transformers-all-MiniLM-L6-v2",
+   "auc": 0.6208074382426516,
+   "n_fail": 1536,
+   "n_ok": 2665
+  },
+  {
+   "corpus": "nq",
+   "model": "sentence-transformers-all-mpnet-base-v2",
+   "auc": 0.6076072457324028,
+   "n_fail": 1211,
+   "n_ok": 2990
+  },
+  {
+   "corpus": "quora",
+   "model": "BAAI-bge-large-en-v1.5",
+   "auc": 0.7405165206686591,
+   "n_fail": 2182,
+   "n_ok": 13493
+  },
+  {
+   "corpus": "quora",
+   "model": "Snowflake-snowflake-arctic-embed-m-v1.5",
+   "auc": 0.6743312684490486,
+   "n_fail": 2433,
+   "n_ok": 13242
+  },
+  {
+   "corpus": "quora",
+   "model": "google-embeddinggemma-300m",
+   "auc": 0.6813984343079639,
+   "n_fail": 2388,
+   "n_ok": 13287
+  },
+  {
+   "corpus": "quora",
+   "model": "intfloat-e5-base-v2",
+   "auc": 0.7029346845503582,
+   "n_fail": 2553,
+   "n_ok": 13122
+  },
+  {
+   "corpus": "quora",
+   "model": "qwen3-embedding-0.6b",
+   "auc": 0.6577698432222278,
+   "n_fail": 2354,
+   "n_ok": 13321
+  },
+  {
+   "corpus": "quora",
+   "model": "sentence-transformers-all-MiniLM-L6-v2",
+   "auc": 0.6927216606294395,
+   "n_fail": 2299,
+   "n_ok": 13376
+  },
+  {
+   "corpus": "quora",
+   "model": "sentence-transformers-all-mpnet-base-v2",
+   "auc": 0.7080636341039026,
+   "n_fail": 2265,
+   "n_ok": 13410
+  },
+  {
+   "corpus": "trec-covid",
+   "model": "BAAI-bge-large-en-v1.5",
+   "auc": 0.48254540251535516,
+   "n_fail": 17306,
+   "n_ok": 231
+  },
+  {
+   "corpus": "trec-covid",
+   "model": "Snowflake-snowflake-arctic-embed-m-v1.5",
+   "auc": 0.43268428936630826,
+   "n_fail": 17296,
+   "n_ok": 241
+  },
+  {
+   "corpus": "trec-covid",
+   "model": "google-embeddinggemma-300m",
+   "auc": 0.5020738027588736,
+   "n_fail": 17307,
+   "n_ok": 230
+  },
+  {
+   "corpus": "trec-covid",
+   "model": "intfloat-e5-base-v2",
+   "auc": 0.48729790183621224,
+   "n_fail": 17306,
+   "n_ok": 231
+  },
+  {
+   "corpus": "trec-covid",
+   "model": "qwen3-embedding-0.6b",
+   "auc": 0.4233220454426613,
+   "n_fail": 17278,
+   "n_ok": 259
+  },
+  {
+   "corpus": "trec-covid",
+   "model": "sentence-transformers-all-MiniLM-L6-v2",
+   "auc": 0.48040514592933947,
+   "n_fail": 17360,
+   "n_ok": 177
+  },
+  {
+   "corpus": "trec-covid",
+   "model": "sentence-transformers-all-mpnet-base-v2",
+   "auc": 0.5281185750065418,
+   "n_fail": 17352,
+   "n_ok": 185
+  }
+ ]
+}

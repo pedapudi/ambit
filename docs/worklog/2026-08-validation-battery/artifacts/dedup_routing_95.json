@@ -1,0 +1,38 @@
+{
+ "threshold": 0.95,
+ "distractors": {
+  "n": 555330,
+  "edges": 8882,
+  "in_groups": 6585,
+  "dropped": 3741
+ },
+ "corpus": {
+  "n": 35173,
+  "edges": 7252,
+  "in_groups": 1919,
+  "dropped": 1243
+ },
+ "arm_distractor": {
+  "median_before": 2.0,
+  "median_after": 2.0,
+  "R@10_before": 0.727,
+  "R@10_after": 0.727,
+  "mcnemar": {
+   "fixed": 0,
+   "broken": 0,
+   "p": 1.0
+  }
+ },
+ "arm_corpus": {
+  "golds_remapped": 21,
+  "median_before": 2.0,
+  "median_after": 2.0,
+  "R@10_before": 0.75,
+  "R@10_after": 0.757,
+  "mcnemar": {
+   "fixed": 9,
+   "broken": 2,
+   "p": 0.0654296875
+  }
+ }
+}

@@ -1,0 +1,9 @@
+queries: 1000
+R@1: base 0.288 tuned 0.301 | discordant 118 vs 131 | McNemar exact p = 0.4470
+R@10: base 0.750 tuned 0.750 | discordant 6 vs 6 | McNemar exact p = 1.0000
+dMRR@10 = +0.0075, 95% CI [-0.0079, +0.0232]
+LoRA r2: cohort n=408, median delta -0.0707, 95% CI [-0.0760, -0.0673], improved 406/408, sign-test p = 2.52e-118
+full FT: cohort n=408, median delta -0.0558, 95% CI [-0.0618, -0.0485], improved 356/408, sign-test p = 8.35e-57
+AUC collisions 0.578, 95% CI [0.536, 0.622] (chance 0.5)
+AUC diff vs control +0.028, 95% CI [-0.017, +0.073]
+sigma* base 0.13361 sd 0.00012 | full-FT 0.13368 sd 0.00013 | paired mean delta +0.00007 sd 0.00000

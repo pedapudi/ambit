@@ -1,0 +1,28 @@
+{
+ "n_queries": 1000,
+ "n_gold_docs": 953,
+ "fail_rank": 10,
+ "sigma": 0.145,
+ "auc_collisions": 0.5784484662505376,
+ "auc_top1cos_control": 0.5505137682928247,
+ "high_collision_cohort": {
+  "n_docs": 95,
+  "n_queries": 98,
+  "median_rank_base": 7.0,
+  "median_rank_tuned": 7.0,
+  "fail_rate_base": 0.41836734693877553,
+  "fail_rate_tuned": 0.42857142857142855,
+  "doc_fail_rate_base": 0.42105263157894735,
+  "doc_fail_rate_tuned": 0.43157894736842106
+ },
+ "rest": {
+  "n_docs": 858,
+  "n_queries": 902,
+  "median_rank_base": 2.0,
+  "median_rank_tuned": 2.0,
+  "fail_rate_base": 0.23170731707317074,
+  "fail_rate_tuned": 0.2328159645232816,
+  "doc_fail_rate_base": 0.23543123543123542,
+  "doc_fail_rate_tuned": 0.23776223776223776
+ }
+}

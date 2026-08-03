@@ -1,0 +1,33 @@
+mined 8518 guarded window pairs (window 0.769-0.98)
+step 20/625  conf 0.00003  pres 0.00307  23 ex/s
+step 40/625  conf 0.00003  pres 0.00064  22 ex/s
+step 60/625  conf 0.00003  pres 0.00044  22 ex/s
+step 80/625  conf 0.00003  pres 0.00035  22 ex/s
+step 100/625  conf 0.00003  pres 0.00032  22 ex/s
+step 120/625  conf 0.00003  pres 0.00031  22 ex/s
+step 140/625  conf 0.00003  pres 0.00032  22 ex/s
+step 160/625  conf 0.00003  pres 0.00030  22 ex/s
+step 180/625  conf 0.00003  pres 0.00029  22 ex/s
+step 200/625  conf 0.00003  pres 0.00029  22 ex/s
+step 220/625  conf 0.00003  pres 0.00029  22 ex/s
+step 240/625  conf 0.00003  pres 0.00033  22 ex/s
+step 260/625  conf 0.00003  pres 0.00036  22 ex/s
+step 280/625  conf 0.00003  pres 0.00033  22 ex/s
+step 300/625  conf 0.00003  pres 0.00033  22 ex/s
+step 320/625  conf 0.00003  pres 0.00045  22 ex/s
+step 340/625  conf 0.00003  pres 0.00040  22 ex/s
+step 360/625  conf 0.00003  pres 0.00036  22 ex/s
+step 380/625  conf 0.00003  pres 0.00037  22 ex/s
+step 400/625  conf 0.00003  pres 0.00035  22 ex/s
+step 420/625  conf 0.00003  pres 0.00045  22 ex/s
+step 440/625  conf 0.00003  pres 0.00041  22 ex/s
+step 460/625  conf 0.00003  pres 0.00035  22 ex/s
+step 480/625  conf 0.00003  pres 0.00047  22 ex/s
+step 500/625  conf 0.00003  pres 0.00039  22 ex/s
+step 520/625  conf 0.00003  pres 0.00038  22 ex/s
+step 540/625  conf 0.00003  pres 0.00037  22 ex/s
+step 560/625  conf 0.00003  pres 0.00035  22 ex/s
+step 580/625  conf 0.00003  pres 0.00033  22 ex/s
+step 600/625  conf 0.00003  pres 0.00033  22 ex/s
+step 620/625  conf 0.00003  pres 0.00032  22 ex/s
+saved merged checkpoint -> /home/sunil/e6-ckpt-r2-lora

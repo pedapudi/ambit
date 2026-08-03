@@ -1,0 +1,50 @@
+{
+ "round": 7,
+ "n": 200000,
+ "dim": 1024,
+ "corpus_n_for_sigma": 200000,
+ "mean_pair_cos": 0.10282669433242678,
+ "liftoff_cos": 0.7171844950730901,
+ "envelope_p": 0.01,
+ "stolarsky_z": -1515.2947055822733,
+ "sigma_star": 0.14585506656248975,
+ "sigma_star_uniform": 0.1596668693168172,
+ "dtm_p1": 1.0435384887241086,
+ "dtm_median": 1.1778476799724662,
+ "dtm_uniform_p1": 1.3555149618885434,
+ "pocket_floor2x": 0.0026634633541107178,
+ "pockets": [
+  {
+   "size": 1022,
+   "birth": 0.49947190284729004,
+   "death": 0.6463697552680969,
+   "prominence": 0.14689785242080688
+  },
+  {
+   "size": 11,
+   "birth": 0.6446916460990906,
+   "death": 0.6559965312480927,
+   "prominence": 0.011304885149002075
+  },
+  {
+   "size": 9,
+   "birth": 0.6417575478553772,
+   "death": 0.6463697552680969,
+   "prominence": 0.0046122074127197266
+  },
+  {
+   "size": 9,
+   "birth": 0.6544839143753052,
+   "death": 0.6589380502700806,
+   "prominence": 0.004454135894775391
+  }
+ ],
+ "sigma_collisions": 0.13373944590126788,
+ "collisions": {
+  "median_all": 0.1362430669793471,
+  "flagged_cohort_median_base": 2.5835673050755084,
+  "flagged_cohort_median_now": 0.469341197553783,
+  "flagged_heldout_n": 408
+ },
+ "heldout_neighbor_overlap@10": 0.6496675
+}

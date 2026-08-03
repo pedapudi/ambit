@@ -1,0 +1,16 @@
+step 20/312  conf 0.00003  pres 0.02949  73 ex/s
+step 40/312  conf 0.00003  pres 0.00847  71 ex/s
+step 60/312  conf 0.00003  pres 0.00423  70 ex/s
+step 80/312  conf 0.00003  pres 0.00251  70 ex/s
+step 100/312  conf 0.00003  pres 0.00180  70 ex/s
+step 120/312  conf 0.00003  pres 0.00131  69 ex/s
+step 140/312  conf 0.00003  pres 0.00108  69 ex/s
+step 160/312  conf 0.00003  pres 0.00090  69 ex/s
+step 180/312  conf 0.00003  pres 0.00078  69 ex/s
+step 200/312  conf 0.00003  pres 0.00070  69 ex/s
+step 220/312  conf 0.00003  pres 0.00063  69 ex/s
+step 240/312  conf 0.00003  pres 0.00058  69 ex/s
+step 260/312  conf 0.00003  pres 0.00055  69 ex/s
+step 280/312  conf 0.00003  pres 0.00050  69 ex/s
+step 300/312  conf 0.00003  pres 0.00047  69 ex/s
+saved merged checkpoint -> /home/sunil/e6-ckpt-full

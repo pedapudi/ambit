@@ -1,0 +1,6 @@
+evaluated split='eval': 1496 queries (747 single, 749 multi); 0 skipped (gold not in corpus)
+[single-doc] {'R@1': np.float64(0.382), 'R@5': np.float64(0.862), 'R@10': np.float64(0.913), 'R@100': np.float64(0.987)} | MRR@10 0.597 | median 2
+[multi-doc] set-Recall@5 0.480 | all-gold@5 0.204
+[multi-doc] set-Recall@10 0.593 | all-gold@10 0.339
+[multi-doc] set-Recall@20 0.687 | all-gold@20 0.471
+[multi-doc] set-Recall@100 0.847 | all-gold@100 0.690
