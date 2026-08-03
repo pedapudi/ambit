@@ -57,71 +57,49 @@ in Embedding Spaces}}
 
 \begin{abstract}
 Embedding-based systems --- retrieval, retrieval-augmented generation,
-deduplication, clustering --- depend on a single geometric property: items that
-must be distinguished must remain distinguishable under the similarity metric.
-We call the failure of this property \emph{crowding}, and we argue it is the
-correct diagnostic target for embedded corpora: crowding is a loss of
-\emph{resolution}, it is predominantly \emph{local}, and it hides from the
-global averages (mean pairwise cosine, isotropy scores, effective rank) that
-practitioners routinely consult. This report describes \textsf{ambit}, an
-open-source instrument that measures how a corpus occupies its embedding
-space. The design is organized around three commitments. First, occupancy is
-measured \emph{continuously over all scales}: the primary object is the
-empirical pair-distance distribution, read exactly (no histogram bins, grid
-cells, or fixed neighbor counts, whose size and placement provably change the
-answer), against analytic or cheaply simulated null models. Second, every
-statistic is \emph{null-calibrated}: values are reported as deviations from a
-matched well-spread reference, including an anisotropy-conditioned reference
-that separates the ubiquitous ``cone effect'' from clustering the cone cannot
-explain. Third, diagnosis descends to \emph{named entities}: per-item scores
-(a distance-to-measure field with Wasserstein-stability guarantees; expected
-retrieval collisions under an exact Gaussian query-noise law) replace per-cell
-counts, which cannot identify the items at risk. We derive an operational
-scalar, the \emph{resolution bandwidth} $\sstar$ --- the largest query-noise
-scale at which the expected number of retrieval collisions per item stays
-below one --- prove its conservative (union-bound) semantics, and show that
-the widely used uniformity loss of Wang and Isola is the logarithm of a
-Chernoff bound on the same quantity, endowing its temperature parameter with
-units. Controlled experiments quantify the fragility of binned occupancy (a
-half-cell lattice shift moves a hexbin peak count by $30\%$ and relocates the
-peak on fixed data), verify the confusion law to Monte-Carlo precision
-(maximum deviation $9{\times}10^{-4}$ over a $6{\times}4$ grid of angles and
-noise scales), and trace a planted $5\%$ near-duplicate pocket through every
-layer of the instrument: whole-curve rejection of uniformity at the minimum
-attainable $p$ with liftoff at $\cos\approx0.93$, an occupancy-discrepancy
-$z$ of $-47 \pm 4$ over $20$ seeds, a $3.7\times$ collapse of the per-item
-field's low tail, exact recovery of the pocket's cardinality and scales by
-the merge tree ($20/20$ seeds), and a $26\%$ loss of noise budget
-($\sstar\!: 0.203 \to 0.150$). The instrument is calibrated and stress-tested
-as a whole: liftoff detection uses a global rank-envelope test whose false
-alarms on $400$ pure nulls match nominal rates (a naive pointwise band, by
-contrast, fired on every null); pocket reporting carries a null-calibrated
-prominence floor; every readout is stable across reservoir sizes from
-$1{,}000$ rows; and a detection-power study against a suite of standard
-diagnostics at matched $1\%$ false alarm shows the continuous layer at full
-power on pockets as small as $1\%$ of the corpus where mean-cosine, hubness,
-and kNN-distance baselines sit near the false-alarm floor. We also report
-negative results, including a measured near-redundancy between the
-confusion functional and uniformity ($r = 0.978$) whose single order-flip is
-nonetheless operationally informative. A case study on a public million-document legal corpus and a
-measurement-driven training recipe with a gradient-locality guarantee
-complete the report; the recipe is exercised end to end on the case-study
-corpus and its production encoder, where the held-out measurements reject a
-misspecified round outright and verify the corrected rounds as safe, with a
-uniform per-item reduction in held-out cohort collisions ($406/408$ items,
-sign-test $p < 10^{-100}$) whose aggregate retrieval effect a label-blind
-evaluation bounds as positive in point estimate but not significant at
-$10^{3}$ queries --- while the capacity ladder (adapter, LoRA, full
-fine-tune) shows that the corpus's duplicate pathology is a data problem no
-training can repair, exactly as the staged protocol routes it. Executing
-that routing label-blind then delivers the significant gain training could
-not (confusable-window deduplication: $12$ queries fixed, none broken, $p =
-5 \times 10^{-4}$, with a measured double dissociation across repair scales),
-and the same measurements used as \emph{guardrails} on a label-supervised
-fine-tune halve its collateral multi-hop damage at no cost to its gains ---
-the label-free held-out gate selecting the better model before any judgment
-is consulted. \textsf{ambit} is unsupervised by design --- no labels,
-gold pairs, or ground truth --- and its core depends only on \textsf{numpy}.
+deduplication, clustering --- depend on a single geometric property: items
+that must be distinguished must remain distinguishable under the similarity
+metric. We call the failure of this property \emph{crowding}. It is a local
+loss of resolution, and it hides from the global statistics practitioners
+consult. This report describes \textsf{ambit}, an open instrument that
+measures how a corpus occupies its embedding space.
+
+Three commitments organize the design. Occupancy is measured
+\emph{continuously over all scales}: the primary object is the exact
+empirical pair-distance distribution --- no bins, grid cells, or fixed
+neighbor counts, whose sizes provably change the answer. Every statistic is
+\emph{null-calibrated}, including against an anisotropy-conditioned
+reference that separates the ubiquitous cone effect from clustering the
+cone cannot explain. Diagnosis descends to \emph{named items} through
+per-item fields with stability guarantees.
+
+The measurements carry operational units. An exact Gaussian law converts
+pair distances into expected retrieval collisions, yielding the
+\emph{resolution bandwidth} $\sstar$: the largest query-noise scale a
+corpus absorbs before, in expectation, one wrong item outranks the right
+one. The widely used uniformity loss is shown to be the logarithm of a
+Chernoff bound on the same quantity, which gives its temperature parameter
+units.
+
+Validation proceeds in three regimes. A traced synthetic benchmark
+establishes calibration (false alarms match nominal rates on hundreds of
+pure nulls) and detection power (full power at matched specificity on
+pockets that leave mean cosine, isotropy, and hubness at the false-alarm
+floor). A public million-document legal corpus supplies realistic geometry
+at scale. A grid of five public corpora and seven public encoders, scored
+blind against relevance judgments, confirms the per-item collision field
+in every informative cell and bounds the corpus-level scalar to
+comparative use. The measurements then drive interventions end to end:
+label-blind deduplication at the measured scales yields a significant
+retrieval gain with zero regressions; measurement-derived guardrails halve
+the collateral damage of supervised fine-tuning at no cost to its gains;
+and a held-out geometric gate rejects a misspecified training round that
+its own loss curve endorsed --- selecting the better model before any
+label is consulted.
+
+\textsf{ambit} is unsupervised by design --- no labels, gold pairs, or
+ground truth enter any measurement --- and its core depends only on
+\textsf{numpy}.
 \end{abstract}
 
 \clearpage
