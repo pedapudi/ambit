@@ -61,7 +61,8 @@ Embedding-based systems --- retrieval, retrieval-augmented generation,
 deduplication, clustering --- depend on a single geometric property: items
 that must be distinguished must remain distinguishable under the similarity
 metric. We call the failure of this property \emph{crowding}. It is a local
-loss of resolution, and it hides from the global statistics practitioners
+loss of resolution --- of the ability to keep distinct items
+distinguishable --- and it hides from the global statistics practitioners
 consult. This report describes \textsf{ambit}, an open instrument that
 measures how a corpus occupies its embedding space.
 
@@ -69,9 +70,10 @@ Three commitments organize the design. Occupancy is measured
 \emph{continuously over all scales}: the primary object is the exact
 empirical pair-distance distribution --- no bins, grid cells, or fixed
 neighbor counts, whose sizes provably change the answer. Every statistic is
-\emph{null-calibrated}, including against an anisotropy-conditioned
-reference that separates the ubiquitous cone effect from clustering the
-cone cannot explain. Diagnosis descends to \emph{named items} through
+\emph{null-calibrated}, including against an anisotropy-conditioned reference that separates the
+ubiquitous \emph{cone effect} --- learned embeddings concentrating in a
+narrow angular region, inflating every pairwise cosine --- from clustering
+the cone cannot explain. Diagnosis descends to \emph{named items} through
 per-item fields with stability guarantees.
 
 The measurements carry operational units. An exact Gaussian law converts
@@ -85,18 +87,19 @@ units.
 Validation proceeds in three regimes. A traced synthetic benchmark
 establishes calibration (false alarms match nominal rates on hundreds of
 pure nulls) and detection power (full power at matched specificity on
-pockets that leave mean cosine, isotropy, and hubness at the false-alarm
-floor). A public million-document legal corpus supplies realistic geometry
+pockets --- small groups of mutually near-duplicate items --- that leave
+mean cosine, isotropy, and hubness detecting no more often than on pure nulls). A public million-document legal corpus supplies realistic geometry
 at scale. Across four public retrieval collections and seven public encoders ---
 with every measurement frozen before any relevance judgment is read ---
 the per-document score identifies the documents that the judgments later
 show failing at their own queries, in every combination where that
 outcome is measurable; the corpus-level score predicts encoder quality
 only on similarity-matching tasks, fixing its scope to comparative use. The measurements then drive interventions end to end:
-label-blind deduplication succeeds only at the site and scale the measurements prescribe --- fixing twelve queries with zero regressions there, and demonstrably harmful when the same operation is applied at the wrong scale; measurement-derived guardrails halve
-the collateral damage of supervised fine-tuning at no cost to its gains;
-and a held-out geometric gate rejects a misspecified training round that
-its own loss curve endorsed --- selecting the better model before any
+label-blind deduplication succeeds only at the site and scale the measurements prescribe --- fixing twelve queries with zero regressions there, and demonstrably harmful when the same operation is applied at the wrong scale; guardrails derived from the measurements (auxiliary loss terms and
+negative-masking rules) halve the collateral damage of supervised
+fine-tuning at no cost to its gains;
+and a pre-registered accept/reject criterion on held-out readouts rejects
+a misspecified training round that its own loss curve endorsed --- selecting the better model before any
 label is consulted.
 
 \textsf{ambit} is unsupervised by design --- no labels, gold pairs, or
@@ -360,7 +363,8 @@ include effective rank \cite{roy2007} and IsoScore \cite{rudman2022}. Wang
 and Isola \cite{wang2020} decompose contrastive representation quality into
 alignment and uniformity; the uniformity functional recurs in
 \S\ref{sec:semantics} with new units. Hubness is a high-dimensional pathology
-of the metric itself \cite{radovanovic2010}.
+of the metric itself in which a few items recur in disproportionately
+many other items' nearest-neighbor lists \cite{radovanovic2010}.
 
 \paragraph{Embedding-quality scores.}
 A family of label-free scores summarizes the covariance or Gram spectrum:
@@ -380,12 +384,12 @@ continuous function of scale from the interpoint-distance distribution; on
 the sphere the null is a cap-area law and, the domain being boundaryless,
 planar edge corrections vanish \cite{robeson2014}; global envelopes provide valid
 whole-curve inference \cite{myllymaki2017}. The modifiable areal unit
-problem \cite{gehlke1934,openshaw1979,openshaw1984} and the ecological
+problem (MAUP) \cite{gehlke1934,openshaw1979,openshaw1984} and the ecological
 fallacy \cite{robinson1950} are the canonical statements of why
 partition-based statistics are fragile and non-attributive; histogram
 inefficiency and the origin problem are classical
 \cite{scott1979,freedman1981,silverman1986}, with the averaged shifted
-histogram \cite{scott1985} the placement-free repair. Stolarsky's invariance
+histogram (ASH) \cite{scott1985} the placement-free repair. Stolarsky's invariance
 principle \cite{stolarsky1973,brauchart2011} identifies the mean pairwise
 chord with the all-caps-all-scales $L_2$ discrepancy.
 
@@ -510,11 +514,13 @@ Qwen3-Embedding-0.6B \cite{qwen3embedding} & $0.6$B & $1024$ & instruction-tuned
 \end{table}
 
 \paragraph{Standard settings.}
-Unless an experiment sweeps them: pair statistics use $2 \times 10^5$
+The following parameters govern statistics defined in
+\S\ref{sec:continuous}--\S\ref{sec:semantics}, each introduced fully
+where its statistic is defined. Unless an experiment sweeps them: pair statistics use $2 \times 10^5$
 sampled distinct pairs; whole-curve inference uses the global rank-envelope
 test at $199$ null curves ($99$ inside report figures); the
 anisotropy-conditioned reference is sampled from the corpus's own covariance
-eigenvalues at matched pair count; the DTM field uses mass fraction
+eigenvalues at matched pair count; the DTM (distance-to-measure) per-item crowding field uses mass fraction
 $m = 0.02$; the merge tree uses minimum pocket size $8$; the discrepancy
 $z$ uses $64$ null replicates. Each of these defaults is itself validated
 by a sweep reported in the section that uses it.
@@ -654,7 +660,7 @@ column counts). Neither perturbation touches the data. The classical
 demonstration that re-zoning fixed data can move a correlation across
 essentially $[-1,+1]$ \cite{openshaw1979} is the extreme form of the same
 phenomenon. Histograms additionally pay an efficiency tax for
-discretization --- MISE $O(n^{-2/3})$ against $O(n^{-4/5})$ for kernel
+discretization --- mean integrated squared error (MISE) $O(n^{-2/3})$ against $O(n^{-4/5})$ for kernel
 estimators \cite{scott1979,freedman1981} --- and averaging over placements
 (the ASH \cite{scott1985}) recovers both placement-independence and the
 kernel rate. \textsf{ambit} retains one hexbin \emph{display}, de-fragilized
@@ -704,7 +710,8 @@ structural tree --- answering, in order, the desiderata of
 Let $x_1,\dots,x_n \in \sphere$ (unit-normalized; cosine
 $c_{ij} = \langle x_i,x_j\rangle$; chord $r_{ij} = \lVert x_i - x_j\rVert =
 \sqrt{2 - 2 c_{ij}}$). \textsf{ambit} computes exact full-corpus second
-moments by streaming and draws a bounded uniform reservoir plus a large
+moments by streaming and draws a bounded uniform \emph{reservoir} (a
+fixed-size random subsample kept during the single pass) plus a large
 random-pair cosine sample ($2{\times}10^5$ pairs by default) for everything
 else. Throughout this section the \emph{figures} show the real corpus
 (Nemotron-Legal, \S\ref{sec:method}) --- the primary examples are drawn from learned-embedding geometry rather than synthetic constructions --- while the traced benchmark of
@@ -732,8 +739,8 @@ are drawn directly --- no $d$-dimensional vectors are materialized. The sphere i
 \emph{rank-envelope} test \cite{myllymaki2017} with extreme-rank-length tie
 breaking (a one-sided $K$ test is massively tied where every null is exactly
 zero): the data curve is ranked among $199$ null curves, a single global $p$
-covers all scales at once, and \emph{liftoff} --- the highest cosine at
-which the data exceed the $\alpha$-critical envelope --- is annotated only
+covers all scales at once, and \emph{liftoff} --- the highest cosine at which the data exceed the $\alpha$-critical
+envelope (the null-curve band at the test's significance level $\alpha$) --- is annotated only
 when the global test rejects. On $40$
 pure-null corpora the gated test reported $0$ liftoffs, whereas the naive
 pointwise band (the max of the null curves) fired on \emph{every} null seed
@@ -743,7 +750,7 @@ nominal; the envelope locates the scale, the rank $p$ decides significance.
 
 \emph{(ii) The anisotropy-conditioned null.} Real corpora are cone-shaped for
 benign reasons; judging them against uniformity alone over-alarms. The second
-reference is the \emph{angular central Gaussian} with the corpus's own
+reference is the \emph{angular central Gaussian} (ACG) with the corpus's own
 covariance spectrum --- $x = \Sigma^{1/2} g / \lVert \Sigma^{1/2} g\rVert$,
 sampled from the eigenvalues alone by rotation invariance: the corpus's
 second-moment cone \emph{without} its clustering. Height of the data curve
@@ -856,7 +863,7 @@ well: with $24$ null replicates $|z|$ is inflated $\approx 20\%$ and
 reproduces with $\mathrm{sd} \approx 8$; the default is $64$ replicates
 ($z = -43 \pm 4.5$ on the benchmark), estimated from a replicate sweep.
 
-\subsection{Localization: the distance-to-measure field}
+\subsection{Localization: the distance-to-measure (DTM) field}
 \label{sec:dtm}
 
 \begin{figure}[t]
@@ -1055,7 +1062,8 @@ low tail against the corpus's own bulk.
 \end{tikzpicture}
 \caption{The pockets readout, reproduced natively from the instrument's
 report on Nemotron-Legal with the merge-tree anatomy annotated on it: the
-one pocket surviving the null-calibrated prominence floor ($204$ members,
+one pocket surviving the null-calibrated prominence floor --- the largest
+prominence pure noise produces at matched size and dimension --- ($204$ members,
 sample ids on the bar) is \emph{born} when its first members hold together
 and \emph{dies} into the bulk (excess-of-mass selection). Its prominence
 $0.090$ is modest --- a loose association, not a duplicate cluster --- yet $16\times$ the null floor, and therefore reportable; and the floor suppressed one
@@ -1069,16 +1077,20 @@ Between the global curve and the per-item field sits \emph{structure}: one
 broad pile, or many tight pockets, and who constitutes each?
 \textsf{ambit} surfaces the hierarchy its clustering backend already
 computes and previously flattened: single linkage on the mutual-reachability
-metric \cite{campello2015}, condensed at a minimum pocket size, selected by
-excess of mass in $\lambda = 1/\mathrm{distance}$ --- equivalently $H_0$
-persistence with the elder rule \cite{chazal2013,rolle2020}. Each selected
-pocket reports birth, death, prominence, size, and member ids
+metric (pair distance floored by each endpoint's distance to its own
+$k$th neighbor, which suppresses noise bridges) \cite{campello2015}, condensed at a minimum pocket size, selected by
+excess of mass --- on each branch, retaining the cluster that persists
+over the widest scale range --- in $\lambda = 1/\mathrm{distance}$ --- equivalently $H_0$
+persistence with the elder rule (at each merge, the younger component
+dies) \cite{chazal2013,rolle2020}. Each selected pocket reports birth, death, prominence (death minus
+birth: the scale range over which it persists as a separate entity),
+size, and member ids
 (Figure~\ref{fig:tree}). Three implementation findings mattered --- the
 third found by the validation battery itself. First, the naive elder rule is
 wrong for this purpose: the tightest pocket is the \emph{eldest} component
 and survives to the root, so the bulk ``dies into it''; excess-of-mass
 selection resolves the inversion. Second, single-linkage chains inside a
-tight pocket are caterpillars, so membership is reported as the condensed
+tight pocket are caterpillars (long chains with single-node side branches), so membership is reported as the condensed
 core plus side branches that fell out in the tight regime (below the
 geometric mean of birth and death), excluding bulk stragglers. Third,
 chaining can prevent \emph{any} real split from existing: a tight pocket may
@@ -1478,7 +1490,7 @@ them. The core depends on \textsf{numpy} alone; heavier capabilities
 OpenAI-compatible endpoint, the training extra) are optional and degrade
 gracefully. A comparison mode aligns two embeddings of the same items by id
 and computes a local neighbor-overlap view read against global
-representational-similarity statistics (CKA \cite{kornblith2019}, kernel and
+representational-similarity statistics (centered kernel alignment, CKA \cite{kornblith2019}, kernel and
 rigid distances); the local/global pair can disagree informatively --- a
 high-CKA, low-overlap outcome is a re-skin that preserves gross structure
 while rewriting fine neighborhoods.
@@ -1674,7 +1686,7 @@ operationalized as $\cos \approx 0.98$ throughout) --- under a
 false-negative guard: an anchor's top-$m$ base-model
 neighbors are never negatives, because the window is precisely where
 unlabeled true relatives live. The protocol is staged: diagnose and take the
-cheapest licensed fix (cone $\Rightarrow$ linear post-processing; duplicates
+cheapest fix the readouts license (cone $\Rightarrow$ linear post-processing; duplicates
 $\Rightarrow$ data repair; only genuine beyond-cone clustering licenses
 training); train with $\mathcal L_{\mathrm{task}} + \lambda_c \mathcal
 L_{\mathrm{conf}} + \lambda_p \mathcal L_{\mathrm{pres}}$ at the measured
@@ -1706,7 +1718,9 @@ Adam, $3{\times}10^{-2}$, 1000 steps, $\lambda_p{=}0.5$ & 1.60 & 0.93\\
 \end{table}
 
 Table~\ref{tab:training} reports the worked end-to-end example. Flagged
-items' median expected collisions fall from $2.6$ to $1.25$ at held-out
+items --- the instrument's crowded-item list, the highest expected
+collision counts under the base model --- see their median expected
+collisions fall from $2.6$ to $1.25$ at held-out
 neighbor overlap $0.92$; raising the preservation weight trades recovery for
 overlap, exactly as designed. The guard matters empirically: without it,
 window mining drafts unlabeled true relatives as negatives --- the classic
@@ -1801,7 +1815,8 @@ Table~\ref{tab:loop} summarizes the rounds; three findings follow. First,
 \emph{the instrument rejects a misspecified round}. The initial LoRA round
 computed $\mathcal L_{\mathrm{pres}}$ against stored embeddings of full
 documents while the trainer embedded token-truncated views, so the gradient
-was dominated by a length distillation; training losses fell while every
+was dominated by a length distillation (the model learning to map
+truncated views onto full-document embeddings); training losses fell while every
 global readout degraded ($\sstar$ down, cohort collisions up $17\%$, the
 pocket enlarged). The licensing rule caught this from the held-out
 measurements alone. Second, with references matched to the trainer's own
@@ -1902,7 +1917,8 @@ repair sites and two thresholds give a double dissociation
 the confusable window (the liftoff scale) fixes $12$ queries and breaks
 none (McNemar exact $p = 5 \times 10^{-4}$) --- the significant retrieval
 gain that training could not deliver --- while merging \emph{within} the
-formulaic target corpus at that same scale is significantly harmful
+formulaic target corpus --- regulatory sections sharing boilerplate
+structure --- at that same scale is significantly harmful
 ($57$ broken), because the confusable window there contains legally
 distinct sections; only merging at the true-duplicate scale ($\cos \ge
 0.95$) helps in-corpus. The instrument's scale structure --- liftoff marks
@@ -1985,8 +2001,9 @@ evaluations then confirmed the prediction. On the targeted task the
 guardrails cost nothing (MRR@10 $0.503$ against $0.501$; both arms far
 above the base $0.467$). On the untargeted open evaluation the guarded arm
 wins everywhere: single-document MRR@10 $0.597$ against $0.563$, and on
-the multi-hop metric where the historical regression lived, all-gold@10
-$0.339$ against $0.223$ --- a $52\%$ relative improvement over the control
+the multi-hop metric where the historical regression lived ---
+all-gold@10, the fraction of multi-hop queries whose every
+judged-relevant document reaches the top ten --- $0.339$ against $0.223$ --- a $52\%$ relative improvement over the control
 ($1{,}496$ held-out queries; the gap exceeds five standard errors). The
 control reproduces the historical collapse; the guard halves the damage
 while improving every other number. Two conclusions follow: the
@@ -2018,8 +2035,9 @@ Figure~\ref{fig:guardfig} presents the comparison.
 \end{tikzpicture}
 \caption{The guardrail experiment on the frozen evaluations. On the target
 task (leftmost group) the guarded arm matches the control --- the guardrails
-are free. On the untargeted open evaluation the guarded arm wins every
-metric, most sharply on the multi-hop all-gold@10 where the control
+are free. On the untargeted open evaluation (set-R@10: recall of the full judged
+set within the top ten) the guarded arm
+wins every metric, most sharply on the multi-hop all-gold@10 where the control
 reproduces the historical regression (base $\approx 0.48$, historical
 baseline; base bars for the open single/set metrics were not measured
 under this harness and are omitted).}
@@ -2145,7 +2163,7 @@ positive only where relevance is geometric matching (Quora), null on
 product search, and negative where semantic competence gaps dominate.
 Bottom: the per-document collision field's failure-prediction AUC for all
 $28$ cells, grouped by corpus, against the chance line --- above $0.5$ in
-every informative cell; the TREC-COVID group is uninformative because its
+every informative cell (one whose failure label varies within the cell); the TREC-COVID group is uninformative because its
 outcome label saturates ($98\%$ of judged documents past rank $10$).}
 \label{fig:external}
 \end{figure}
