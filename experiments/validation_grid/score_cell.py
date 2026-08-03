@@ -51,7 +51,8 @@ def load_queries(qpath):
         with op(qpath, "rt") as fh:
             for line in fh:
                 d = json.loads(line)
-                ids.append(str(d.get("qid") or d.get("_id") or d.get("id")))
+                ids.append(str(d.get("query_id") or d.get("qid") or
+                               d.get("_id") or d.get("id")))
                 texts.append(str(d.get("query") or d.get("text")))
         return ids, texts
     files = sorted(glob.glob(os.path.join(qpath, "*.parquet"))) or \

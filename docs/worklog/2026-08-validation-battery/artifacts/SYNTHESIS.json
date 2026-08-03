@@ -2,10 +2,10 @@
  "h1": {
   "esci-us": {
    "n": 7,
-   "sigma": 0.642857142857143,
-   "ratio": 0.642857142857143,
-   "meancos": -0.5,
-   "effrank": -0.03571428571428572
+   "sigma": -0.07142857142857144,
+   "ratio": -0.07142857142857144,
+   "meancos": 0.3214285714285715,
+   "effrank": 0.25
   },
   "nq": {
    "n": 7,
@@ -30,6 +30,55 @@
   }
  },
  "h2": [
+  {
+   "corpus": "esci-us",
+   "model": "BAAI-bge-large-en-v1.5",
+   "auc": 0.5938605142654363,
+   "n_fail": 16969,
+   "n_ok": 2764
+  },
+  {
+   "corpus": "esci-us",
+   "model": "Snowflake-snowflake-arctic-embed-m-v1.5",
+   "auc": 0.571704838018924,
+   "n_fail": 16662,
+   "n_ok": 3071
+  },
+  {
+   "corpus": "esci-us",
+   "model": "google-embeddinggemma-300m",
+   "auc": 0.6164214810597781,
+   "n_fail": 16594,
+   "n_ok": 3139
+  },
+  {
+   "corpus": "esci-us",
+   "model": "intfloat-e5-base-v2",
+   "auc": 0.6000470941533828,
+   "n_fail": 16965,
+   "n_ok": 2768
+  },
+  {
+   "corpus": "esci-us",
+   "model": "qwen3-embedding-0.6b",
+   "auc": 0.6905584756394824,
+   "n_fail": 17532,
+   "n_ok": 2201
+  },
+  {
+   "corpus": "esci-us",
+   "model": "sentence-transformers-all-MiniLM-L6-v2",
+   "auc": 0.6219158525017733,
+   "n_fail": 17696,
+   "n_ok": 2037
+  },
+  {
+   "corpus": "esci-us",
+   "model": "sentence-transformers-all-mpnet-base-v2",
+   "auc": 0.6180423691586521,
+   "n_fail": 17752,
+   "n_ok": 1981
+  },
   {
    "corpus": "nq",
    "model": "BAAI-bge-large-en-v1.5",

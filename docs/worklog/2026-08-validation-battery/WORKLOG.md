@@ -245,14 +245,16 @@ paths); pilot cell validated the whole pipeline against public numbers
 
 - **H2 (per-item collision → failure), confirmed cross-corpus.** Every
   cell with a non-degenerate outcome is above chance: Quora 7/7 (AUC
-  0.66–0.74), NQ 7/7 (0.51–0.62), legal 0.578 → 15/15 positive (sign-test
-  p ≈ 3×10⁻⁵). TREC-COVID's ≈0.5 cells are an outcome artifact (50 queries
+  0.66–0.74), ESCI 7/7 (0.57–0.69, after a query-id loader bug that silently
+  scored zero queries was caught and fixed), NQ 7/7 (0.51–0.62), legal
+  0.578 → 22/22 positive (sign-test p ≈ 2×10⁻⁷). TREC-COVID's ≈0.5 cells are an outcome artifact (50 queries
   × hundreds of relevant docs ⇒ 98% of judged docs "fail at rank 10" —
   the label saturates).
 - **H1 (σ* ranks encoders within a corpus), rejected as universal;
-  replaced by a scope law.** Matching-flavored tasks: Quora +0.75, ESCI
-  +0.64 (mean-cosine control inverted). Knowledge-flavored tasks: NQ
-  −0.54, TREC-COVID −0.32. Retrieval = semantic alignment × geometric
+  replaced by a scope law.** Positive only on pure duplicate
+  matching (Quora +0.75, mean-cosine control inverted); null on product
+  search (ESCI −0.07); negative on knowledge tasks (NQ −0.54,
+  TREC-COVID −0.32). Retrieval = semantic alignment × geometric
   headroom; ambit measures only the second factor (unsupervised by
   design), so σ* predicts outcomes exactly where alignment is roughly
   constant across encoders — and anti-predicts where a weak encoder "wins"
