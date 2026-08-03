@@ -2796,18 +2796,31 @@ legibly as prominence bars.
 \label{app:env}
 % =========================================================================
 
-Two CPU-only Linux hosts, described by their properties. The
-\emph{measurement host} (validation battery, scaling study): a
-16-core/32-thread x86-64 workstation, $123$\,GB RAM, NVMe storage with
-$\approx 2$\,GB/s measured streaming reads, Python~3.13, \textsf{numpy}~2.5
-with multi-threaded OpenBLAS, and the \emph{numpy-only core install} of the
-artifact --- deliberately, since that is the configuration the portability
-claim is about. The \emph{case-study host}: a 6-core/12-thread mobile-class
-x86-64 machine with $27$\,GB RAM, exercising the optional tabular-IO path
-(sharded Parquet with decode overhead). Every statistic is computed by the
-released library (the training experiments additionally use \textsf{torch}
-on CPU); no experiment uses code outside the artifact; random seeds are
-fixed and stated per experiment.
+Three Linux hosts, described by their properties.
+\begin{itemize}
+\item \emph{Measurement host} (validation battery, scaling study): a
+  16-core/32-thread x86-64 workstation, $123$\,GB RAM, NVMe storage with
+  $\approx 2$\,GB/s measured streaming reads, Python~3.13,
+  \textsf{numpy}~2.5 with multi-threaded OpenBLAS, and the
+  \emph{numpy-only core install} of the artifact --- deliberately, since
+  that is the configuration the portability claim is about.
+\item \emph{Case-study host}: a 6-core/12-thread mobile-class x86-64
+  machine with $27$\,GB RAM, exercising the optional tabular-IO path
+  (sharded Parquet with decode overhead).
+\item \emph{Accelerated host} (encoder fine-tuning, corpus embedding for
+  the loop, the guardrail arms, and the external grid; the exact
+  per-document collision fields at million-row scale): a 48-core x86-64
+  workstation, $246$\,GB RAM, four workstation GPUs with $96$\,GB
+  memory each. Embedding served through an OpenAI-compatible inference
+  server or computed in-process; distributed fine-tuning over two GPUs
+  with gradients synchronized per step.
+\end{itemize}
+Every reported \emph{measurement} is computed by the released
+\textsf{numpy} core regardless of host; the accelerated host contributes
+embedding, training, and the large exact collision fields (an optional
+\textsf{torch} path in the artifact). No experiment uses code outside
+the artifact and its stated experiment scripts; random seeds are fixed
+and stated per experiment.
 
 % =========================================================================
 \section{Formula Glossary}
