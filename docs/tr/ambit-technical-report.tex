@@ -87,10 +87,12 @@ establishes calibration (false alarms match nominal rates on hundreds of
 pure nulls) and detection power (full power at matched specificity on
 pockets that leave mean cosine, isotropy, and hubness at the false-alarm
 floor). A public million-document legal corpus supplies realistic geometry
-at scale. A grid of five public corpora and seven public encoders, scored
-blind against relevance judgments, confirms the per-item collision field
-in every informative cell and bounds the corpus-level scalar to
-comparative use. The measurements then drive interventions end to end:
+at scale. Across four public retrieval collections and seven public encoders ---
+with every measurement frozen before any relevance judgment is read ---
+the per-document score identifies the documents that the judgments later
+show failing at their own queries, in every combination where that
+outcome is measurable; the corpus-level score predicts encoder quality
+only on similarity-matching tasks, fixing its scope to comparative use. The measurements then drive interventions end to end:
 label-blind deduplication succeeds only at the site and scale the measurements prescribe --- fixing twelve queries with zero regressions there, and demonstrably harmful when the same operation is applied at the wrong scale; measurement-derived guardrails halve
 the collateral damage of supervised fine-tuning at no cost to its gains;
 and a held-out geometric gate rejects a misspecified training round that
@@ -141,12 +143,15 @@ the data.) Its contributions are the following.
 
 \begin{enumerate}
 \item \textbf{A continuous, null-calibrated measurement layer}
-  (\S\ref{sec:continuous}): the exact pair-closeness curve against a uniform
-  and an anisotropy-conditioned null; a one-number occupancy discrepancy via
-  Stolarsky's invariance principle; a per-item distance-to-measure field with
-  a stability guarantee; and a threshold-free merge tree. Every component is
-  exercised on a single traced benchmark --- a planted $5\%$ near-duplicate
-  pocket --- so the layers can be read against one another.
+  (\S\ref{sec:continuous}): the exact pair-closeness curve (the fraction
+  of document pairs at least $t$-similar, read at every threshold $t$ at
+  once) against two reference models of a well-spread corpus; a
+  one-number spread discrepancy that is exact by Stolarsky's invariance
+  principle; a per-item crowding radius with a stability guarantee; and a
+  threshold-free catalogue of tight document groups. Every component is
+  exercised on a single traced benchmark --- a planted $5\%$
+  near-duplicate pocket --- so the layers can be read against one
+  another.
 \item \textbf{Operational semantics} (\S\ref{sec:semantics}): an exact
   Gaussian confusion law, verified to Monte-Carlo precision; the resolution
   bandwidth $\sstar$; a Chernoff identity giving the Wang--Isola uniformity
@@ -162,21 +167,26 @@ the data.) Its contributions are the following.
 \item \textbf{Measurement-driven interventions}:
   (i) a measurement-gated fine-tuning loop (\S\ref{sec:loop}) whose
   held-out readouts reject a misspecified round that training loss
-  endorsed; (ii) label-blind execution of its deduplication prescription
-  (\S\ref{sec:routing}), whose two scales produce opposite,
-  significant outcomes exactly as prescribed; and (iii)
+  endorsed; (ii) deduplication executed exactly as the instrument prescribes,
+  without consulting labels (\S\ref{sec:routing}): applied at the scale
+  and site it recommends, retrieval improves significantly; applied at
+  the scale it warns against, retrieval measurably degrades; and (iii)
   measurement-derived guardrails (\S\ref{sec:guardrail}) that halve the
   collateral damage of supervised fine-tuning at no cost to its gains,
   with a label-free model-selection gate.
 \item \textbf{External validation with a measured scope law}
-  (\S\ref{sec:external}): across $28$ public corpus--encoder cells scored
-  blind against relevance judgments, the per-item collision field predicts
-  failing documents in every informative cell (sign test
-  $p \approx 2 \times 10^{-7}$), while the corpus-level $\sstar$ ranks
-  encoders only where relevance is geometric matching and inverts on
-  knowledge-limited tasks --- an empirical statement of the
-  alignment--uniformity decomposition that fixes the instrument's scope:
-  per-item triage and comparative geometric budgeting, not encoder
+  (\S\ref{sec:external}). We embedded four public retrieval collections
+  with seven public encoders --- twenty-eight combinations --- and computed
+  every readout \emph{before} opening the collections' relevance
+  judgments. The instrument's per-document score (the expected number of
+  retrieval confusions each document will suffer) identified, in every
+  combination where the outcome is measurable, which documents the
+  judgments later showed failing at their own queries (sign test
+  $p \approx 2 \times 10^{-7}$). The corpus-level summary $\sstar$
+  predicts retrieval quality across encoders only where the task itself is
+  similarity matching; on knowledge-seeking tasks the relationship
+  inverts. Together these results fix the instrument's scope:
+  per-document triage and comparative budgeting, not encoder
   leaderboards.
 \end{enumerate}
 
@@ -2037,11 +2047,14 @@ identity is what multi-hop retrieval consumes.
 The preceding sections validate the instrument internally and on one
 corpus. This section reports a first cross-corpus, cross-encoder slice of the
 external-validation design: the four judged collections and seven encoders
-of Tables~\ref{tab:corpora} and~\ref{tab:encoders}, yielding $28$
-corpus--encoder cells plus the legal case study. Per cell, the corpus is
+of Tables~\ref{tab:corpora} and~\ref{tab:encoders}. Each combination of
+a corpus and an encoder --- a \emph{cell} of the grid --- is treated as
+one embedded corpus to be measured and then scored, giving $28$ cells plus
+the legal case study. Per cell, the corpus is
 embedded, the full readout set is computed and its hash recorded
-\emph{before} any judgment file is opened, the per-document collision field
-is computed at the cell's measured $\sstar$, and only then are the queries
+\emph{before} any judgment file is opened, the per-document collision field of \S\ref{sec:semantics} (each
+document's expected collision count) is computed at the cell's measured
+$\sstar$, and only then are the queries
 run and scored (nDCG@10, recall@100, and per-relevant-document failure
 labels). One pipeline check: BGE-large's nDCG@10 on TREC-COVID reproduces
 its published benchmark value. Table~\ref{tab:external} and Figures~\ref{fig:external}--\ref{fig:pocketgrid} present every
@@ -2177,8 +2190,11 @@ across columns), which is why the instrument reports structure per
 embedding rather than labeling corpora as intrinsically clean or dirty.
 
 
-\textbf{The per-item claim is confirmed across corpora.} In every cell
-whose outcome variable is informative, expected-collision counts predict
+\textbf{The per-item claim is confirmed across corpora.} We call a
+cell's outcome \emph{informative} when the failure label actually varies
+--- some judged documents fail at rank $10$ and some do not; a label that
+is nearly constant cannot be predicted by anything. In every informative
+cell, expected-collision counts predict
 which judged-relevant documents fail at their own queries: all seven
 encoders on duplicate questions (AUC $0.66$--$0.74$), all seven on product
 search ($0.57$--$0.69$, including $0.69$ for the case-study encoder despite
