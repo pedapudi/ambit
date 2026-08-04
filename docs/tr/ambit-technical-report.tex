@@ -61,42 +61,45 @@ Embedding-based systems --- retrieval, retrieval-augmented generation,
 deduplication, clustering --- depend on a single geometric property: items
 that must be distinguished must remain distinguishable under the similarity
 metric. We call the failure of this property \emph{crowding}. It is a local
-loss of resolution, and the global statistics that practitioners routinely
-examine do not detect it. This report describes \textsf{ambit}, an open
-instrument that measures how a corpus occupies its embedding space.
+loss of resolution, invisible to the global statistics that practitioners
+routinely examine. This report describes \textsf{ambit}, an open
+instrument that measures how a corpus occupies its embedding space. It
+treats an embedded corpus as a pattern of points on a sphere and asks the
+question other sciences ask of point patterns: do points bunch more than
+a stated null allows, at which scales, and which points?
 
 Three commitments organize the design. Occupancy is measured
 \emph{continuously over all scales}, with no bins, grid cells, or fixed
 neighbor counts, whose sizes provably change the answer. Every statistic is
 \emph{null-calibrated}, including against a reference that separates the
 ubiquitous \emph{cone effect} --- learned embeddings crowding into a narrow
-angular region --- from clustering the cone cannot explain. Diagnosis
+angular region --- from clustering that the cone cannot explain. Diagnosis
 descends to \emph{named items} through per-item fields with stability
 guarantees.
 
-The measurements carry operational units. An exact Gaussian law converts
+The measurements carry retrieval units. An exact formula converts
 pair distances into expected retrieval collisions, yielding the
-\emph{resolution bandwidth} $\sstar$: the largest query-noise scale a
+\emph{resolution bandwidth} $\sstar$: the largest query-noise scale that a
 corpus absorbs before one wrong item outranks the right one. The widely
 used uniformity loss is shown to be the logarithm of a Chernoff bound on
-the same quantity, which gives its temperature parameter units.
+the same count, which gives its temperature parameter concrete units.
 
-Validation proceeds in three regimes. A traced synthetic benchmark
+Validation proceeds in three regimes. A synthetic benchmark
 establishes calibration on hundreds of pure nulls and full detection power
 on planted near-duplicate pockets that mean cosine, isotropy, and hubness
 miss. A public million-document legal corpus supplies realistic geometry at
 scale. Across four public retrieval collections and seven public encoders,
-every measurement is frozen before any relevance judgment is read; the
-per-document score identifies the documents that the judgments later show
-failing at their own queries, in every combination where that outcome is
-measurable, while the corpus-level score predicts encoder quality only on
+every measurement is frozen before any relevance judgment is read. The
+per-document score identifies the documents that later fail at their own
+queries, in every combination where that outcome is
+measurable; the corpus-level score predicts encoder quality only on
 similarity-matching tasks.
 
 The measurements also select and verify interventions. Label-blind
-deduplication at the prescribed site and scale fixes twelve queries with
-zero regressions; the same operation at the wrong scale is demonstrably
-harmful. Guardrails derived from the measurements halve the collateral
-damage of supervised fine-tuning at no cost to its gains, and a
+deduplication at the prescribed site and scale improves every query it
+changes (twelve improved, none harmed, $p = 0.0005$); at the wrong scale
+it measurably degrades retrieval. Measurement-derived guardrails halve the
+collateral damage of supervised fine-tuning at no cost to its gains, and a
 pre-registered criterion on held-out readouts rejects a training round
 that its own loss curve endorsed --- before any label is consulted.
 \textsf{ambit} is unsupervised by design --- no labels enter any
@@ -121,13 +124,27 @@ be ordered, and clusters that blur into one another. We refer to this failure
 mode as \emph{crowding} and to its complement --- the corpus's ability to
 keep distinct items distinct --- as \emph{resolution}.
 
-Crowding is a difficult measurement target for two reasons, developed
-gradually in \S\ref{sec:geometry}: it is \emph{local} (a collapsing pocket
-barely moves any global average), and the standard instruments for localizing
-density --- histograms, hexbin lattices, voxel grids, fixed-$k$ neighbor
-counts --- carry hidden discretization parameters whose values change the
-answer (\S\ref{sec:binned}). Figure~\ref{fig:introwhy} previews both
-difficulties.
+It helps to fix an image of the object under study. An embedded corpus is
+a \emph{pattern of points on a sphere}, and crowding is a question about
+the arrangement of those points: do some of them bunch together more
+tightly than a well-spread corpus would allow, at which scales, and which
+points are they? Questions of exactly this form are the daily business of
+sciences that live on point patterns --- ecologists ask them of trees,
+epidemiologists of disease cases, astronomers of galaxies --- and those
+fields spent half a century building statistics that answer them at every
+scale at once, against stated null models, without bins.
+\textsf{ambit}'s design position is that embedding geometry is the same
+measurement problem on a new domain, and the report carries that
+methodology to the sphere and gives its outputs retrieval meaning
+(\S\ref{sec:related} records the transfers).
+
+Seen this way, crowding is difficult to measure for two reasons, which
+\S\ref{sec:geometry} and \S\ref{sec:binned} develop: it is \emph{local} (a
+collapsing pocket barely moves any global average), and the standard
+instruments for localizing density --- histograms, hexbin lattices, voxel
+grids, fixed-$k$ neighbor counts --- carry hidden discretization
+parameters whose values change the answer. Figure~\ref{fig:introwhy}
+previews both difficulties.
 
 \begin{figure}[t]
 \centering
@@ -183,9 +200,11 @@ difficulties.
 viewed whole, the corpus shows nothing unusual --- the defect is one dot
 among thousands, and on the benchmark of \S\ref{sec:method}, planting
 $200$ near-duplicates in $4{,}000$ items moves mean pairwise similarity by
-only $0.0006$ on a scale of $1$. Magnified, that dot is six documents a
-query cannot tell apart, each expecting $2.6$ retrieval collisions where
-it had none. The pathology is severe, local, and invisible to any average.
+only ${\approx}\,0.002$ on a scale of $1$ (\S\ref{sec:averages}).
+Magnified, that dot is six documents a
+query cannot tell apart, each expecting $2.6$ retrieval collisions against
+zero for a well-spread corpus. The pathology is severe, local, and
+invisible to any average.
 Right:
 binning the same seven items with the same bin width but a half-bin origin
 shift changes the counts and relocates the peak --- the discretization, not
@@ -196,9 +215,12 @@ tool's own displays.}
 instrument built to measure occupancy and crowding without relying on
 global averages or on a discretization.
 Three commitments organize its design: occupancy is measured continuously
-over all scales; every statistic is calibrated against a stated null (a
-matched model of a corpus with no crowding); and diagnosis descends to
-named items.
+over all scales, so no
+bin or lattice can choose the answer; every statistic is calibrated
+against a stated null --- a matched model of a corpus with no crowding ---
+so the benign concentration every learned encoder exhibits is not
+mistaken for pathology; and diagnosis descends to named items, because
+the actionable output is a list of documents, not a score.
 \S\ref{sec:geometry}--\S\ref{sec:power} build and validate the
 instrument under these commitments; \S\ref{sec:training} and
 \S\ref{sec:external} use its measurements to drive training,
@@ -207,15 +229,20 @@ The report's contributions are the following.
 
 \begin{enumerate}
 \item \textbf{A continuous, null-calibrated measurement layer}
-  (\S\ref{sec:continuous}): the exact pair-closeness curve (for each
-  similarity level $t$, the fraction of document pairs whose similarity is
-  $t$ or higher --- a full curve rather than a single count) against two
-  reference models of a well-spread corpus; a
-  single number summarizing deviation from that reference at all
-  scales simultaneously; a per-item crowding radius with a stability guarantee; and a
-  threshold-free catalogue of tight document groups. Every component is
-  exercised on one benchmark with a known planted defect (a $5\%$
-  near-duplicate pocket), so the layers can be read against one another.
+  (\S\ref{sec:continuous}), four readouts deep:
+  \begin{itemize}
+  \item the exact pair-closeness curve --- for each similarity level $t$,
+    the fraction of document pairs whose similarity is $t$ or higher, a
+    full curve rather than a single count --- read against two reference
+    models of a well-spread corpus;
+  \item a single number summarizing deviation from that reference at all
+    scales simultaneously;
+  \item a per-item crowding radius with a stability guarantee;
+  \item a threshold-free catalogue of tight document groups.
+  \end{itemize}
+  Every component is exercised on one benchmark with a known planted
+  defect (a $5\%$ near-duplicate pocket), so the layers can be read
+  against one another.
 \item \textbf{Operational semantics} (\S\ref{sec:semantics}). An
   exact formula converts the distance between any two documents into the
   probability that an imprecise query confuses them; summing it over a
@@ -232,10 +259,7 @@ The report's contributions are the following.
   measurement core, a public million-document case study, and
   training penalties built from the measurements, with a guarantee that
   their gradients act only on confusable pairs and provably leave distant
-  pairs untouched. (The
-  toolkit delivers its measurements through a self-contained HTML report;
-  that artifact is engineering, not a contribution, and is documented
-  separately in \ref{sec:report}.)
+  pairs untouched.
 \item \textbf{Measurement-driven interventions}:
   (i) a measurement-gated fine-tuning loop (\S\ref{sec:loop}) whose
   held-out readouts reject a misspecified round that training loss
@@ -264,11 +288,13 @@ The report's contributions are the following.
 
 Throughout, \textsf{ambit} is \emph{unsupervised by design}: no labels, gold
 pairs, or relevance judgments are consumed. We are explicit about the nature
-of the contribution: the mathematics assembled here is, with small exceptions,
-classical. The contribution is an \emph{instrument} --- the selection,
-calibration, and composition of known functionals into a measurement system
-with stated guarantees, stated nulls, and stated scope --- together with the
-negative results that pruned its design space.
+of the contribution: the mathematics assembled here is, with small
+exceptions, classical, drawn from spatial statistics, directional
+statistics, geometric inference, and discrepancy theory
+(\S\ref{sec:related}). The contribution is an \emph{instrument} --- the
+selection, calibration, and composition of known functionals into a
+measurement system with stated guarantees, stated nulls, and stated scope
+--- together with the negative results that pruned its design space.
 
 % =========================================================================
 \section{Geometry of Crowding}
@@ -447,18 +473,13 @@ geometrically diluted before any arithmetic begins.}
 
 % =========================================================================
 \section{Related Work}
+\label{sec:related}
 % =========================================================================
 
-A corpus of embeddings is a point pattern: a finite set of points in a
-metric space. Point patterns have been a measurement subject in the
-observational sciences for half a century, and the questions asked there
-are this report's questions posed on other domains. Ecologists ask
-whether trees cluster and at what scale; epidemiologists ask which cases
-form a hotspot; astronomers ask how strongly galaxies clump beyond what
-the survey's own geometry explains. \textsf{ambit}'s design position is
-that embedding geometry is the same measurement problem on an unfamiliar
-domain, and that the mature instruments those fields built transfer to
-it. Four transfers organize this section:
+The introduction framed an embedded corpus as a point pattern and
+crowding as the clustering question that the observational sciences ask
+of point patterns. This section attributes the instruments that answer
+it. Four transfers organize the section:
 \begin{itemize}
 \item \textbf{spatial statistics} supplies the crowding curve and its
   whole-curve inference;
@@ -1848,8 +1869,8 @@ eigenspectrum, a kNN graph (optionally filtered to \emph{reciprocal}
 neighbors, which suppresses hubs by construction), unsupervised clusters,
 and the pair-cosine sample. All measurements of
 \S\ref{sec:continuous}--\S\ref{sec:semantics} are library functions over
-these objects; a separate presentation layer (\ref{sec:report}) renders
-them. The core depends on \textsf{numpy} alone; heavier capabilities
+these objects; a separate presentation layer (Appendix~\ref{sec:report})
+renders them. The core depends on \textsf{numpy} alone; heavier capabilities
 (tabular IO, ANN graphs, UMAP, GPU paths, on-the-fly embedding via an
 OpenAI-compatible endpoint, the training extra) are optional and degrade
 gracefully. A comparison mode aligns two embeddings of the same items by id
