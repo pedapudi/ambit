@@ -193,7 +193,8 @@ the data, chose the answer. \S\ref{sec:binned} quantifies this on the
 tool's own displays.}
 \label{fig:introwhy}
 \end{figure} This report describes \textsf{ambit}, an
-instrument built to measure occupancy and crowding without either failure.
+instrument built to measure occupancy and crowding without relying on
+global averages or on a discretization.
 Three commitments organize its design: occupancy is measured continuously
 over all scales; every statistic is calibrated against a stated null (a
 matched model of a corpus with no crowding); and diagnosis descends to
@@ -202,10 +203,7 @@ named items.
 instrument under these commitments; \S\ref{sec:training} and
 \S\ref{sec:external} use its measurements to drive training,
 deduplication, and fine-tuning guardrails.
-(\S\ref{sec:geometry} and \S\ref{sec:binned} first develop, with
-controlled experiments, why global averages cannot detect crowding and why
-binned occupancy statistics are properties of the lattice rather than of
-the data.) Its contributions are the following.
+The report's contributions are the following.
 
 \begin{enumerate}
 \item \textbf{A continuous, null-calibrated measurement layer}
@@ -213,7 +211,7 @@ the data.) Its contributions are the following.
   similarity level $t$, the fraction of document pairs whose similarity is
   $t$ or higher --- a full curve rather than a single count) against two
   reference models of a well-spread corpus; a
-  single number summarizing deviation from a well-spread corpus at all
+  single number summarizing deviation from that reference at all
   scales simultaneously; a per-item crowding radius with a stability guarantee; and a
   threshold-free catalogue of tight document groups. Every component is
   exercised on one benchmark with a known planted defect (a $5\%$
@@ -350,10 +348,11 @@ uniform points is $0.0361$ (Figure~\ref{fig:conc}). Three consequences
 follow. First, ``similar'' is a geometrically tiny target: two unrelated
 items land in each other's $\cos = 0.3$ caps about once in $10^{16}$
 draws. Second, the well-spread null's
-small-distance tail is \emph{empty}: in every one of $19$ simulated
-uniform corpora of this size (the classical envelope count: real data exceeding all $19$ simulations
-is then a $1/20 = 5\%$ event under the null), the fraction of pairs with $\cos \ge 0.30$ is exactly zero
---- so \emph{any} observed mass there is unambiguous structure. Distance
+small-distance tail is \emph{empty}. In each of $19$ simulated
+uniform corpora of this size, the fraction of pairs with $\cos \ge 0.30$
+is exactly zero, so \emph{any} observed mass there is unambiguous
+structure. (Nineteen is the classical envelope count: real data exceeding
+all $19$ simulations is a $1/20 = 5\%$ event under the null.) Distance
 concentration, the classical curse of high dimension \cite{beyer1999}, is, for a null-calibrated instrument, an asset: every close pair is a finding.
 Third, because almost every pair is a near-orthogonal
 background pair, \emph{averages over pairs are dominated by the background} ---
@@ -395,12 +394,13 @@ occupies a stretch of the square's \emph{side}; its pairs occupy the
 small square block where that stretch meets itself. Side and area scale
 differently --- membership is linear, pair share is quadratic --- so a
 pocket holding $5\%$ of the items owns only $0.25\%$ of the area over
-which any average is taken. On the benchmark corpus used throughout this
-report (full construction in \S\ref{sec:method}: $n = 4{,}000$ items at
-$d = 768$ with a planted pocket of $k = 200$ near-duplicates, median
+which any average is taken. The benchmark corpus used throughout this
+report makes the dilution concrete. It holds $n = 4{,}000$ items at
+$d = 768$ with a planted pocket of $k = 200$ near-duplicates at median
 intra-pocket cosine $0.929$ --- five percent of the corpus rendered
-mutually interchangeable), this geometric dilution means the mean pairwise
-cosine moves by $0.0025 \times 0.93 \approx +0.002$: invisible without a
+mutually interchangeable (full construction in \S\ref{sec:method}).
+This geometric dilution means the pocket moves the mean pairwise
+cosine by only $0.0025 \times 0.93 \approx +0.002$: invisible without a
 calibrated test, and uninformative about \emph{which} items failed. Covariance-spectrum
 summaries (effective rank, isotropy scores) are blind for the same
 arithmetic reason: they are sums over the corpus, dominated by the diffuse majority. More generally: \emph{global averages address whether the whole cloud is degenerate; crowding concerns which part of the cloud has collapsed, at what scale, and which items it contains.} A sound instrument must
@@ -448,6 +448,32 @@ geometrically diluted before any arithmetic begins.}
 % =========================================================================
 \section{Related Work}
 % =========================================================================
+
+A corpus of embeddings is a point pattern: a finite set of points in a
+metric space. Point patterns have been a measurement subject in the
+observational sciences for half a century, and the questions asked there
+are this report's questions posed on other domains. Ecologists ask
+whether trees cluster and at what scale; epidemiologists ask which cases
+form a hotspot; astronomers ask how strongly galaxies clump beyond what
+the survey's own geometry explains. \textsf{ambit}'s design position is
+that embedding geometry is the same measurement problem on an unfamiliar
+domain, and that the mature instruments those fields built transfer to
+it. Four transfers organize this section:
+\begin{itemize}
+\item \textbf{spatial statistics} supplies the crowding curve and its
+  whole-curve inference;
+\item \textbf{directional statistics} supplies the anisotropy-conditioned
+  reference;
+\item \textbf{geometric inference} supplies the per-item crowding radius
+  and the pocket hierarchy;
+\item \textbf{discrepancy theory} supplies the occupancy discrepancy.
+\end{itemize}
+Each transfer required an adaptation to the high-dimensional sphere,
+recorded below beside the technique it concerns. What no donor field
+supplies is the operational layer: none has a notion of one document
+outranking another at a query, so the conversion of pair distances into
+expected retrieval collisions (\S\ref{sec:semantics}) is native to this
+report.
 
 \paragraph{Anisotropy and resolution.}
 Gao et al.\ \cite{gao2019} and Ethayarajh \cite{ethayarajh2019}
@@ -499,7 +525,13 @@ within every distance and read clustering as a \emph{function of scale}
 rather than at one arbitrary radius. \textsf{ambit}'s crowding curve is
 this idea transplanted to the sphere, where the null is a cap-area law
 and, the domain having no boundary, the planar edge corrections vanish
-\cite{robeson2014}. Global envelope tests \cite{myllymaki2017} solve the
+\cite{robeson2014}. Spatial statisticians also met \textsf{ambit}'s
+central confound long ago: raw $K$ misreads a nonuniform background
+intensity as clustering, and the \emph{inhomogeneous} $K$ function
+\cite{baddeley2000} repairs this by conditioning the test on a fitted
+intensity. The anisotropy-conditioned reference of \S\ref{sec:kcurve} is
+the same move on the sphere, with the corpus's cone playing the role of
+the fitted intensity. Global envelope tests \cite{myllymaki2017} solve the
 companion inference problem --- how to test a whole curve at once without
 the multiple-comparison error of checking each scale separately --- and
 supply \textsf{ambit}'s liftoff test. The modifiable areal unit problem
@@ -553,7 +585,7 @@ Every claim marked \emph{measured} in this report follows one protocol,
 stated here once. The test environments are scientifically incidental and are described by their properties in \ref{app:env}; the data are what matter.
 
 \paragraph{Datasets.}
-Two complementary data regimes carry the evidence; between them, every
+Three complementary data regimes carry the evidence; among them, every
 claim is testable.
 
 \emph{(i) The synthetic benchmark family --- known ground truth by
@@ -827,14 +859,18 @@ cell, $199$-null rank envelopes, $64$-replicate discrepancy nulls);
 single-seed values appear only for deterministic or concentration-driven
 demonstrations and are marked by the absence of a spread. \emph{Figures}
 follow one rule: every data-bearing plot embeds unmodified experimental
-outputs as its coordinates --- and the primary examples are the \emph{real
-corpus's}: the crowding curve, the DTM field, and the collision curves are
-Nemotron-Legal measurements, and two figures reproduce the instrument's own
-report readouts on that corpus natively (the named-document localization
-list and the pockets bar, with the report's values verbatim); the lattice
-demonstration's highlighted peak cells are computed from the figure's own
-points; the remaining figures are intuition schematics and are captioned as
-such.
+outputs as its coordinates.
+\begin{itemize}
+  \item \textbf{Real-corpus figures:} the crowding curve, the DTM field,
+  and the collision curves plot Nemotron-Legal measurements, and two
+  figures reproduce the instrument's own report readouts on that corpus
+  natively (the named-document localization list and the pockets bar,
+  with the report's values verbatim).
+  \item \textbf{Self-computed demonstrations:} the lattice demonstration's
+  highlighted peak cells are computed from the figure's own points.
+  \item \textbf{Intuition schematics:} the remaining figures carry no
+  data and are captioned as schematics.
+\end{itemize}
 
 % =========================================================================
 \section{The Fragility of Binned Occupancy}
@@ -1014,15 +1050,17 @@ because a one-sided test on $K$ is heavily tied wherever every null curve
 is exactly zero. \emph{Liftoff} --- the highest cosine at which the data
 exceed the $\alpha$-critical envelope, the null-curve band at the test's
 significance level --- is annotated only when the global test rejects. On $40$
-pure-null corpora the gated test reported $0$ liftoffs, whereas the naive
+pure-null corpora the gated test reported $0$ liftoffs. The naive
 pointwise band (the max of the null curves) fired on \emph{every} null seed
-at the bulk edge --- a direct demonstration of the multiple-comparison failure --- and
-even the $\alpha$-critical envelope alone over-fires $\approx 4\times$
-nominal; the envelope locates the scale, the rank $p$ decides significance.
+at the bulk edge --- a direct demonstration of the multiple-comparison
+failure --- and even the $\alpha$-critical envelope alone over-fires
+$\approx 4\times$ nominal. The division of labor is therefore strict: the
+envelope locates the scale, and the rank $p$ decides significance.
 
 \emph{(ii) The anisotropy-conditioned null.} Real corpora are cone-shaped for
 benign reasons; judging them against uniformity alone over-alarms. The second
-reference is the \emph{angular central Gaussian} (ACG) with the corpus's own
+reference is the \emph{angular central Gaussian} (ACG) of directional
+statistics \cite{tyler1987} with the corpus's own
 covariance spectrum --- $x = \Sigma^{1/2} g / \lVert \Sigma^{1/2} g\rVert$,
 sampled from the eigenvalues alone by rotation invariance: the corpus's
 second-moment cone \emph{without} its clustering. Height of the data curve
@@ -1094,16 +1132,13 @@ structure a single scalar would average away.
 \end{tikzpicture}
 \caption{The crowding curve on the real corpus (Nemotron-Legal
 \cite{nemotronlegal}, computed from the report's own $2{\times}10^5$-pair
-sample). Through mid-similarities the data track the anisotropy-matched
-reference --- that excess over uniformity is the cone, benign --- but above
-$\cos \approx 0.8$ the curve rises above both references: genuine
-tight-pair structure, globally significant at the minimum attainable
-$p = 1/200$. No bin width or lattice placement exists anywhere in the
-figure, and the liftoff claim is family-wise valid across all
-scales. Bottom: the same curve for five corpora under the same encoder
-($d = 1024$, shared envelope) --- every corpus carries tight-pair mass far
-above the null, with distinct anatomies: ESCI and TREC-COVID hold the most
-near-duplicate mass, Quora the least beyond its paraphrase band.}
+sample): the data track the anisotropy-matched reference through
+mid-similarities and rise above both references past $\cos \approx 0.8$,
+where the global test rejects at $p = 1/200$. No bin width or lattice
+placement exists anywhere in the figure, and the liftoff claim is
+family-wise valid across all scales. Bottom: the same curve for five
+corpora under the same encoder ($d = 1024$, shared envelope), each with
+its own anatomy; the text gives the reading.}
 \label{fig:kcurve}
 \end{figure}
 
@@ -1144,9 +1179,9 @@ The scale readouts $\sstar$ and liftoff behave like effect sizes
 instead: they concentrate as $1/\sqrt P$, with $\mathrm{sd}(\sstar)$
 falling from $0.0126$ to $0.0013$ as $P$ grows from $10^4$ to $10^6$. Second, the null's spread must itself be estimated
 well: with $24$ null replicates $|z|$ is inflated $\approx 20\%$ and
-reproduces with $\mathrm{sd} \approx 8$; the default of $64$ replicates was set by that replicate sweep, at the
-point where the inflation seen at $24$ replicates has died away; at the
-default the benchmark reads $z = -43 \pm 4.5$.
+reproduces with $\mathrm{sd} \approx 8$. The default of $64$ replicates
+sits where that inflation has died away; at the default the benchmark
+reads $z = -43 \pm 4.5$.
 
 \subsection{Localization: the distance-to-measure (DTM) field}
 \label{sec:dtm}
@@ -1199,14 +1234,13 @@ default the benchmark reads $z = -43 \pm 4.5$.
 --- each item is scored by the radius of the ball it needs to gather a fixed
 share ($m = 2\%$) of the corpus. \emph{Right:} the field's exact CDF on the
 real corpus (measured): the \emph{entire} field sits left of the uniform
-needle at $1.36$ --- the anisotropy cone shortens every radius, so the
-uniform band is diagnostic of the cone, not of pockets --- and the finding
-is the low tail against the corpus's own bulk (1st percentile $0.966$
-against median $1.047$), whose members the instrument names by id
-(Figure~\ref{fig:dtmcard}). The four grid corpora under the same encoder
-overlay their CDFs: each has its own bulk position and low-tail mass ---
-per-item crowding profiles differ far more across corpora than any global
-statistic suggests.}
+needle at $1.36$, and the finding is the low tail against the corpus's own
+bulk (1st percentile $0.966$ against median $1.047$), whose members the
+instrument names by id (Figure~\ref{fig:dtmcard}); the text explains why
+the uniform band reads on the cone rather than on pockets. The four grid
+corpora under the same encoder overlay their CDFs: each has its own bulk
+position and low-tail mass --- per-item crowding profiles differ far more
+across corpora than any global statistic suggests.}
 \label{fig:dtm}
 \end{figure}
 
@@ -1251,11 +1285,12 @@ m^{-1/2}\, W_2(P, Q)$ \cite{chazal2011}: a small perturbation of the
 corpus provably moves every item's score a small amount, the guarantee
 that step functions lack. The guarantee also holds empirically: jittering
 every coordinate by $10^{-3}$ leaves the field $0.997$-correlated with
-itself. Against a fixed $10^6$-row corpus, the field's first percentile is
-invariant to the reservoir drawn ($0.365$--$0.366$ across reservoirs of
-$10^3$--$1.6{\times}10^4$ rows, ten seeds each), as is every other
-headline readout ($\sstar$ spans $0.0559$--$0.0562$ against $0.0564$ at a
-$3.2{\times}10^4$ reference). On
+itself. Against a fixed $10^6$-row \emph{synthetic} corpus --- the
+benchmark generator scaled up, $5\%$ pocket planted --- the field's first
+percentile is invariant to the reservoir drawn ($0.365$--$0.366$ across
+reservoirs of $10^3$--$1.6{\times}10^4$ rows, ten seeds each), as is
+every other headline readout ($\sstar$ spans $0.0559$--$0.0562$ against
+$0.0564$ at a $3.2{\times}10^4$ reference). On
 the traced benchmark the planted pocket drags the low tail to $0.364$
 against a bulk at $1.35$ --- the $3.7\times$ separation behind the
 detection-power results of \S\ref{sec:power}.
@@ -1311,7 +1346,7 @@ right at $1.36$). Aggregate, cell-based displays cannot provide this output.}
 \end{figure} Both tails are actionable and
 \emph{named}: the low tail is the crowded-item list (each entry annotated
 with its expected collision count at the corpus's own $\sstar$;
-\S\ref{sec:semantics}), the high tail the coverage voids. In strongly
+\S\ref{sec:semantics}), and the high tail is the list of coverage voids. In strongly
 cone-shaped corpora the entire field sits below the uniform band --- the cone
 shortens every radius --- and the instrument reports the regime explicitly rather than an
 uninformative all-items count; the finding in that regime is the shape of the
@@ -1374,21 +1409,28 @@ dies) \cite{chazal2013,rolle2020}. Each selected pocket reports birth, death, pr
 birth: the scale range over which it persists as a separate entity),
 size, and member ids
 (Figure~\ref{fig:tree}). Three implementation findings mattered --- the
-third found by the validation battery itself. First, the naive elder rule is
-wrong for this purpose: the tightest pocket is the \emph{eldest} component
-and survives to the root, so the bulk ``dies into it''; excess-of-mass
-selection resolves the inversion. Second, single-linkage chains inside a
-tight pocket are caterpillars (long chains with single-node side branches), so membership is reported as the condensed
-core plus side branches that fell out in the tight regime (below the
-geometric mean of birth and death), excluding bulk stragglers. Third, chaining can prevent \emph{any} real split from existing. A
-tight pocket may seed the one component that then absorbs the bulk point
-by point. In that case no node ever has two children of at least the
-minimum size, the only cluster is the root, and the tightest structure
-in the corpus goes unreported. A parameter sweep exposed this failure:
-at minimum size $32$ a planted $200$-member pocket returned nothing, and
-$3$ of $20$ benchmark seeds missed it even at the default. The fix treats a childless root as a candidate with death at the
-final merge scale, whereupon the membership rule extracts exactly the pocket
-core. Post-fix, the tree recovers the planted pocket in $20$ of $20$ seeds
+third found by the validation battery itself.
+\begin{itemize}
+\item \textbf{Elder-rule inversion.} The naive elder rule is wrong for
+  this purpose: the tightest pocket is the \emph{eldest} component and
+  survives to the root, so the bulk ``dies into it.'' Excess-of-mass
+  selection resolves the inversion.
+\item \textbf{Caterpillar membership.} Single-linkage chains inside a
+  tight pocket are caterpillars (long chains with single-node side
+  branches). Membership is therefore reported as the condensed core plus
+  the side branches that fell out in the tight regime (below the
+  geometric mean of birth and death), excluding bulk stragglers.
+\item \textbf{The childless root.} Chaining can prevent \emph{any} real
+  split from existing: a tight pocket may seed the one component that
+  then absorbs the bulk point by point, so no node ever has two children
+  of the minimum size, the only cluster is the root, and the tightest
+  structure in the corpus goes unreported. A parameter sweep exposed this
+  failure --- at minimum size $32$ a planted $200$-member pocket returned
+  nothing, and $3$ of $20$ benchmark seeds missed it even at the default.
+  The fix treats a childless root as a candidate with death at the final
+  merge scale, whereupon the membership rule extracts exactly the pocket
+  core.
+\end{itemize} Post-fix, the tree recovers the planted pocket in $20$ of $20$ seeds
 at exact size ($200.0 \pm 0.0$; birth $0.063$, death $0.898$, prominence
 $0.835$) across min-sizes $8$--$64$, and on a two-pocket variant recovers
 sizes $60$ and $40$ exactly. Reported prominence also carries a \emph{null
@@ -1594,15 +1636,14 @@ one. $C$ is monotone; bisection inverts it.
 \end{axis}
 \end{tikzpicture}
 \caption{Expected collisions vs.\ query noise on the real corpus (measured;
-Nemotron-Legal). The curves separate exactly in the decision region ---
-the corpus's cone and tight pairs dominate $C(\sigma)$ at the noise scales
+Nemotron-Legal). Top: the corpus against its uniform control --- the
+corpus's cone and tight pairs dominate $C(\sigma)$ at the noise scales
 where retrieval operates, pulling the tolerance crossing from
-$\sstar = 0.148$ to $0.123$: the corpus retains $83\%$ of a well-spread
-corpus's noise budget. At large $\sigma$ the curves converge (every pair
-confuses) and at tiny $\sigma$ both vanish; the tolerance crossing is determined where
-they differ. The lower panel overlays the five corpora under the same encoder: the ordering and spacing of their $\sstar$ values ($0.090$ to $0.129$) is the corpus-side noise-budget comparison the instrument is designed to support. On the traced benchmark the same construction attributes a cost of $26\%$ of the budget to the
-planted $5\%$ pocket
-($\sstar\!: 0.203 \to 0.150$).}
+$\sstar = 0.148$ to $0.123$. At large $\sigma$ the curves converge (every
+pair confuses) and at tiny $\sigma$ both vanish; the tolerance crossing
+is determined where they differ. Bottom: the five corpora under the same
+encoder, with tolerance crossings spanning $\sstar = 0.090$ to $0.129$;
+the text gives the reading.}
 \label{fig:csigma}
 \end{figure}
 
@@ -2158,7 +2199,7 @@ measurements alone. Second, with references matched to the trainer's own
 views and the confusable window placed in every batch, both LoRA and full
 fine-tuning are \emph{safe but marginal}: no readout degrades, held-out
 overlap stays at $0.97$, and the flagged cohort improves by $2$--$3\%$ in
-the median . The effect is small but nearly universal across items: of the $408$
+the median. The effect is small but nearly universal across items: of the $408$
 flagged items that fall in the held-out split, $406$ (LoRA) and $356$
 (full fine-tune) individually reduce their expected collisions (paired
 sign tests, $p < 10^{-100}$ and $p < 10^{-56}$). $\sstar$ is measured as genuinely unchanged rather than
@@ -2190,7 +2231,7 @@ the base $204$ at $0.090$ --- so the fine-tune that improves retrieval
 $200$k held-out measurement is a faithful proxy for the full corpus.
 
 \emph{Reading Figure~\ref{fig:loopfig}.} The left panel is the
-counterfactual the instrument prevented: both rejected rounds sit
+counterfactual that the instrument prevented: both rejected rounds sit
 \emph{above} the baseline --- the tuned models made the flagged cohort worse --- while their own training losses were falling monotonically. Training loss alone endorsed that round; only the held-out geometric readouts identified the regression. The right panel shows the gate that caught it: the rejected LoRA round is the
 only point below the
 pre-registered overlap floor, and the accepted rounds cluster near the
@@ -2214,8 +2255,13 @@ $[-0.008, +0.023]$, spans zero. The correct reading is therefore
 \emph{retrieval-neutral-to-positive}: a per-item-significant geometry
 improvement whose aggregate task effect is bounded near zero, consistent
 with the duplication finding --- most failures are not caused by the
-crowding the objective can legally repair. For context, a label-supervised
-fine-tune measured under the same harness reaches recall@1 $0.355$, an upper reference point that supervision, not geometry, supplies. The per-item layer makes a sharper, item-level
+crowding the objective can legally repair.
+
+For context, a label-supervised
+fine-tune measured under the same harness reaches recall@1 $0.355$, an
+upper reference point that supervision, not geometry, supplies.
+
+The per-item layer makes a sharper, item-level
 prediction: documents with high base-model expected collisions should be the
 ones that \emph{fail at their own queries} (a judged-relevant document
 outranked by non-relevant neighbors). Scored blind, base expected-collision
@@ -2411,13 +2457,18 @@ external-validation design: the four judged collections and seven encoders
 of Tables~\ref{tab:corpora} and~\ref{tab:encoders}. Each combination of
 a corpus and an encoder --- a \emph{cell} of the grid --- is treated as
 one embedded corpus to be measured and then scored, giving $28$ cells plus
-the legal case study. Per cell, the corpus is
-embedded, the full readout set is computed and its hash recorded
-\emph{before} any judgment file is opened, the per-document collision field of \S\ref{sec:semantics} (each
-document's expected collision count) is computed at the cell's measured
-$\sstar$, and only then are the queries
-run and scored (nDCG@10, recall@100, and per-relevant-document failure
-labels). One pipeline check: BGE-large's nDCG@10 on TREC-COVID reproduces
+the legal case study. Each cell follows four steps in strict order:
+\begin{enumerate}
+\item embed the corpus;
+\item compute the full readout set and record its hash, \emph{before} any
+  judgment file is opened;
+\item compute the per-document collision field of \S\ref{sec:semantics}
+  (each document's expected collision count) at the cell's measured
+  $\sstar$;
+\item only then run and score the queries (nDCG@10, recall@100, and
+  per-relevant-document failure labels).
+\end{enumerate}
+One pipeline check: BGE-large's nDCG@10 on TREC-COVID reproduces
 its published benchmark value. Table~\ref{tab:external} and Figures~\ref{fig:external}--\ref{fig:pocketgrid} present every
 cell; the grid's two findings are elaborated below.
 
@@ -2556,13 +2607,13 @@ cell's outcome \emph{informative} when the failure label actually varies
 --- some judged documents fail at rank $10$ and some do not; a label that
 is nearly constant cannot be predicted by anything. In every informative
 cell, expected-collision counts predict
-which judged-relevant documents fail at their own queries: all seven
-encoders on duplicate questions (AUC $0.66$--$0.74$), all seven on product
-search ($0.57$--$0.69$, including $0.69$ for the case-study encoder despite
-an $84\%$ base failure rate), all seven on open-domain QA
-($0.51$--$0.62$), and the legal case study ($0.58$) --- every one of the
-twenty-two informative cells is positive (sign test
-$p \approx 2 \times 10^{-7}$). The biomedical collection is uninformative
+which judged-relevant documents fail at their own queries. The informative
+cells comprise all seven encoders on each of the three informative corpora
+--- duplicate questions, product search, and open-domain QA --- plus the
+legal case study; the AUC ranges per corpus are the final columns of
+Table~\ref{tab:external}. Every one of these cells is positive (sign test
+$p \approx 2 \times 10^{-7}$), including an AUC of $0.69$ on product
+search for the case-study encoder despite an $84\%$ base failure rate. The biomedical collection is uninformative
 for this outcome by construction, not by counterexample: with $50$ queries
 carrying hundreds of relevant documents each, $98\%$ of judged documents
 exceed rank $10$ and the failure label saturates entirely.
@@ -2622,10 +2673,9 @@ opposite repair prescriptions. Figure~\ref{fig:dedupf1} plots the ladder.
 \end{tikzpicture}
 \caption{Duplicate prediction from pair cosine alone on Quora's annotated
 duplicate pairs (case-study encoder; $15{,}675$ gold pairs). Precision
-rises monotonically toward the duplicate scale --- the ground-truth reading
-of ``the closer to one, the more surely duplicate'' --- while recall falls,
-because annotated duplicates are mostly paraphrases living between the
-liftoff and duplicate scales: the confusable window.}
+rises monotonically toward the duplicate scale while recall falls; the
+dashed lines mark the two scales --- liftoff and duplicate boundary ---
+whose contrast the text interprets.}
 \label{fig:dedupf1}
 \end{figure}
 
@@ -3527,6 +3577,14 @@ paper. \emph{JRSS-B} 39(2), 1977.
 
 \bibitem{robeson2014} S.~M.~Robeson, A.~Li, C.~Huang. Point-pattern analysis
 on the sphere. \emph{Spatial Statistics} 10, 2014.
+
+\bibitem{baddeley2000} A.~J.~Baddeley, J.~M{\o}ller, R.~Waagepetersen.
+Non- and semi-parametric estimation of interaction in inhomogeneous point
+patterns. \emph{Statistica Neerlandica} 54(3), 2000.
+
+\bibitem{tyler1987} D.~E.~Tyler. Statistical analysis for the angular
+central Gaussian distribution on the sphere. \emph{Biometrika} 74(3),
+1987.
 
 \bibitem{myllymaki2017} M.~Myllym\"aki, T.~Mrkvi\v{c}ka, P.~Grabarnik,
 H.~Seijo, U.~Hahn. Global envelope tests for spatial processes.
