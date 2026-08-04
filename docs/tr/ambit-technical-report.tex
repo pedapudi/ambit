@@ -61,50 +61,46 @@ Embedding-based systems --- retrieval, retrieval-augmented generation,
 deduplication, clustering --- depend on a single geometric property: items
 that must be distinguished must remain distinguishable under the similarity
 metric. We call the failure of this property \emph{crowding}. It is a local
-loss of resolution --- of the ability to keep distinct items
-distinguishable --- and the global statistics that practitioners
-routinely examine do not detect it. This report describes \textsf{ambit}, an open instrument that
-measures how a corpus occupies its embedding space.
+loss of resolution, and the global statistics that practitioners routinely
+examine do not detect it. This report describes \textsf{ambit}, an open
+instrument that measures how a corpus occupies its embedding space.
 
 Three commitments organize the design. Occupancy is measured
-\emph{continuously over all scales}: the primary object is the exact
-empirical pair-distance distribution --- no bins, grid cells, or fixed
+\emph{continuously over all scales}, with no bins, grid cells, or fixed
 neighbor counts, whose sizes provably change the answer. Every statistic is
-\emph{null-calibrated}, including against an anisotropy-conditioned reference that separates the
-ubiquitous \emph{cone effect} --- learned embeddings concentrating in a
-narrow angular region, inflating every pairwise cosine --- from clustering
-the cone cannot explain. Diagnosis descends to \emph{named items} through
-per-item fields with stability guarantees.
+\emph{null-calibrated}, including against a reference that separates the
+ubiquitous \emph{cone effect} --- learned embeddings crowding into a narrow
+angular region --- from clustering the cone cannot explain. Diagnosis
+descends to \emph{named items} through per-item fields with stability
+guarantees.
 
 The measurements carry operational units. An exact Gaussian law converts
 pair distances into expected retrieval collisions, yielding the
 \emph{resolution bandwidth} $\sstar$: the largest query-noise scale a
-corpus absorbs before, in expectation, one wrong item outranks the right
-one. The widely used uniformity loss is shown to be the logarithm of a
-Chernoff bound on the same quantity, which gives its temperature parameter
-units.
+corpus absorbs before one wrong item outranks the right one. The widely
+used uniformity loss is shown to be the logarithm of a Chernoff bound on
+the same quantity, which gives its temperature parameter units.
 
 Validation proceeds in three regimes. A traced synthetic benchmark
-establishes calibration (false alarms match nominal rates on hundreds of
-pure nulls) and detection power (full power at matched specificity on
-pockets --- small groups of mutually near-duplicate items --- that leave
-mean cosine, isotropy, and hubness detecting no more often than on pure nulls). A public million-document legal corpus supplies realistic geometry
-at scale. Across four public retrieval collections and seven public encoders ---
-with every measurement frozen before any relevance judgment is read ---
-the per-document score identifies the documents that the judgments later
-show failing at their own queries, in every combination where that
-outcome is measurable; the corpus-level score predicts encoder quality
-only on similarity-matching tasks, fixing its scope to comparative use. The measurements then drive interventions end to end:
-label-blind deduplication succeeds only at the site and scale the measurements prescribe --- fixing twelve queries with zero regressions there, and demonstrably harmful when the same operation is applied at the wrong scale; guardrails derived from the measurements (auxiliary loss terms and
-negative-masking rules) halve the collateral damage of supervised
-fine-tuning at no cost to its gains;
-and a pre-registered accept/reject criterion on held-out readouts rejects
-a misspecified training round that its own loss curve endorsed --- selecting the better model before any
-label is consulted.
+establishes calibration on hundreds of pure nulls and full detection power
+on planted near-duplicate pockets that mean cosine, isotropy, and hubness
+miss. A public million-document legal corpus supplies realistic geometry at
+scale. Across four public retrieval collections and seven public encoders,
+every measurement is frozen before any relevance judgment is read; the
+per-document score identifies the documents that the judgments later show
+failing at their own queries, in every combination where that outcome is
+measurable, while the corpus-level score predicts encoder quality only on
+similarity-matching tasks.
 
-\textsf{ambit} is unsupervised by design --- no labels, gold pairs, or
-ground truth enter any measurement --- and its core depends only on
-\textsf{numpy}.
+The measurements also select and verify interventions. Label-blind
+deduplication at the prescribed site and scale fixes twelve queries with
+zero regressions; the same operation at the wrong scale is demonstrably
+harmful. Guardrails derived from the measurements halve the collateral
+damage of supervised fine-tuning at no cost to its gains, and a
+pre-registered criterion on held-out readouts rejects a training round
+that its own loss curve endorsed --- before any label is consulted.
+\textsf{ambit} is unsupervised by design --- no labels enter any
+measurement --- and its core depends only on \textsf{numpy}.
 \end{abstract}
 
 \clearpage
