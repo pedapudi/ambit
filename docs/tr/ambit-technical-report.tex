@@ -481,63 +481,64 @@ geometrically diluted before any arithmetic begins.}
 % =========================================================================
 
 The introduction framed an embedded corpus as a point pattern and
-crowding as the clustering question that the observational sciences ask
-of point patterns. Those sciences have mature statistics for answering
-it; \textsf{ambit} carries that body of work to the high-dimensional
-sphere where embedded corpora live. This section describes each borrowed method
-in plain terms --- what it was built to do in its home field, and what
-changes when it is applied to embeddings --- and then situates
-\textsf{ambit} among the statistics the embedding literature itself
-uses. Spatial statistics supplies the crowding curve and its inference;
-geometric inference, the per-item crowding radius and the pocket
-hierarchy; discrepancy theory, the occupancy summary; directional
-statistics, the reference that models the cone. What no donor field
-supplies is the operational layer: none has a notion of one document
-outranking another at a query, so the conversion of pair distances into
-expected retrieval collisions (\S\ref{sec:semantics}) is native to this
-report.
+crowding as the clustering question the observational sciences ask of
+point patterns. Those sciences have mature statistics for answering it;
+\textsf{ambit} carries that work to the high-dimensional sphere where
+embedded corpora live. Spatial statistics supplies the crowding curve
+and its inference; geometric inference, the per-item crowding radius and
+the pocket hierarchy; discrepancy theory, the occupancy summary;
+directional statistics, the reference that models the cone. Each is
+described below in plain terms --- what it does in its home field, and
+what changes on embeddings. No donor field supplies the operational
+layer: none has a notion of one document outranking another at a query,
+so the conversion of pair distances into expected retrieval collisions
+(\S\ref{sec:semantics}) is native to this report.
 
-\paragraph{Spatial statistics.}
+\paragraph{Counting pairs at every distance.}
 Ripley's $K$ function \cite{ripley1976,besag1977} is the standard test
 for whether a set of points clusters. An ecologist applies it to trees
 in a forest plot, an epidemiologist to the home addresses of disease
 cases, an astronomer to galaxies in a survey volume, a cell biologist to
 proteins imaged on a membrane. The recipe is the same in each: count how
-many pairs of points fall within every distance, and compare those
-counts to what scattering the same number of points at random would
-give. Reading the comparison as a \emph{function of distance} matters,
-because a pattern can be clumped at one scale and evenly spread at
-another --- trees clustering into groves while the groves themselves sit
-apart --- and any single chosen radius reports one of those and hides
-the other. \textsf{ambit}'s crowding curve is
-this idea transplanted to the sphere, and the move there is kinder than
-it sounds. The random-scatter comparison stays exact: on a sphere, the
-chance that a random point falls within a given distance of another is
-just the area of the surrounding patch of surface, known in closed form
-(the cap-area law). The transplant also sheds a nuisance. A forest plot
-has edges, and a tree near one has neighbors only on the inside, so its
-pair counts run low and the ecologist must compensate (an \emph{edge
-correction}). A sphere has no edge --- walk in any direction and the
-surface continues --- so every document sits in the same position and
-no such correction arises \cite{robeson2014}. Two further pieces of the field's machinery carry
-over with the curve. Global envelope tests \cite{myllymaki2017} answer
-the companion inference question --- how to test a whole curve at once
-without the multiple-comparison error of checking each scale separately
---- and supply \textsf{ambit}'s liftoff test. Spatial statisticians also
-met \textsf{ambit}'s central confound long ago. Disease cases cluster in
-cities, but that says nothing about contagion: people cluster in cities.
-Raw $K$ reports the crowd, not the outbreak. The \emph{inhomogeneous}
-$K$ function \cite{baddeley2000} repairs this by testing the pattern
-against a background that already contains the uneven population, so
-only clustering beyond it is reported. The anisotropy-conditioned
-reference of \S\ref{sec:kcurve} is the same move on the sphere: the
-cone into which a learned encoder packs every document is the uneven
-background, supplied by the angular central Gaussian of directional
-statistics, and what \textsf{ambit} reports is the clumping the cone
-does not account for.
+many pairs fall within every distance, and compare those counts to what
+scattering the same number of points at random would give. Reading the
+comparison as a \emph{function of distance} matters, because a pattern
+can be clumped at one scale and evenly spread at another --- trees
+clustering into groves while the groves sit apart --- and any single
+radius reports one and hides the other.
 
-\paragraph{The hazards of partitioned statistics.}
-The same sciences also documented what \emph{not} to transfer. The
+\textsf{ambit}'s crowding curve is this idea transplanted to the sphere,
+and the move is kinder than it sounds. The random-scatter comparison
+stays exact: on a sphere, the chance that a random point falls within a
+given distance of another is the area of the surrounding patch of
+surface, known in closed form (the cap-area law). The transplant also
+sheds a nuisance. A forest plot has edges, and a tree near one has
+neighbors only on the inside, so its pair counts run low and the
+ecologist must compensate (an \emph{edge correction}). A sphere has no
+edge --- walk in any direction and the surface continues --- so no such
+correction arises \cite{robeson2014}.
+
+\paragraph{Testing a whole curve at once.}
+A curve read at every distance invites a multiple-comparison error:
+check enough scales and one will look significant by chance. Global
+envelope tests \cite{myllymaki2017} test the entire curve as a single
+object, and supply \textsf{ambit}'s liftoff test.
+
+\paragraph{Conditioning on an uneven background.}
+Spatial statisticians met \textsf{ambit}'s central confound long ago.
+Disease cases cluster in cities, but that says nothing about contagion:
+people cluster in cities. Raw $K$ reports the crowd, not the outbreak.
+The \emph{inhomogeneous} $K$ function \cite{baddeley2000} repairs this
+by testing against a background that already contains the uneven
+population, so only clustering beyond it is reported. The
+anisotropy-conditioned reference of \S\ref{sec:kcurve} is the same move
+on the sphere: the cone into which a learned encoder packs every
+document is the uneven background, supplied by the angular central
+Gaussian of directional statistics, and \textsf{ambit} reports the
+clumping the cone does not account for.
+
+\paragraph{What not to transfer.}
+The same sciences documented the hazards of partitioned statistics. The
 modifiable areal unit problem (MAUP)
 \cite{gehlke1934,openshaw1979,openshaw1984} and the ecological fallacy
 \cite{robinson1950} are the classical demonstrations that
@@ -547,75 +548,71 @@ in \S\ref{sec:binned}, that \textsf{ambit} is built to avoid. The same
 lesson appears in one dimension as the histogram's bin-width and origin
 sensitivity \cite{scott1979,freedman1981,silverman1986}; the averaged
 shifted histogram \cite{scott1985} repairs placement by averaging over
-origins, and \textsf{ambit} goes one step further by removing the
-partition altogether.
+origins, and \textsf{ambit} removes the partition altogether.
 
-\paragraph{Discrepancy theory.}
+\paragraph{Auditing every region at once.}
 Stolarsky's invariance principle \cite{stolarsky1973,brauchart2011}
 converts an audit that cannot be run directly --- compare actual against
-expected occupancy over \emph{every} cap at \emph{every} scale --- into
-one computable number, the mean pairwise distance. \textsf{ambit}'s
-occupancy discrepancy is this theorem put to work.
+expected occupancy over \emph{every} region at \emph{every} scale ---
+into one computable number, the mean pairwise distance.
+\textsf{ambit}'s occupancy discrepancy is this theorem put to work.
 
-\paragraph{Geometric inference.}
+\paragraph{Scoring individual points, and finding groups.}
 The distance to a measure \cite{chazal2011,chazalmichel2021} asks, for
 each point, how far it must reach to gather a fixed fraction of the data
---- a robust replacement for density estimation. Its defining property
+--- a robust replacement for density estimation, whose defining property
 is stability: small changes to the data provably move every score only
 slightly. \textsf{ambit}'s per-item crowding radius is this estimator on
 the sphere. For structure, Hartigan's cluster tree
-\cite{hartigan1981,chaudhuri2010} reads groups at all densities
-simultaneously instead of at one threshold; ToMATo \cite{chazal2013} and
-HDBSCAN's condensed tree \cite{campello2015} are two normalizations of
-that object \cite{rolle2020}, with stability inherited from persistence
-theory \cite{cohensteiner2007}. \textsf{ambit}'s pocket catalogue ---
-births, deaths, and prominences of tight groups --- is this machinery
-with a null-calibrated reporting floor.
+\cite{hartigan1981,chaudhuri2010} reads groups at all densities at once
+instead of at one threshold; ToMATo \cite{chazal2013} and HDBSCAN's
+condensed tree \cite{campello2015} are two normalizations of that object
+\cite{rolle2020}, inheriting stability from persistence theory
+\cite{cohensteiner2007}. \textsf{ambit}'s pocket catalogue --- births,
+deaths, and prominences of tight groups --- is this machinery with a
+null-calibrated reporting floor.
 
-\paragraph{Anisotropy and resolution.}
-The embedding literature contributes the phenomenon that every one of
-the transfers above must be conditioned on. Gao et al.\ \cite{gao2019}
-and Ethayarajh \cite{ethayarajh2019}
+\paragraph{The cone that every transfer must condition on.}
+Gao et al.\ \cite{gao2019} and Ethayarajh \cite{ethayarajh2019}
 established that learned embeddings do not use the whole sphere: vectors
-bunch into a narrow cone, which inflates every pairwise cosine at once.
-For \textsf{ambit} this is the central confound --- a cone raises
-similarities without making any two items confusable --- and it is why
-every readout is calibrated against an anisotropy-matched reference
-rather than against the uniform sphere alone. Mu et al.\ \cite{mu2018}
-showed that subtracting the mean direction and a few dominant components
-restores much of the usable angular range: this is precisely the linear
-repair that \textsf{ambit}'s routing recommends when its measurements
-attribute crowding to the cone and to nothing else. Cai et al.\
-\cite{cai2021} found genuine cluster structure \emph{inside} the cone ---
-the kind of beyond-cone crowding the anisotropy-matched reference is
-designed to isolate. Effective rank \cite{roy2007} and IsoScore
-\cite{rudman2022} compress the covariance into one number (roughly, how
-many directions carry variance, and how close the cloud is to perfectly
-round); \textsf{ambit} reports both as context and measures, in
-\S\ref{sec:power}, that they cannot see small pockets. Wang and Isola
+bunch into a narrow cone, inflating every pairwise cosine at once. This
+is \textsf{ambit}'s central confound --- a cone raises similarities
+without making any two items confusable --- and the reason every readout
+is calibrated against an anisotropy-matched reference rather than the
+uniform sphere alone. Mu et al.\ \cite{mu2018} showed that subtracting
+the mean direction and a few dominant components restores much of the
+usable angular range: the linear repair \textsf{ambit}'s routing
+recommends when it attributes crowding to the cone alone. Cai et al.\
+\cite{cai2021} found genuine cluster structure \emph{inside} the cone,
+which is what the anisotropy-matched reference is designed to isolate.
+
+\paragraph{What the embedding literature measures instead.}
+Effective rank \cite{roy2007} and IsoScore \cite{rudman2022} compress
+the covariance into one number --- roughly, how many directions carry
+variance, and how round the cloud is. \textsf{ambit} reports both as
+context, and \S\ref{sec:power} measures that they cannot see small
+pockets. Hubness \cite{radovanovic2010}, a few items appearing in
+disproportionately many nearest-neighbor lists, is a metric-level
+symptom of the same congestion \textsf{ambit} measures geometrically,
+and a baseline in the detection-power study. Wang and Isola
 \cite{wang2020} decompose contrastive embedding quality into
 \emph{alignment} (paired texts land together) and \emph{uniformity}
-(everything spreads out): \textsf{ambit} deliberately measures only the
-uniformity half --- it is unsupervised and cannot see alignment --- and
-this decomposition is exactly what the external validation of
-\S\ref{sec:external} recovers empirically. Hubness
-\cite{radovanovic2010} is the phenomenon of a few items appearing in
-disproportionately many other items' nearest-neighbor lists --- a
-metric-level symptom of the same congestion \textsf{ambit} measures
-geometrically, and a baseline in the detection-power study.
+(everything spreads out); \textsf{ambit} measures only the uniformity
+half, being unsupervised, and \S\ref{sec:external} recovers that
+decomposition empirically.
 
 \paragraph{Embedding-quality scores.}
 RankMe \cite{garrido2023}, $\alpha$-ReQ \cite{agrawal2022}, and their
 relatives (surveyed in \cite{tsitsulin2023}) score an embedding, without
-labels, by how evenly its variance spreads across directions. A
-structural fact governs the family: on unit vectors these scores all
-re-read the same second-moment spectrum, so they largely re-parameterize
-one another. The Vendi score \cite{friedman2023,pasarkar2024} escapes the
-family by counting effective modes through a nonlinear kernel
-\cite{giraldo2015,ospanov2024}. \textsf{ambit} adopts the lesson as a
-design filter (\S\ref{sec:filters}): rather than adding another reading
-of the spectrum, it measures different objects entirely --- the
-pair-distance distribution and per-item fields.
+labels, by how evenly its variance spreads across directions. On unit
+vectors these all re-read the same second-moment spectrum, so they
+largely re-parameterize one another; the Vendi score
+\cite{friedman2023,pasarkar2024} escapes the family by counting
+effective modes through a nonlinear kernel
+\cite{giraldo2015,ospanov2024}. \textsf{ambit} takes the lesson as a
+design filter (\S\ref{sec:filters}): rather than add another reading of
+the spectrum, it measures different objects --- the pair-distance
+distribution and per-item fields.
 
 \paragraph{Projections and density.}
 Two-dimensional layouts preserve neighborhoods, not density
