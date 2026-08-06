@@ -84,32 +84,34 @@ The measurements are stated in retrieval terms. A query never lands
 exactly on its target, and when two documents sit close together, a query
 aimed at one can return the other --- a \emph{collision}. From pair
 distances alone, \textsf{ambit} computes how many collisions to expect at
-any level of query imprecision, and reports the largest imprecision the
-corpus absorbs before collisions begin: the \emph{resolution bandwidth}
-$\sstar$, the corpus's tolerance for imprecise queries.
+any level of query imprecision, and reports the largest the corpus
+absorbs before collisions begin: the \emph{resolution bandwidth}
+$\sstar$, its tolerance for imprecise queries.
 
-Validation establishes three properties. On hundreds of corpora with
-nothing planted, the instrument alarms only at its advertised rate. It
-recovers planted groups of near-duplicates in full --- groups that mean
-cosine, isotropy, and hubness miss. And its predictions were tested
+Validation establishes three properties. An instrument must not report a
+defect that is not there: on hundreds of corpora built free of crowding,
+false alarms stay within the five percent the test allows. It must find
+one that is there: when a group of near-duplicates is deliberately
+inserted into a corpus, \textsf{ambit} recovers it in full, where mean
+cosine, isotropy, and hubness miss it. Its predictions were tested
 blind: across four public retrieval collections and seven public
-encoders, every score was computed and locked before the relevance
-labels --- the human judgments of which documents answer which queries
---- were consulted. The per-document score picked out in advance the
+encoders, every score was computed and locked before the answer keys ---
+the human judgments of which documents answer which queries --- were
+opened. The per-document score picked out in advance the
 documents that retrieval then failed on, in every pairing that tests it.
 The corpus-level score tracks encoder quality only on similarity-matching
 tasks.
 
-The case study embeds one million documents drawn from a public legal
-corpus; there, the measurements select interventions and verify them.
-Merging exactly the near-duplicate documents the readouts name, at the
+In the case study --- one million documents from a public legal corpus
+--- the measurements select interventions and verify them.
+Merging the near-duplicate documents the readouts name, at the
 similarity level they certify as true duplication, improved twelve
-queries and harmed none ($p = 0.0005$); merging at the looser level the
-readouts warn against degraded retrieval. Measurement-built guardrails
+queries and harmed none ($p = 0.0005$); the same merge at the looser
+level they warn against degraded retrieval. Measurement-built guardrails
 halve the damage supervised fine-tuning does outside its training
-distribution, at no cost to its gains. And a rejection rule fixed in
+distribution, at no cost to its gains. A rejection rule fixed in
 advance caught a defective fine-tuning round that its own falling loss
-endorsed; the labels later confirmed the veto. \textsf{ambit} is
+endorsed, a veto the labels later confirmed. \textsf{ambit} is
 unsupervised --- no labels enter any measurement --- and its core depends
 only on \textsf{numpy}.
 \end{abstract}
@@ -206,9 +208,9 @@ previews both difficulties.
 \end{minipage}
 \caption{The two measurement difficulties, previewed (schematic). Left:
 viewed whole, the corpus shows nothing unusual --- the defect is one dot
-among thousands, and on the benchmark of \S\ref{sec:method}, planting
-$200$ near-duplicates in $4{,}000$ items moves mean pairwise similarity by
-only ${\approx}\,0.002$ on a scale of $1$ (\S\ref{sec:averages}).
+among thousands, and on the benchmark of \S\ref{sec:method}, inserting
+$200$ near-duplicates into $4{,}000$ items moves mean pairwise similarity
+by only ${\approx}\,0.002$ on a scale of $1$ (\S\ref{sec:averages}).
 Magnified, that dot is six documents a
 query cannot tell apart, each expecting $2.6$ retrieval collisions against
 zero for a well-spread corpus. The pathology is severe, local, and
@@ -534,10 +536,27 @@ edge --- walk in any direction and the surface continues --- so no such
 correction arises \cite{robeson2014}.
 
 \paragraph{Testing a whole curve at once.}
-A curve read at every distance invites a multiple-comparison error:
-check enough scales and one will look significant by chance. Global
-envelope tests \cite{myllymaki2017} test the entire curve as a single
-object, and supply \textsf{ambit}'s liftoff test.
+Reading the counts at every distance creates a problem of its own. The
+curve is not one number but a value at each of some eighty similarity
+levels, and each level carries its own range of counts that
+crowding-free corpora produce --- a band the observed curve should stay
+inside. Checking each level separately against its own band is the
+mistake: each check has its own chance of firing on a corpus with
+nothing wrong, and across eighty of them something almost always fires.
+Measured on this report's own crowding-free corpora, that
+level-by-level reading raises an alarm on every one of forty
+(\S\ref{sec:power}).
+
+The repair is to treat the curve as a single object. A global envelope
+test \cite{myllymaki2017} builds $199$ crowding-free corpora, computes
+each one's whole curve, and asks where the observed curve ranks among
+all two hundred by its most extreme departure at any level. That yields
+one verdict covering every level at once, with a smallest attainable
+$p$ of $1/200 = 0.005$, since the observed curve can at best exceed all
+$199$ simulations. This is \textsf{ambit}'s liftoff test, and it fixes a
+division of labor used throughout the report: the band shows at which
+similarity a corpus departs from the reference, and the single global
+verdict decides whether that departure is real.
 
 \paragraph{Conditioning on an uneven background.}
 Spatial statisticians met \textsf{ambit}'s central confound long ago.
@@ -654,13 +673,18 @@ Three complementary data regimes carry the evidence; among them, every
 claim is testable.
 
 \emph{(i) The synthetic benchmark family --- known ground truth by
-construction.} Detection, localization, and recovery claims can only be scored against
-a pathology whose membership and scales are known exactly. Planting one
-supplies that ground truth without the instrument ever consuming labels. One instance of this family is followed end to end through the report;
-we call it the \emph{traced} benchmark. It holds $n = 4{,}000$ points at
+construction.} Detection, localization, and recovery claims can only be
+scored against a defect whose membership and scales are known exactly.
+The way to obtain one is to build the corpus and insert the defect
+deliberately, choosing which items belong to it and how tightly they
+sit --- a \emph{planted} pathology. Ground truth then comes from the
+construction, and the instrument still never consumes a label. One
+instance of this family is followed end to end through the report; we
+call it the \emph{traced} benchmark. It holds $n = 4{,}000$ points at
 $d = 768$ (a contemporary encoder width), drawn as normalized standard
-Gaussians, which places them exactly uniformly on $\sphere$. The pocket
-replaces the last $k = 200$ points ($5\%$) with
+Gaussians, which places them exactly uniformly on $\sphere$. The
+planted group --- a \emph{pocket} --- replaces the last $k = 200$
+points ($5\%$) with
 $x_i = (c + s\, g_i)/\lVert c + s\, g_i\rVert$ for one shared uniform
 direction $c$, i.i.d.\ Gaussian $g_i$, and spread $s = 0.01$. That
 spread puts the pocket in the near-duplicate regime, at median
