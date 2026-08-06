@@ -1,0 +1,35 @@
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+  width=10.0cm, height=3.6cm,
+  xmode=log, log basis x=10,
+  xmin=0.75, xmax=135, ymin=0.33, ymax=0.70,
+  xtick={1,10,100},
+  xticklabels={$0.1\times$, default, $10\times$},
+  ytick=\empty,
+  xlabel={one parameter, swept over an order of magnitude or more},
+  ylabel={readout},
+  label style={font=\scriptsize},
+  tick label style={font=\tiny},
+  axis lines=left,
+  clip=false]
+
+% the seed-to-seed spread: the yardstick any drift is read against
+\addplot[fill=faint!18, draw=none] coordinates
+  {(0.75,0.455) (135,0.455) (135,0.575) (0.75,0.575)} \closedcycle;
+
+% the readout across the sweep
+\addplot[acc, very thick] coordinates
+  {(0.8,0.522) (1.5,0.503) (3,0.514) (6,0.505) (10,0.512)
+   (20,0.503) (45,0.516) (100,0.508) (130,0.519)};
+
+\addplot[only marks, mark=*, mark size=1.7pt, acc] coordinates {(10,0.512)};
+
+\node[faint, font=\tiny, anchor=west, align=left] at (axis cs:150,0.515)
+  {seed-to-seed\\ spread};
+\node[good, font=\tiny, anchor=north] at (axis cs:10,0.435)
+  {the readout never leaves that spread: a plateau};
+
+\end{axis}
+\end{tikzpicture}
+\end{center}

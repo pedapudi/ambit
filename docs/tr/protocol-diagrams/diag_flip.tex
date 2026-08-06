@@ -1,0 +1,50 @@
+\begin{center}
+\begin{tikzpicture}[font=\tiny, >={Stealth[length=1.5mm]}]
+  % ================= left: what a single draw does =================
+  \node[faint, anchor=east, align=right] at (0.30,0)
+    {two fixed\\unit vectors,\\known angle\\between them};
+
+  % the two documents and the chord between them
+  \fill[faint] (1.10,0.62) circle (0.05);
+  \fill[faint] (1.10,-0.62) circle (0.05);
+  \node[anchor=east] at (1.02,0.62) {$x_1$};
+  \node[anchor=east] at (1.02,-0.62) {$x_2$};
+  \draw[faint!60] (1.10,0.62) -- (1.10,-0.62);
+
+  % the line at which the ranking changes hands
+  \draw[bad, dashed] (0.75,0) -- (3.45,0);
+  \node[bad, anchor=west] at (3.50,0) {the ranking changes hands here};
+
+  % the query, perturbed
+  \node[acc, anchor=south, align=center] at (2.05,0.72)
+    {query, perturbed by noise\\($3\times10^{5}$ draws)};
+  \fill[acc] (2.05,0.40) circle (0.045);
+  \foreach \p in {(1.86,0.58),(2.24,0.62),(1.94,0.26),(2.30,0.30),(1.72,0.36),
+                  (2.14,0.16),(2.42,0.48),(1.80,0.14),(2.36,0.10),(2.00,0.52)}
+    \fill[acc!55] \p circle (0.028);
+  \foreach \p in {(1.98,-0.16),(2.22,-0.11),(1.79,-0.22)}
+    \fill[bad] \p circle (0.028);
+  \node[bad, anchor=north west, align=left] at (1.68,-0.30)
+    {draws landing below the line:\\$x_2$ now outranks $x_1$};
+
+  % ================= middle: the sweep of conditions =================
+  \begin{scope}[xshift=7.85cm, yshift=-0.48cm]
+    \foreach \i in {0,1,2,3,4,5,6}
+      \draw[faint!70] (\i*0.24,0) -- (\i*0.24,0.96);
+    \foreach \j in {0,1,2,3,4}
+      \draw[faint!70] (0,\j*0.24) -- (1.44,\j*0.24);
+    \node[faint, anchor=south, align=center] at (0.72,1.02)
+      {repeated in every cell\\of a $6\times4$ grid};
+    \node[faint, anchor=north] at (0.72,-0.06) {angle $\rightarrow$};
+    \node[faint, rotate=90, anchor=south] at (-0.10,0.48) {noise scale $\rightarrow$};
+  \end{scope}
+
+  % ================= right: the comparison =================
+  \draw[->, faint] (9.45,0) -- (10.00,0);
+  \node[draw=faint, rounded corners=1pt, align=center, inner sep=3.5pt,
+        anchor=west] at (10.10,0)
+    {\textcolor{acc}{the simulated flip rate} against\\
+     \textcolor{good}{the closed-form probability},\\
+     largest gap over all $24$ cells};
+\end{tikzpicture}
+\end{center}

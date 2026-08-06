@@ -1,0 +1,40 @@
+\begin{center}
+\begin{tikzpicture}[font=\tiny, >={Stealth[length=1.5mm]}]
+  % eight generators, ranked twice; positions are 1..8 left to right
+  % top order:    1 2 3 4 5 6 7 8
+  % bottom order: 1 2 3 4 6 5 7 8   (one adjacent swap = one disagreement)
+
+  \node[faint, anchor=east, align=right] at (-0.15,0.62)
+    {ranked by the\\confusion functional};
+  \node[faint, anchor=east, align=right] at (-0.15,-0.62)
+    {ranked by the\\uniformity functional};
+
+  % top row
+  \foreach \i in {1,2,3,4,5,6,7,8}
+    \node[draw=faint, circle, inner sep=0.9pt, minimum size=0.30cm]
+      (t\i) at (\i*0.72,0.62) {\i};
+  % bottom row (positions carry the generator labels in the new order)
+  \node[draw=faint, circle, inner sep=0.9pt, minimum size=0.30cm] (b1) at (0.72,-0.62) {1};
+  \node[draw=faint, circle, inner sep=0.9pt, minimum size=0.30cm] (b2) at (1.44,-0.62) {2};
+  \node[draw=faint, circle, inner sep=0.9pt, minimum size=0.30cm] (b3) at (2.16,-0.62) {3};
+  \node[draw=faint, circle, inner sep=0.9pt, minimum size=0.30cm] (b4) at (2.88,-0.62) {4};
+  \node[draw=bad, circle, inner sep=0.9pt, minimum size=0.30cm] (b6) at (3.60,-0.62) {6};
+  \node[draw=bad, circle, inner sep=0.9pt, minimum size=0.30cm] (b5) at (4.32,-0.62) {5};
+  \node[draw=faint, circle, inner sep=0.9pt, minimum size=0.30cm] (b7) at (5.04,-0.62) {7};
+  \node[draw=faint, circle, inner sep=0.9pt, minimum size=0.30cm] (b8) at (5.76,-0.62) {8};
+
+  % agreeing links
+  \foreach \i in {1,2,3,4,7,8} \draw[good] (t\i) -- (b\i);
+  % the disagreement
+  \draw[bad, thick] (t5) -- (b5);
+  \draw[bad, thick] (t6) -- (b6);
+
+  \node[anchor=west, align=left, good] at (6.30,0.30)
+    {parallel links: the two functionals\\agree, and one would be redundant};
+  \node[anchor=west, align=left, bad] at (6.30,-0.42)
+    {a crossing: the functionals disagree\\on this pair, so neither is redundant};
+
+  \node[faint, anchor=north, align=center] at (3.24,-0.95)
+    {eight synthetic corpus generators, each measured by both functionals};
+\end{tikzpicture}
+\end{center}

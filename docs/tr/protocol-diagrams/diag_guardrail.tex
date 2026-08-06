@@ -1,0 +1,29 @@
+\begin{center}
+\begin{tikzpicture}[font=\tiny]
+  % ---- one recipe --------------------------------------------------
+  \draw[faint] (0,0.65) rectangle (1.8,1.35);
+  \node[align=center] at (0.9,1.0) {one supervised\\recipe};
+  \draw[-{Stealth[length=1.8mm]}, faint] (1.8,1.0) -- (2.15,1.0) --
+        (2.15,1.65) -- (2.5,1.65);
+  \draw[-{Stealth[length=1.8mm]}, faint] (1.8,1.0) -- (2.15,1.0) --
+        (2.15,0.35) -- (2.5,0.35);
+  % ---- the two arms ------------------------------------------------
+  \draw[faint] (2.5,1.35) rectangle (5.9,1.95);
+  \node at (4.2,1.65) {control arm: no guard terms};
+  \draw[acc, thick] (2.5,0.05) rectangle (5.9,0.65);
+  \node[acc] at (4.2,0.35) {guarded arm: $+$ guard terms};
+  \node[align=center] at (4.2,-0.17) {the arms differ here and nowhere else};
+  % ---- both arms scored the same way -------------------------------
+  \draw[decorate, decoration={brace, amplitude=3pt}, faint]
+        (6.05,1.95) -- (6.05,0.05);
+  \draw[-{Stealth[length=1.8mm]}, faint] (6.3,1.0) -- (6.8,1.0);
+  \draw[faint] (6.8,0.35) rectangle (11.5,1.65);
+  \node[anchor=west] at (6.95,1.32) {targeted metric --- no cost claimed};
+  \node[anchor=west] at (6.95,0.68) {open-corpus metrics --- protection claimed};
+  % ---- the gate fires before any label is seen ---------------------
+  \draw[faint, dashed] (2.5,-1.1) rectangle (6.5,-0.55);
+  \node at (4.5,-0.825) {held-out gate read and recorded};
+  \draw[-{Stealth[length=1.8mm]}, faint, dashed] (6.5,-0.825) -- (7.3,-0.825);
+  \node[anchor=west] at (7.4,-0.825) {\emph{then} the judgments are opened};
+\end{tikzpicture}
+\end{center}

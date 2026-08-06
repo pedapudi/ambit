@@ -1,0 +1,27 @@
+\begin{center}
+\begin{tikzpicture}[font=\tiny]
+  % ---- axis captions ----------------------------------------------
+  \node[anchor=south] at (2.35,2.24) {confusable window};
+  \node[anchor=south] at (5.25,2.24) {true-duplicate scale};
+  \node[anchor=south, font=\tiny\itshape] at (3.8,2.56) {scale};
+  \node[anchor=east, align=right] at (0.95,1.75) {foreign\\distractors};
+  \node[anchor=east, align=right] at (0.95,0.6) {target\\corpus};
+  \node[rotate=90, font=\tiny\itshape] at (-0.95,1.18) {site};
+  % ---- the prescribed cell ----------------------------------------
+  \fill[good, opacity=0.12] (1.05,1.3) rectangle (3.65,2.2);
+  \draw[good, thick] (1.05,1.3) rectangle (3.65,2.2);
+  \node[good, align=center] at (2.35,1.75) {prescribed\\by the readouts};
+  % ---- the three cells the readouts warn against -------------------
+  \draw[faint, dashed] (3.95,1.3) rectangle (6.55,2.2);
+  \node[faint] at (5.25,1.75) {control cell};
+  \draw[faint, dashed] (1.05,0.15) rectangle (3.65,1.05);
+  \node[faint] at (2.35,0.6) {control cell};
+  \draw[faint, dashed] (3.95,0.15) rectangle (6.55,1.05);
+  \node[faint] at (5.25,0.6) {control cell};
+  % ---- what is held constant --------------------------------------
+  \node[anchor=west, align=left] at (6.95,1.72)
+    {the \emph{same} label-blind deduplication\\runs in all four cells};
+  \node[anchor=west, align=left] at (6.95,0.62)
+    {measure: frozen-query failures fixed\\and introduced, exact paired test};
+\end{tikzpicture}
+\end{center}

@@ -1,0 +1,40 @@
+\begin{center}
+\begin{tikzpicture}[font=\tiny]
+  % ---- the fixed subset -------------------------------------------
+  \draw[faint] (0,0.55) rectangle (2.2,1.45);
+  \draw[faint] (0,1.0) -- (2.2,1.0);
+  \node at (1.1,1.22) {train $80\%$};
+  \node at (1.1,0.78) {held out $20\%$};
+  \node[anchor=south] at (1.1,1.5) {fixed $200{,}000$-document subset};
+  \draw[-{Stealth[length=1.8mm]}, faint] (2.2,1.0) -- (2.8,1.0);
+  % ---- train ------------------------------------------------------
+  \draw[acc, thick] (2.8,0.6) rectangle (4.6,1.4);
+  \node[acc, align=center] at (3.7,1.0) {fine-tune\\round $k$};
+  \draw[-{Stealth[length=1.8mm]}, faint] (4.6,1.0) -- (5.2,1.0);
+  % ---- re-measure -------------------------------------------------
+  \draw[faint] (5.2,0.6) rectangle (7.6,1.4);
+  \node[align=center] at (6.4,1.0) {re-measure on the\\held-out $20\%$};
+  \draw[-{Stealth[length=1.8mm]}, faint] (7.6,1.0) -- (8.2,1.0);
+  % ---- the pre-registered rule ------------------------------------
+  \draw[faint, dashed] (7.35,1.75) rectangle (10.4,2.3);
+  \node[align=center] at (8.875,2.025) {continuation rule fixed\\before round $1$};
+  \draw[-{Stealth[length=1.8mm]}, faint, dashed] (8.875,1.75) -- (8.875,1.55);
+  % ---- the gate ---------------------------------------------------
+  \draw[acc, thick] (8.875,0.5) -- (9.5,1.0) -- (8.875,1.5) -- (8.25,1.0) -- cycle;
+  \node[acc] at (8.875,1.0) {rule};
+  % ---- outcomes ---------------------------------------------------
+  \draw[-{Stealth[length=1.8mm]}, good] (9.5,1.12) -- (10.15,1.45);
+  \node[good, anchor=west] at (10.25,1.45) {accept: continue};
+  \draw[-{Stealth[length=1.8mm]}, bad] (9.5,0.88) -- (10.15,0.55);
+  \node[bad, anchor=west] at (10.25,0.55) {reject: round discarded};
+  % ---- control: the trainee's own loss ----------------------------
+  \draw[faint] (2.8,-0.6) -- (2.8,0.15);
+  \draw[faint] (2.8,-0.6) -- (5.2,-0.6);
+  \draw[acc, thick] (2.9,0.08) .. controls (3.6,-0.3) and (4.3,-0.45) ..
+                    (5.1,-0.52);
+  \node[anchor=west] at (2.75,0.3) {trainee's loss (control)};
+  \node[anchor=west, align=left] at (5.45,-0.22)
+    {falls in every round --- including\\the ones the readouts
+     \textcolor{bad}{reject}};
+\end{tikzpicture}
+\end{center}

@@ -1,0 +1,28 @@
+\begin{center}
+\begin{tikzpicture}[font=\tiny]
+  % ---- the 7 x 4 grid of cells ------------------------------------
+  \foreach \c in {0,...,6} {
+    \foreach \r in {0,...,3} {
+      \draw[faint] (0.42*\c,0.34*\r) rectangle (0.42*\c+0.34,0.34*\r+0.26);
+    }
+  }
+  \node[rotate=90, anchor=south] at (-0.3,0.65) {$4$ collections};
+  \node[anchor=north, align=center] at (1.43,-0.1)
+    {$7$ encoders\\$28$ cells in all};
+  \draw[-{Stealth[length=1.8mm]}, faint] (3.0,0.65) -- (3.5,0.65);
+  % ---- measure every cell -----------------------------------------
+  \draw[acc, thick] (3.5,0.25) rectangle (5.9,1.05);
+  \node[acc, align=center] at (4.7,0.65) {embed and measure\\every cell};
+  \draw[-{Stealth[length=1.8mm]}, faint] (5.9,0.65) -- (6.9,0.65);
+  % ---- the freeze --------------------------------------------------
+  \draw[bad, dashed, thick] (6.4,-0.15) -- (6.4,1.45);
+  \node[bad, anchor=south] at (6.4,1.5) {readouts frozen};
+  % ---- only then are the judgments opened --------------------------
+  \draw[faint] (6.9,0.25) rectangle (9.3,1.05);
+  \node[align=center] at (8.1,0.65) {open the judgments,\\score the queries};
+  \draw[-{Stealth[length=1.8mm]}, faint] (9.3,0.65) -- (9.8,0.65);
+  \node[anchor=west] at (9.9,0.95) {per document: does the collision count};
+  \node[anchor=west] at (9.9,0.72) {predict which documents fail?};
+  \node[anchor=west] at (9.9,0.4) {per corpus: does $\sstar$ rank encoders?};
+\end{tikzpicture}
+\end{center}

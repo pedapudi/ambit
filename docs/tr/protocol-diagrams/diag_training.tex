@@ -1,0 +1,47 @@
+\begin{center}
+\begin{tikzpicture}[font=\tiny, >={Stealth[length=1.8mm]}]
+
+% ---- the corpus, with a near-duplicate group inserted ------------------
+\draw[faint] (0,0.55) rectangle (2.10,2.35);
+\foreach \p in {(0.28,2.08),(0.78,2.16),(1.28,1.96),(1.78,2.10),(0.40,1.72),
+                (0.94,1.64),(1.52,1.78),(1.86,1.60),(0.28,1.34),(0.84,1.26),
+                (1.40,1.40),(1.90,1.28),(0.42,0.94),(0.96,0.82),(1.54,0.96)}
+  \fill[faint!70] \p circle (0.042);
+\foreach \p in {(1.28,0.70),(1.40,0.76),(1.34,0.62),(1.48,0.66),(1.22,0.80)}
+  \fill[bad] \p circle (0.042);
+\node[anchor=north, align=center, text width=3.1cm] at (1.05,0.47)
+  {corpus, with a near-duplicate group inserted ({\color{bad}red})};
+
+% ---- the split ---------------------------------------------------------
+\draw[->, faint] (2.22,1.98) -- (2.68,1.98);
+\draw[->, faint] (2.22,0.85) -- (2.68,0.85);
+
+% ---- what the training machinery sees ----------------------------------
+\node[draw=acc, text=acc, anchor=west, align=center, inner sep=3pt,
+      text width=2.9cm] (mine) at (2.75,1.98)
+  {$80\%$: mined, weighted, batched};
+\draw[->, acc] (mine.east) -- (6.25,1.98);
+\node[draw=acc, text=acc, anchor=west, align=center, inner sep=3pt]
+      (map) at (6.30,1.98) {linear map (trainee)};
+
+% ---- what it never sees ------------------------------------------------
+\node[draw=good, text=good, anchor=west, align=center, inner sep=3pt,
+      text width=2.9cm] (held) at (2.75,0.85)
+  {$20\%$ held out: never mined, weighted, or batched};
+
+% ---- the two meet only at the measurement ------------------------------
+\draw[->, acc] (map.east) -- (8.95,1.98) -- (8.95,1.50) -- (9.30,1.50);
+\draw[->, good] (held.east) -- (8.70,0.85) -- (8.70,1.20) -- (9.30,1.20);
+
+\node[draw=faint, anchor=west, align=left, inner sep=3pt] (meas) at (9.30,1.35)
+  {\textbf{measured on the held-out slice}\\
+   collisions among flagged items\\
+   neighbour overlap vs.\ the frozen base};
+
+% ---- the control the overlap is read against ---------------------------
+\node[draw=faint, text=faint, anchor=north, align=center, inner sep=3pt]
+      (base) at (11.35,0.62) {frozen base model (control)};
+\draw[->, faint] (base.north) -- (11.35,0.93);
+
+\end{tikzpicture}
+\end{center}

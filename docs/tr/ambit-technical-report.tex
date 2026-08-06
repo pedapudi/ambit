@@ -790,7 +790,9 @@ uses it.
 \paragraph{Per-experiment protocols.}
 Each experiment below states the hypothesis under test, the design and
 the reason it takes that shape, the control it is read against, and the
-measure that decides. Full parameter values appear beside each result.
+measure that decides. A schematic of the design accompanies each; the
+schematics carry no data. Full parameter values appear beside each
+result.
 
 \paragraph{Lattice fragility (Table~\ref{tab:maup}).}
 \begin{itemize}
@@ -808,6 +810,7 @@ themselves change by a comparable amount.
 cell count and peak location under each perturbation, lattice against
 control.
 \end{itemize}
+\input{diag_lattice}
 
 \paragraph{Confusion-law verification (Table~\ref{tab:flip}).}
 \begin{itemize}
@@ -824,6 +827,7 @@ size.
   \item \textbf{Measure:} the maximum absolute deviation between empirical flip rate
 and formula over the grid.
 \end{itemize}
+\input{diag_flip}
 
 \paragraph{Redundancy of the confusion and uniformity functionals (Table~\ref{tab:redundancy}).}
 \begin{itemize}
@@ -838,6 +842,7 @@ agreement, the outcome under full redundancy.
   \item \textbf{Measure:} the rank correlation, and each individual
 disagreement, which is the more informative of the two.
 \end{itemize}
+\input{diag_redundancy}
 
 \paragraph{Calibration and detection power (\S\ref{sec:power}).}
 \begin{itemize}
@@ -854,6 +859,7 @@ hubness, a neighbor-distance quantile) run under identical thresholds.
   \item \textbf{Measure:} empirical false-alarm rate against nominal; detection rate per
 pathology cell at matched specificity.
 \end{itemize}
+\input{diag_power}
 
 \paragraph{Sensitivity sweeps.}
 \begin{itemize}
@@ -867,6 +873,7 @@ spread as the yardstick.
   \item \textbf{Measure:} readout drift across the sweep,
 compared to that spread.
 \end{itemize}
+\input{diag_sweep}
 
 \paragraph{The training example (Table~\ref{tab:training}).}
 \begin{itemize}
@@ -880,6 +887,7 @@ training machinery never touched.
 and a structure-preservation score against the frozen base.
   \item \textbf{Measure:} held-out flagged-item collisions and neighbor overlap, per schedule.
 \end{itemize}
+\input{diag_training}
 
 \paragraph{The encoder loop (\S\ref{sec:loop}).}
 \begin{itemize}
@@ -895,6 +903,7 @@ curve --- the signal a practitioner would otherwise trust.
   \item \textbf{Measure:} per-round held-out $\sstar$, flagged-cohort
 collisions, and neighbor overlap against the rule.
 \end{itemize}
+\input{diag_loop}
 
 \paragraph{Routing (\S\ref{sec:routing}).}
 \begin{itemize}
@@ -906,11 +915,12 @@ deduplication executed in all four combinations of two sites (foreign
 distractors; the target corpus) and two scales (the confusable window;
 the duplicate scale), because only the full $2 \times 2$ separates
 ``the prescription was right'' from ``any cleanup helps.''
-  \item \textbf{Control:} the
-three cells the measurements warn against.
+  \item \textbf{Control:} the other three combinations, which the
+measurements do not prescribe.
   \item \textbf{Measure:} frozen-query failures
 fixed and introduced per cell, with an exact paired test.
 \end{itemize}
+\input{diag_routing}
 
 \paragraph{Guardrails (\S\ref{sec:guardrail}).}
 \begin{itemize}
@@ -927,6 +937,7 @@ arm.
 and the untargeted open-corpus metrics (where protection is claimed),
 plus the pre-label gate's prediction.
 \end{itemize}
+\input{diag_guardrail}
 
 \paragraph{The external grid (\S\ref{sec:external}).}
 \begin{itemize}
@@ -943,6 +954,7 @@ merely promised against.
   \item \textbf{Measure:} per-cell prediction quality (AUC) for the first; per-corpus rank
 correlation with nDCG@10 for the second.
 \end{itemize}
+\input{diag_grid}
 
 \paragraph{Reporting conventions.}
 Aggregates are reported with their null value at matched sample size
