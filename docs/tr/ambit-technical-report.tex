@@ -225,9 +225,10 @@ global averages or on a discretization.
 The instrument answers the point-pattern question in its own terms. It
 measures occupancy at every scale at once, because any binned view lets
 the bin choose the answer (\S\ref{sec:binned}). It compares every
-measurement to a stated reference --- the same corpus with no crowding
---- so that the benign concentration every learned encoder exhibits is
-not mistaken for pathology (\S\ref{sec:geometry}). And it carries the
+measurement to a stated reference --- the same corpus with no crowding,
+what statisticians call a \emph{null model} --- so that the benign
+concentration every learned encoder exhibits is not mistaken for
+pathology (\S\ref{sec:geometry}). And it carries the
 diagnosis down to named documents, because the actionable output is a
 list of what to fix, not a score.
 \S\ref{sec:geometry}--\S\ref{sec:power} build and validate the
@@ -246,10 +247,12 @@ prior work each part builds on (\S\ref{sec:related}) --- are four.
   similarity level, the fraction of document pairs at least that
   similar); one number summarizing how far that whole curve sits from a
   well-spread reference; a per-document crowding radius that provably
-  moves only slightly when the corpus changes slightly; and a catalogue
-  of tight document groups found without choosing any similarity cutoff.
-  Every readout is compared to a stated reference, including one that
-  absorbs the cone effect of learned encoders.
+  moves only slightly when the corpus changes slightly (a
+  \emph{stability guarantee}); and a catalogue of tight document groups
+  found without choosing any similarity cutoff (\emph{threshold-free}).
+  Every readout is compared to a stated reference --- a \emph{null
+  model} --- including one that absorbs the cone effect of learned
+  encoders.
 \item \textbf{Retrieval semantics for occupancy measurements}
   (\S\ref{sec:semantics}). An exact conversion from pair distances to
   expected retrieval collisions --- an imprecise query aimed at one
@@ -510,13 +513,13 @@ the other. \textsf{ambit}'s crowding curve is
 this idea transplanted to the sphere, and the move there is kinder than
 it sounds. The random-scatter comparison stays exact: on a sphere, the
 chance that a random point falls within a given distance of another is
-just the area of the surrounding patch of surface, which is known in
-closed form. The transplant also sheds a nuisance. A forest plot has
-edges, and a tree near one has neighbors only on the inside, so its
-pair counts run low and the ecologist must correct for it. A sphere has
-no edge --- walk in any direction and the surface continues --- so
-every document sits in the same position and no correction is needed
-\cite{robeson2014}. Two further pieces of the field's machinery carry
+just the area of the surrounding patch of surface, known in closed form
+(the cap-area law). The transplant also sheds a nuisance. A forest plot
+has edges, and a tree near one has neighbors only on the inside, so its
+pair counts run low and the ecologist must compensate (an \emph{edge
+correction}). A sphere has no edge --- walk in any direction and the
+surface continues --- so every document sits in the same position and
+no such correction arises \cite{robeson2014}. Two further pieces of the field's machinery carry
 over with the curve. Global envelope tests \cite{myllymaki2017} answer
 the companion inference question --- how to test a whole curve at once
 without the multiple-comparison error of checking each scale separately
