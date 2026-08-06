@@ -59,6 +59,7 @@ in Embedding Spaces}}
   \node[gray, font=\large\bfseries] at ([yshift=-1.2cm]current page.north)
     {D\,R\,A\,F\,T};
 \end{tikzpicture}
+\vspace{-3.5em}
 
 \begin{abstract}
 Embedding-based systems --- retrieval, retrieval-augmented generation,
@@ -66,48 +67,51 @@ deduplication, clustering --- depend on a single geometric property: items
 that must be distinguished must remain distinguishable under the similarity
 metric. We call the failure of this property \emph{crowding}. It is a local
 loss of resolution, invisible to the global statistics that practitioners
-routinely examine. This report describes \textsf{ambit}, an open
+routinely examine. This report describes \textsf{ambit}, an
 instrument that measures how a corpus occupies its embedding space. It
 treats an embedded corpus as a pattern of points on a sphere and asks the
 question other sciences ask of point patterns: do points bunch more than
 a stated null allows, at which scales, and which points?
 
-Three commitments organize the design. Occupancy is measured
-\emph{continuously over all scales}, with no bins, grid cells, or fixed
-neighbor counts, whose sizes provably change the answer. Every statistic is
-\emph{null-calibrated}, including against a reference that separates the
-ubiquitous \emph{cone effect} --- learned embeddings crowding into a narrow
-angular region --- from clustering that the cone cannot explain. Diagnosis
-descends to \emph{named items} through per-item fields with stability
-guarantees.
+The instrument answers the question in its own terms. It measures
+occupancy at every scale at once, because binned views change with the
+bin. It compares every measurement to a stated reference --- the same
+corpus with no crowding --- because a raw similarity number means nothing
+on its own. And it carries the diagnosis down to individual documents,
+because the useful output is a list of what to fix.
 
-The measurements carry retrieval units. An exact formula converts
-pair distances into expected retrieval collisions, yielding the
-\emph{resolution bandwidth} $\sstar$: the largest query-noise scale that a
-corpus absorbs before one wrong item outranks the right one. The widely
-used uniformity loss is shown to be the logarithm of a Chernoff bound on
-the same count, which gives its temperature parameter concrete units.
+The measurements are stated in retrieval terms. A query never lands
+exactly on its target, and when two documents sit close together, a query
+aimed at one can return the other --- a \emph{collision}. From pair
+distances alone, \textsf{ambit} computes how many collisions to expect at
+any level of query imprecision, and reports the largest imprecision the
+corpus absorbs before collisions begin: the \emph{resolution bandwidth}
+$\sstar$, the corpus's tolerance for imprecise queries.
 
-Validation proceeds in three regimes. A synthetic benchmark
-establishes calibration on hundreds of pure nulls and full detection power
-on planted near-duplicate pockets that mean cosine, isotropy, and hubness
-miss. A public million-document legal corpus supplies realistic geometry at
-scale. Across four public retrieval collections and seven public encoders,
-every measurement is frozen before any relevance judgment is read. The
-per-document score identifies the documents that later fail at their own
-queries, in every combination where that outcome is
-measurable; the corpus-level score predicts encoder quality only on
-similarity-matching tasks.
+Validation establishes three properties. On hundreds of corpora with
+nothing planted, the instrument alarms only at its advertised rate. It
+recovers planted groups of near-duplicates in full --- groups that mean
+cosine, isotropy, and hubness miss. And its predictions were tested
+blind: across four public retrieval collections and seven public
+encoders, every score was computed and locked before the relevance
+labels --- the human judgments of which documents answer which queries
+--- were consulted. The per-document score picked out in advance the
+documents that retrieval then failed on, in every pairing that tests it.
+The corpus-level score tracks encoder quality only on similarity-matching
+tasks.
 
-The measurements also select and verify interventions. Label-blind
-deduplication at the prescribed site and scale improves every query it
-changes (twelve improved, none harmed, $p = 0.0005$); at the wrong scale
-it measurably degrades retrieval. Measurement-derived guardrails halve the
-collateral damage of supervised fine-tuning at no cost to its gains, and a
-pre-registered criterion on held-out readouts rejects a training round
-that its own loss curve endorsed --- before any label is consulted.
-\textsf{ambit} is unsupervised by design --- no labels enter any
-measurement --- and its core depends only on \textsf{numpy}.
+The case study embeds one million documents drawn from a public legal
+corpus; there, the measurements select interventions and verify them.
+Merging exactly the near-duplicate documents the readouts name, at the
+similarity level they certify as true duplication, improved twelve
+queries and harmed none ($p = 0.0005$); merging at the looser level the
+readouts warn against degraded retrieval. Measurement-built guardrails
+halve the damage supervised fine-tuning does outside its training
+distribution, at no cost to its gains. And a rejection rule fixed in
+advance caught a defective fine-tuning round that its own falling loss
+endorsed; the labels later confirmed the veto. \textsf{ambit} is
+unsupervised --- no labels enter any measurement --- and its core depends
+only on \textsf{numpy}.
 \end{abstract}
 
 \clearpage
@@ -128,7 +132,7 @@ be ordered, and clusters that blur into one another. We refer to this failure
 mode as \emph{crowding} and to its complement --- the corpus's ability to
 keep distinct items distinct --- as \emph{resolution}.
 
-It helps to fix an image of the object under study. An embedded corpus is
+An embedded corpus is
 a \emph{pattern of points on a sphere}, and crowding is a question about
 the arrangement of those points: do some of them bunch together more
 tightly than a well-spread corpus would allow, at which scales, and which
@@ -218,13 +222,14 @@ tool's own displays.}
 \end{figure} This report describes \textsf{ambit}, an
 instrument built to measure occupancy and crowding without relying on
 global averages or on a discretization.
-Three commitments organize its design: occupancy is measured continuously
-over all scales, so no
-bin or lattice can choose the answer; every statistic is calibrated
-against a stated null --- a matched model of a corpus with no crowding ---
-so the benign concentration every learned encoder exhibits is not
-mistaken for pathology; and diagnosis descends to named items, because
-the actionable output is a list of documents, not a score.
+The instrument answers the point-pattern question in its own terms. It
+measures occupancy at every scale at once, because any binned view lets
+the bin choose the answer (\S\ref{sec:binned}). It compares every
+measurement to a stated reference --- the same corpus with no crowding
+--- so that the benign concentration every learned encoder exhibits is
+not mistaken for pathology (\S\ref{sec:geometry}). And it carries the
+diagnosis down to named documents, because the actionable output is a
+list of what to fix, not a score.
 \S\ref{sec:geometry}--\S\ref{sec:power} build and validate the
 instrument under these commitments; \S\ref{sec:training} and
 \S\ref{sec:external} use its measurements to drive training,
@@ -247,42 +252,45 @@ The report's contributions are the following.
   Every component is exercised on one benchmark with a known planted
   defect (a $5\%$ near-duplicate pocket), so the layers can be read
   against one another.
-\item \textbf{Operational semantics} (\S\ref{sec:semantics}). An
-  exact formula converts the distance between any two documents into the
-  probability that an imprecise query confuses them; summing it over a
-  corpus yields the resolution bandwidth $\sstar$, the largest query
-  imprecision the corpus tolerates before retrieval errors are expected.
-  We also show that a widely used training objective, the uniformity loss
-  of Wang and Isola \cite{wang2020}, bounds this same error count at the
-  right temperature --- giving its temperature parameter a concrete
-  meaning. The section closes with a precise statement of the model's
-  assumptions and two negative results recorded with the reasons for
-  their failure.
+\item \textbf{Operational semantics} (\S\ref{sec:semantics}). An exact
+  formula converts the distance between two documents into the
+  probability that an imprecise query aimed at one returns the other ---
+  a collision. Summed over the corpus, this yields the resolution
+  bandwidth $\sstar$: the corpus's tolerance for imprecise queries. We
+  also show that a widely used training objective, the uniformity loss
+  of Wang and Isola \cite{wang2020}, bounds the same collision count at
+  one specific temperature, which gives that parameter concrete meaning.
+  The section closes with a precise statement of the model's assumptions
+  and two negative results recorded with the reasons for their failure.
 \item \textbf{An open instrument and a training recipe}
   (\S\ref{sec:instrument}, \S\ref{sec:training}): a streaming numpy-only
-  measurement core, a public million-document case study, and
+  measurement core, a case study of one million documents drawn from a
+  public legal corpus, and
   training penalties built from the measurements, with a guarantee that
   their gradients act only on confusable pairs and provably leave distant
   pairs untouched.
 \item \textbf{Measurement-driven interventions}:
-  (i) a measurement-gated fine-tuning loop (\S\ref{sec:loop}) whose
-  held-out readouts reject a misspecified round that training loss
-  endorsed; (ii) deduplication executed exactly as the instrument prescribes,
-  without consulting labels (\S\ref{sec:routing}): applied at the scale
-  and site it recommends, retrieval improves significantly; applied at
-  the scale it warns against, retrieval measurably degrades; and (iii)
-  measurement-derived guardrails (\S\ref{sec:guardrail}) that halve the
-  collateral damage of supervised fine-tuning at no cost to its gains,
-  with a label-free model-selection gate.
+  (i) a fine-tuning loop (\S\ref{sec:loop}) in which a rejection rule,
+  fixed in advance and applied to held-out measurements, vetoed a
+  defective round whose own loss curve looked healthy --- a veto the
+  labels later confirmed; (ii) label-free deduplication
+  (\S\ref{sec:routing}) that merges exactly the near-duplicate documents
+  the readouts name, at the similarity level they certify as true
+  duplication --- twelve queries improved, none harmed ($p = 0.0005$) ---
+  while the same merge at the looser level the readouts warn against
+  degrades retrieval; and (iii) guardrails (\S\ref{sec:guardrail}) that
+  halve the damage supervised fine-tuning does outside its training
+  distribution, at no cost to its gains, with a label-free rule for
+  choosing between trained models.
 \item \textbf{External validation with a measured scope law}
   (\S\ref{sec:external}). We embedded four public retrieval collections
-  with seven public encoders --- twenty-eight combinations --- and computed
-  every readout \emph{before} opening the collections' relevance
-  judgments. The instrument's per-document score (the expected number of
-  retrieval confusions each document will suffer) identified, in every
-  combination where the outcome is measurable, which documents the
-  judgments later showed failing at their own queries (sign test
-  $p \approx 2 \times 10^{-7}$). The corpus-level summary $\sstar$
+  with seven public encoders --- twenty-eight combinations --- and
+  computed and locked every readout \emph{before} consulting the
+  collections' relevance judgments, the human answer keys that say which
+  documents answer which queries. The per-document collision score
+  picked out in advance the documents that the judgments then showed
+  failing at their own queries, in every pairing that tests it (sign
+  test $p \approx 2 \times 10^{-7}$). The corpus-level summary $\sstar$
   predicts retrieval quality across encoders only where the task itself is
   similarity matching; on knowledge-seeking tasks the relationship
   inverts. Together these results fix the instrument's scope:
@@ -426,12 +434,19 @@ differently --- membership is linear, pair share is quadratic --- so a
 pocket holding $5\%$ of the items owns only $0.25\%$ of the area over
 which any average is taken. The benchmark corpus used throughout this
 report makes the dilution concrete. It holds $n = 4{,}000$ items at
-$d = 768$ with a planted pocket of $k = 200$ near-duplicates at median
-intra-pocket cosine $0.929$ --- five percent of the corpus rendered
-mutually interchangeable (full construction in \S\ref{sec:method}).
-This geometric dilution means the pocket moves the mean pairwise
-cosine by only $0.0025 \times 0.93 \approx +0.002$: invisible without a
-calibrated test, and uninformative about \emph{which} items failed. Covariance-spectrum
+$d = 768$, and the last $k = 200$ of them --- five percent --- are
+replaced with near-duplicates of one another, so alike (median pairwise
+cosine $0.929$) that a retrieval system cannot rank them apart (full
+construction in \S\ref{sec:method}). Now follow the arithmetic of the
+average, step by step. Five percent of the items yields
+$0.05^2 = 0.25\%$ of the pairs, so $99.75\%$ of the average consists of
+background pairs, which the previous subsection showed sit near cosine
+$0$. Each pocket pair contributes its cosine of roughly $0.93$, weighted
+by the pocket's $0.25\%$ pair share, so the entire catastrophe adds
+$0.0025 \times 0.93 \approx 0.002$ to the mean. Two hundred documents
+became interchangeable, and the corpus-wide average moved from about
+$0.000$ to $0.002$: invisible without a calibrated test, and
+uninformative about \emph{which} items failed. Covariance-spectrum
 summaries (effective rank, isotropy scores) are blind for the same
 arithmetic reason: they are sums over the corpus, dominated by the diffuse majority. More generally: \emph{global averages address whether the whole cloud is degenerate; crowding concerns which part of the cloud has collapsed, at what scale, and which items it contains.} A sound instrument must
 therefore (i) read \emph{distributions}, not means; (ii) read them
@@ -482,26 +497,82 @@ geometrically diluted before any arithmetic begins.}
 
 The introduction framed an embedded corpus as a point pattern and
 crowding as the clustering question that the observational sciences ask
-of point patterns. This section attributes the instruments that answer
-it. Four transfers organize the section:
-\begin{itemize}
-\item \textbf{spatial statistics} supplies the crowding curve and its
-  whole-curve inference;
-\item \textbf{directional statistics} supplies the anisotropy-conditioned
-  reference;
-\item \textbf{geometric inference} supplies the per-item crowding radius
-  and the pocket hierarchy;
-\item \textbf{discrepancy theory} supplies the occupancy discrepancy.
-\end{itemize}
-Each transfer required an adaptation to the high-dimensional sphere,
-recorded below beside the technique it concerns. What no donor field
+of point patterns. Those sciences did not stop at the question: they
+spent decades building the statistics that answer it, and \textsf{ambit}
+is rooted in that body of work, carried to the high-dimensional sphere
+where embedded corpora live. This section describes each borrowed method
+in plain terms --- what it was built to do in its home field, and what
+changes when it is applied to embeddings --- and then situates
+\textsf{ambit} among the statistics the embedding literature itself
+uses. Spatial statistics supplies the crowding curve and its inference;
+geometric inference, the per-item crowding radius and the pocket
+hierarchy; discrepancy theory, the occupancy summary; directional
+statistics, the reference that models the cone. What no donor field
 supplies is the operational layer: none has a notion of one document
 outranking another at a query, so the conversion of pair distances into
 expected retrieval collisions (\S\ref{sec:semantics}) is native to this
 report.
 
+\paragraph{Spatial statistics.}
+Ripley's $K$ function \cite{ripley1976,besag1977} is the ecologist's tool
+for asking whether points (trees, stars, cells) cluster: count the pairs
+within every distance and read clustering as a \emph{function of scale}
+rather than at one arbitrary radius. \textsf{ambit}'s crowding curve is
+this idea transplanted to the sphere, where the null is a cap-area law
+and, the domain having no boundary, the planar edge corrections vanish
+\cite{robeson2014}. Two further pieces of the field's machinery carry
+over with the curve. Global envelope tests \cite{myllymaki2017} answer
+the companion inference question --- how to test a whole curve at once
+without the multiple-comparison error of checking each scale separately
+--- and supply \textsf{ambit}'s liftoff test. And spatial statisticians
+long ago met \textsf{ambit}'s central confound: raw $K$ misreads a
+nonuniform background intensity as clustering, and the
+\emph{inhomogeneous} $K$ function \cite{baddeley2000} repairs this by
+conditioning the test on a fitted intensity. The anisotropy-conditioned
+reference of \S\ref{sec:kcurve} is the same move on the sphere, with the
+corpus's cone playing the role of the fitted intensity and the angular
+central Gaussian of directional statistics supplying the fitted model.
+
+\paragraph{The hazards of partitioned statistics.}
+The same sciences also documented what \emph{not} to transfer. The
+modifiable areal unit problem (MAUP)
+\cite{gehlke1934,openshaw1979,openshaw1984} and the ecological fallacy
+\cite{robinson1950} are the classical demonstrations that
+partition-based statistics change with the partition and say nothing
+about individuals --- the two failures, quantified on embedding displays
+in \S\ref{sec:binned}, that \textsf{ambit} is built to avoid. The same
+lesson appears in one dimension as the histogram's bin-width and origin
+sensitivity \cite{scott1979,freedman1981,silverman1986}; the averaged
+shifted histogram \cite{scott1985} repairs placement by averaging over
+origins, and \textsf{ambit} goes one step further by removing the
+partition altogether.
+
+\paragraph{Discrepancy theory.}
+Stolarsky's invariance principle \cite{stolarsky1973,brauchart2011}
+converts an audit that cannot be run directly --- compare actual against
+expected occupancy over \emph{every} cap at \emph{every} scale --- into
+one computable number, the mean pairwise distance. \textsf{ambit}'s
+occupancy discrepancy is this theorem put to work.
+
+\paragraph{Geometric inference.}
+The distance to a measure \cite{chazal2011,chazalmichel2021} asks, for
+each point, how far it must reach to gather a fixed fraction of the data
+--- a robust replacement for density estimation. Its defining property
+is stability: small changes to the data provably move every score only
+slightly. \textsf{ambit}'s per-item crowding radius is this estimator on
+the sphere. For structure, Hartigan's cluster tree
+\cite{hartigan1981,chaudhuri2010} reads groups at all densities
+simultaneously instead of at one threshold; ToMATo \cite{chazal2013} and
+HDBSCAN's condensed tree \cite{campello2015} are two normalizations of
+that object \cite{rolle2020}, with stability inherited from persistence
+theory \cite{cohensteiner2007}. \textsf{ambit}'s pocket catalogue ---
+births, deaths, and prominences of tight groups --- is this machinery
+with a null-calibrated reporting floor.
+
 \paragraph{Anisotropy and resolution.}
-Gao et al.\ \cite{gao2019} and Ethayarajh \cite{ethayarajh2019}
+The embedding literature contributes the phenomenon that every one of
+the transfers above must be conditioned on. Gao et al.\ \cite{gao2019}
+and Ethayarajh \cite{ethayarajh2019}
 established that learned embeddings do not use the whole sphere: vectors
 bunch into a narrow cone, which inflates every pairwise cosine at once.
 For \textsf{ambit} this is the central confound --- a cone raises
@@ -542,53 +613,6 @@ family by counting effective modes through a nonlinear kernel
 design filter (\S\ref{sec:filters}): rather than adding another reading
 of the spectrum, it measures different objects entirely --- the
 pair-distance distribution and per-item fields.
-
-\paragraph{Spatial statistics.}
-Ripley's $K$ function \cite{ripley1976,besag1977} is the ecologist's tool
-for asking whether points (trees, stars, cells) cluster: count the pairs
-within every distance and read clustering as a \emph{function of scale}
-rather than at one arbitrary radius. \textsf{ambit}'s crowding curve is
-this idea transplanted to the sphere, where the null is a cap-area law
-and, the domain having no boundary, the planar edge corrections vanish
-\cite{robeson2014}. Spatial statisticians also met \textsf{ambit}'s
-central confound long ago: raw $K$ misreads a nonuniform background
-intensity as clustering, and the \emph{inhomogeneous} $K$ function
-\cite{baddeley2000} repairs this by conditioning the test on a fitted
-intensity. The anisotropy-conditioned reference of \S\ref{sec:kcurve} is
-the same move on the sphere, with the corpus's cone playing the role of
-the fitted intensity. Global envelope tests \cite{myllymaki2017} solve the
-companion inference problem --- how to test a whole curve at once without
-the multiple-comparison error of checking each scale separately --- and
-supply \textsf{ambit}'s liftoff test. The modifiable areal unit problem
-(MAUP) \cite{gehlke1934,openshaw1979,openshaw1984} and the ecological
-fallacy \cite{robinson1950} are the classical demonstrations that
-partition-based statistics change with the partition and say nothing
-about individuals: the two failures, quantified on embedding displays in
-\S\ref{sec:binned}, that \textsf{ambit} is built to avoid. The same
-lesson appears in one dimension as the histogram's bin-width and origin
-sensitivity \cite{scott1979,freedman1981,silverman1986}; the averaged
-shifted histogram (ASH) \cite{scott1985} repairs placement by averaging
-over origins, and \textsf{ambit} goes one step further by removing the
-partition altogether. Stolarsky's invariance principle
-\cite{stolarsky1973,brauchart2011} converts an uncomputable audit ---
-compare actual against expected occupancy over \emph{every} cap at
-\emph{every} scale --- into the mean pairwise distance, one number;
-\textsf{ambit}'s occupancy discrepancy is this theorem put to work.
-
-\paragraph{Geometric inference.}
-The distance to a measure \cite{chazal2011,chazalmichel2021} asks, for
-each point, how far it must reach to gather a fixed fraction of the data
---- a robust replacement for density estimates whose defining property is
-stability: provably, small changes to the data move every score only
-slightly. \textsf{ambit}'s per-item crowding radius is this estimator on
-the sphere. For structure, Hartigan's cluster tree
-\cite{hartigan1981,chaudhuri2010} reads groups at all densities
-simultaneously instead of at one threshold; ToMATo \cite{chazal2013} and
-HDBSCAN's condensed tree \cite{campello2015} are two normalizations of
-that object \cite{rolle2020}, with stability inherited from persistence
-theory \cite{cohensteiner2007}. \textsf{ambit}'s pocket catalogue --- 
-births, deaths, and prominences of tight groups --- is this machinery
-with a null-calibrated reporting floor.
 
 \paragraph{Projections and density.}
 Two-dimensional layouts preserve neighborhoods, not density
