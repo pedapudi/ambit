@@ -560,16 +560,21 @@ verdict decides whether that departure is real.
 
 \paragraph{Conditioning on an uneven background.}
 Spatial statisticians met \textsf{ambit}'s central confound long ago.
-Disease cases cluster in cities, but that says nothing about contagion:
-people cluster in cities. Raw $K$ reports the crowd, not the outbreak.
-The \emph{inhomogeneous} $K$ function \cite{baddeley2000} repairs this
-by testing against a background that already contains the uneven
-population, so only clustering beyond it is reported. The
-anisotropy-conditioned reference of \S\ref{sec:kcurve} is the same move
-on the sphere: the cone into which a learned encoder packs every
-document is the uneven background, supplied by the angular central
-Gaussian of directional statistics, and \textsf{ambit} reports the
-clumping the cone does not account for.
+Disease cases cluster in cities, but that says nothing about contagion,
+because people cluster in cities. Counting pairs against a uniform
+comparison would measure where the population lives rather than how the
+disease spreads. The \emph{inhomogeneous} $K$ function
+\cite{baddeley2000} repairs this by comparing the pattern against a
+background that already contains the uneven population, so that only
+clustering beyond it is reported.
+
+The same repair applies on the sphere. A learned encoder does not spread
+documents over the whole sphere; it packs them into a narrow region of
+it, called a cone. That cone is \textsf{ambit}'s uneven background. The
+reference of \S\ref{sec:kcurve} models it with a distribution from
+directional statistics, the angular central Gaussian, and
+\textsf{ambit} then reports only the clumping that the cone does not
+explain.
 
 \paragraph{What not to transfer.}
 The same sciences documented the hazards of partitioned statistics. The
@@ -608,12 +613,11 @@ null-calibrated reporting floor.
 
 \paragraph{The cone that every transfer must condition on.}
 Gao et al.\ \cite{gao2019} and Ethayarajh \cite{ethayarajh2019}
-established that learned embeddings do not use the whole sphere: vectors
-bunch into a narrow cone, inflating every pairwise cosine at once. This
-is \textsf{ambit}'s central confound --- a cone raises similarities
-without making any two items confusable --- and the reason every readout
-is calibrated against an anisotropy-matched reference rather than the
-uniform sphere alone. Mu et al.\ \cite{mu2018} showed that subtracting
+established the cone described above, and measured its consequence:
+packing every vector into a narrow region inflates all pairwise cosines
+at once. A cone therefore raises similarities without making any two
+items confusable, which is why every readout is calibrated against an
+anisotropy-matched reference rather than the uniform sphere alone. Mu et al.\ \cite{mu2018} showed that subtracting
 the mean direction and a few dominant components restores much of the
 usable angular range: the linear repair \textsf{ambit}'s routing
 recommends when it attributes crowding to the cone alone. Cai et al.\
