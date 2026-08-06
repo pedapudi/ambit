@@ -975,11 +975,15 @@ outputs as its coordinates.
 
 \textsf{ambit}'s early density views were conventional: hexbin lattices over
 a 2-D projection, voxel grids, radial shells, fixed-$k$ neighbor counts.
-Every one of them was abandoned. The reason is not taste: a binned view
-lets the lattice, rather than the data, choose the answer, and the effect
-is large enough to measure.
+Every one of them was abandoned. Each of these views works by dividing
+the space into cells and counting how many items land in each. The
+trouble is that the cells are a choice --- where their boundaries fall,
+and how large they are --- and that choice changes the counts. Two
+analysts with the same corpus and different grids can report different
+crowded regions, and the gap between their answers is larger than the
+defects worth detecting.
 
-\subsection{The answer belongs to the lattice}
+\subsection{The grid changes the answer}
 
 \begin{figure}[t]
 \centering
