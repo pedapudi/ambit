@@ -234,68 +234,50 @@ list of what to fix, not a score.
 instrument under these commitments; \S\ref{sec:training} and
 \S\ref{sec:external} use its measurements to drive training,
 deduplication, and fine-tuning guardrails.
-The report's contributions are the following.
+The contributions --- what \textsf{ambit} adds to the field, beyond the
+prior work each part builds on (\S\ref{sec:related}) --- are four.
 
 \begin{enumerate}
-\item \textbf{A continuous, null-calibrated measurement layer}
-  (\S\ref{sec:continuous}), four readouts deep:
-  \begin{itemize}
-  \item the exact pair-closeness curve --- for each similarity level $t$,
-    the fraction of document pairs whose similarity is $t$ or higher, a
-    full curve rather than a single count --- read against two reference
-    models of a well-spread corpus;
-  \item a single number summarizing deviation from that reference at all
-    scales simultaneously;
-  \item a per-item crowding radius with a stability guarantee;
-  \item a threshold-free catalogue of tight document groups.
-  \end{itemize}
-  Every component is exercised on one benchmark with a known planted
-  defect (a $5\%$ near-duplicate pocket), so the layers can be read
-  against one another.
-\item \textbf{Operational semantics} (\S\ref{sec:semantics}). An exact
-  formula converts the distance between two documents into the
-  probability that an imprecise query aimed at one returns the other ---
-  a collision. Summed over the corpus, this yields the resolution
-  bandwidth $\sstar$: the corpus's tolerance for imprecise queries. We
-  also show that a widely used training objective, the uniformity loss
-  of Wang and Isola \cite{wang2020}, bounds the same collision count at
-  one specific temperature, which gives that parameter concrete meaning.
-  The section closes with a precise statement of the model's assumptions
-  and two negative results recorded with the reasons for their failure.
-\item \textbf{An open instrument and a training recipe}
-  (\S\ref{sec:instrument}, \S\ref{sec:training}): a streaming numpy-only
-  measurement core, a case study of one million documents drawn from a
-  public legal corpus, and
-  training penalties built from the measurements, with a guarantee that
-  their gradients act only on confusable pairs and provably leave distant
-  pairs untouched.
-\item \textbf{Measurement-driven interventions}:
-  (i) a fine-tuning loop (\S\ref{sec:loop}) in which a rejection rule,
-  fixed in advance and applied to held-out measurements, vetoed a
-  defective round whose own loss curve looked healthy --- a veto the
-  labels later confirmed; (ii) label-free deduplication
-  (\S\ref{sec:routing}) that merges exactly the near-duplicate documents
-  the readouts name, at the similarity level they certify as true
-  duplication --- twelve queries improved, none harmed ($p = 0.0005$) ---
-  while the same merge at the looser level the readouts warn against
-  degrades retrieval; and (iii) guardrails (\S\ref{sec:guardrail}) that
-  halve the damage supervised fine-tuning does outside its training
-  distribution, at no cost to its gains, with a label-free rule for
-  choosing between trained models.
-\item \textbf{External validation with a measured scope law}
-  (\S\ref{sec:external}). We embedded four public retrieval collections
-  with seven public encoders --- twenty-eight combinations --- and
-  computed and locked every readout \emph{before} consulting the
-  collections' relevance judgments, the human answer keys that say which
-  documents answer which queries. The per-document collision score
-  picked out in advance the documents that the judgments then showed
-  failing at their own queries, in every pairing that tests it (sign
-  test $p \approx 2 \times 10^{-7}$). The corpus-level summary $\sstar$
-  predicts retrieval quality across encoders only where the task itself is
-  similarity matching; on knowledge-seeking tasks the relationship
-  inverts. Together these results fix the instrument's scope:
-  per-document triage and comparative budgeting, not encoder
-  leaderboards.
+\item \textbf{A calibrated instrument for occupancy and crowding}
+  (\S\ref{sec:continuous}, \S\ref{sec:instrument}). The point-pattern
+  toolkit of the observational sciences, composed into a single
+  instrument for embedding spaces and released as an open, numpy-only
+  library. Its readouts, in plain terms: the crowding curve (for every
+  similarity level, the fraction of document pairs at least that
+  similar); one number summarizing how far that whole curve sits from a
+  well-spread reference; a per-document crowding radius that provably
+  moves only slightly when the corpus changes slightly; and a catalogue
+  of tight document groups found without choosing any similarity cutoff.
+  Every readout is compared to a stated reference, including one that
+  absorbs the cone effect of learned encoders.
+\item \textbf{Retrieval semantics for occupancy measurements}
+  (\S\ref{sec:semantics}). An exact conversion from pair distances to
+  expected retrieval collisions --- an imprecise query aimed at one
+  document returning another --- yielding the resolution bandwidth
+  $\sstar$, the corpus's tolerance for imprecise queries, and giving the
+  temperature parameter of the widely used uniformity loss
+  \cite{wang2020} concrete meaning. This bridge from occupancy
+  statistics to retrieval error counts is, to our knowledge, new.
+\item \textbf{Blind evidence that geometry predicts retrieval failure}
+  (\S\ref{sec:external}). Across four public retrieval collections and
+  seven public encoders, with every readout computed and locked before
+  the collections' relevance judgments were consulted, the per-document
+  collision score picked out the documents that the judgments then
+  showed failing at their own queries, in every pairing that tests it
+  (sign test $p \approx 2 \times 10^{-7}$). The corpus-level $\sstar$
+  tracks encoder quality only where the task is similarity matching ---
+  a measured scope law, not a claimed universal.
+\item \textbf{Interventions selected and verified by measurement}
+  (\S\ref{sec:training}). The readouts choose the repair and the
+  verification confirms it, label-free throughout: deduplication at the
+  similarity level the readouts certify improved twelve queries and
+  harmed none ($p = 0.0005$), while the merge they warn against degrades
+  retrieval; guardrails built from the measurements halve the damage
+  supervised fine-tuning does outside its training distribution, at no
+  cost to its gains; and a rejection rule fixed in advance vetoed a
+  fine-tuning round whose own loss curve looked healthy. The training
+  penalties behind these carry a guarantee that their gradients act only
+  on confusable pairs.
 \end{enumerate}
 
 Throughout, \textsf{ambit} is \emph{unsupervised by design}: no labels, gold
@@ -497,10 +479,9 @@ geometrically diluted before any arithmetic begins.}
 
 The introduction framed an embedded corpus as a point pattern and
 crowding as the clustering question that the observational sciences ask
-of point patterns. Those sciences did not stop at the question: they
-spent decades building the statistics that answer it, and \textsf{ambit}
-is rooted in that body of work, carried to the high-dimensional sphere
-where embedded corpora live. This section describes each borrowed method
+of point patterns. Those sciences have mature statistics for answering
+it; \textsf{ambit} carries that body of work to the high-dimensional
+sphere where embedded corpora live. This section describes each borrowed method
 in plain terms --- what it was built to do in its home field, and what
 changes when it is applied to embeddings --- and then situates
 \textsf{ambit} among the statistics the embedding literature itself
@@ -514,24 +495,36 @@ expected retrieval collisions (\S\ref{sec:semantics}) is native to this
 report.
 
 \paragraph{Spatial statistics.}
-Ripley's $K$ function \cite{ripley1976,besag1977} is the ecologist's tool
-for asking whether points (trees, stars, cells) cluster: count the pairs
-within every distance and read clustering as a \emph{function of scale}
-rather than at one arbitrary radius. \textsf{ambit}'s crowding curve is
+Ripley's $K$ function \cite{ripley1976,besag1977} is the standard test
+for whether a set of points clusters. An ecologist applies it to trees
+in a forest plot, an epidemiologist to the home addresses of disease
+cases, an astronomer to galaxies in a survey volume, a cell biologist to
+proteins imaged on a membrane. The recipe is the same in each: count how
+many pairs of points fall within every distance, and compare those
+counts to what scattering the same number of points at random would
+give. Reading the comparison as a \emph{function of distance} matters,
+because a pattern can be clumped at one scale and evenly spread at
+another --- trees clustering into groves while the groves themselves sit
+apart --- and any single chosen radius reports one of those and hides
+the other. \textsf{ambit}'s crowding curve is
 this idea transplanted to the sphere, where the null is a cap-area law
 and, the domain having no boundary, the planar edge corrections vanish
 \cite{robeson2014}. Two further pieces of the field's machinery carry
 over with the curve. Global envelope tests \cite{myllymaki2017} answer
 the companion inference question --- how to test a whole curve at once
 without the multiple-comparison error of checking each scale separately
---- and supply \textsf{ambit}'s liftoff test. And spatial statisticians
-long ago met \textsf{ambit}'s central confound: raw $K$ misreads a
-nonuniform background intensity as clustering, and the
-\emph{inhomogeneous} $K$ function \cite{baddeley2000} repairs this by
-conditioning the test on a fitted intensity. The anisotropy-conditioned
-reference of \S\ref{sec:kcurve} is the same move on the sphere, with the
-corpus's cone playing the role of the fitted intensity and the angular
-central Gaussian of directional statistics supplying the fitted model.
+--- and supply \textsf{ambit}'s liftoff test. Spatial statisticians also
+met \textsf{ambit}'s central confound long ago. Disease cases cluster in
+cities, but that says nothing about contagion: people cluster in cities.
+Raw $K$ reports the crowd, not the outbreak. The \emph{inhomogeneous}
+$K$ function \cite{baddeley2000} repairs this by testing the pattern
+against a background that already contains the uneven population, so
+only clustering beyond it is reported. The anisotropy-conditioned
+reference of \S\ref{sec:kcurve} is the same move on the sphere: the
+cone into which a learned encoder packs every document is the uneven
+background, supplied by the angular central Gaussian of directional
+statistics, and what \textsf{ambit} reports is the clumping the cone
+does not account for.
 
 \paragraph{The hazards of partitioned statistics.}
 The same sciences also documented what \emph{not} to transfer. The
