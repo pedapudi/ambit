@@ -107,11 +107,12 @@ In the case study --- one million documents from a public legal corpus
 near-duplicate documents the readouts name, at the similarity level they
 certify as true duplication, improved twelve queries and harmed none
 ($p = 0.0005$); the same merge at the looser level they warn against
-degraded retrieval. Measurement-built guardrails
-halve the damage supervised fine-tuning does outside its training
-distribution, at no cost to its gains. A rejection rule fixed in advance
-vetoed a defective round that its own falling loss endorsed; the labels
-later agreed. \textsf{ambit} is
+degraded retrieval. Guard terms halve the damage
+supervised fine-tuning does outside its training distribution, at no cost
+to its gains, and a rejection rule fixed in advance vetoed a defective
+round its own falling loss endorsed. The measurements govern a
+fine-tuning run well; as its objective alone they leave retrieval
+unchanged. \textsf{ambit} is
 unsupervised --- no labels enter any measurement --- and its core depends
 only on \textsf{numpy}.
 \end{abstract}
@@ -275,17 +276,21 @@ prior work each part builds on (\S\ref{sec:related}) --- are four.
   combining it with another, not because anything crowds it. The
   corpus-level $\sstar$ tracks encoder quality only where the task is
   similarity matching --- measured scope, not a claimed universal.
-\item \textbf{Interventions selected and verified by measurement}
+\item \textbf{Measurement as a governor for fine-tuning}
   (\S\ref{sec:training}). The readouts choose the repair and the
   verification confirms it, label-free throughout: deduplication at the
   similarity level the readouts certify improved twelve queries and
   harmed none ($p = 0.0005$), while the merge they warn against degrades
-  retrieval; guardrails built from the measurements halve the damage
+  retrieval; guard terms built from the measurements halve the damage
   supervised fine-tuning does outside its training distribution, at no
   cost to its gains; and a rejection rule fixed in advance vetoed a
-  fine-tuning round whose own loss curve looked healthy. The training
-  penalties behind these carry a guarantee that their gradients act only
-  on confusable pairs.
+  defective round whose own loss curve looked healthy. Those terms carry
+  a guarantee that their gradients act only on confusable pairs. We
+  report the boundary as plainly as the successes: used as a standalone
+  objective rather than as a governor, the same measurements leave
+  retrieval unchanged (\S\ref{sec:driving}), because the crowding they
+  find in that corpus is duplication that no semantics-preserving
+  objective may remove.
 \end{enumerate}
 
 Throughout, \textsf{ambit} is \emph{unsupervised by design}: no labels, gold
@@ -2117,13 +2122,14 @@ provides.
 
 % =========================================================================
 % =========================================================================
-\section{From Measurement to Gradient}
+\section{Governing Fine-Tuning with Measurements}
 \label{sec:training}
 % =========================================================================
 
-The instrument detects, localizes, and prices crowding. This section tests
-a stronger claim: that its measurements suffice to \emph{drive}
-interventions. Four are tested:
+The instrument detects, localizes, and prices crowding. This section
+tests a stronger claim: that its measurements suffice to \emph{drive}
+interventions. The confusion kernel is differentiable, so the
+measurements can enter training directly, and four uses are tested:
 \begin{enumerate}
 \item a measurement-derived training objective (below);
 \item a measurement-gated fine-tuning loop on the case-study encoder
@@ -2133,8 +2139,16 @@ interventions. Four are tested:
 \item measurement-derived guardrails for supervised fine-tuning
   (\S\ref{sec:guardrail}).
 \end{enumerate}
-The confusion kernel is differentiable, so the measurement layer doubles as
-a training-time regularizer with a stated guarantee.
+The results separate sharply, and the separation is the section's main
+finding. As a \emph{standalone} objective the measurements do not improve
+retrieval: the tuned encoder is retrieval-neutral against its base, and a
+label-supervised reference is far ahead of both. As a \emph{governor} over
+someone else's objective they work well --- guard terms halve the damage
+supervised fine-tuning does outside its training distribution at no cost
+to its gains, a gate rejects a defective round before any label is read,
+and the readouts route a repair that training could not perform. The
+honest summary is that these measurements make a good governor and a poor
+loss, and \S\ref{sec:driving} gives the structural reason.
 
 \subsection{Losses and the gradient-locality guarantee}
 
@@ -2438,6 +2452,19 @@ This section has exercised the whole map from readout to intervention:
   re-chunk first;
 \item $\sstar$ sets the query-noise budget an application may spend.
 \end{itemize}
+Every entry on that map is a governing action: it decides what to do,
+where, and at what scale, or it vetoes a step someone else proposed. None
+of them is the objective doing the work by itself. That distinction is
+the section's result, and it follows from the mechanism above rather than
+from a shortfall of capacity or tuning. A crowding measurement can only
+be trained away when the crowding is something training is permitted to
+move; the near-duplicate mass that dominates this corpus is not, and the
+external grid shows the same limit from the other direction, where
+failures caused by composition rather than by crowding are invisible to
+the per-item field (\S\ref{sec:external}). Used to govern --- to select
+the repair, to bound the damage of a supervised objective, to reject a
+round --- the measurements pay for themselves; used as the objective,
+they do not.
 
 \subsection{Executing the routing rule}
 \label{sec:routing}
@@ -2886,7 +2913,17 @@ whose contrast the text interprets.}
   such probe requires supervision this instrument excludes. The
   multi-hop null makes a sharper and cheaper prediction: the per-item
   field should recover on the subset of multi-hop questions answerable
-  from a single document and stay at chance on the rest. One prediction
+  from a single document and stay at chance on the rest.
+\item \textbf{The objective, retested where it should work.} Training at
+  the measured $\sstar$ was tried on a corpus whose crowding is textual
+  duplication, which a semantics-preserving objective may not remove, and
+  it left retrieval unchanged. The prediction that follows is testable
+  and cheap: on a corpus whose failures really are caused by items being
+  hard to tell apart --- duplicate matching, where the per-item field
+  reaches an AUC of $0.74$ --- the same objective should produce a
+  measurable retrieval gain. If it does not, the objective should be
+  withdrawn as a contribution and the training layer stated purely as a
+  governor. One prediction
   also remains falsifiable and untested at scale
   (Table~\ref{tab:redundancy}): the exact confusion transform ranks
   duplicate pathology above diffuse collapse, where its near-equivalent
@@ -2929,9 +2966,12 @@ $26$ of $29$ testable pairings --- failing only on multi-hop questions,
 where the cause of failure is composition rather than crowding --- and
 the measurements chose interventions that
 held up once the labels were read: a deduplication that fixed twelve
-queries and broke none, guardrails that halved the damage supervised
+queries and broke none, guard terms that halved the damage supervised
 fine-tuning does outside its training distribution, and a veto on a
-training round that its own falling loss endorsed. The negative results
+training round that its own falling loss endorsed. Those are governing
+acts. Run as a training objective in its own right, the same
+measurements left retrieval unchanged, and the report says so at the
+same volume. The negative results
 are reported alongside these, because an instrument's reliability rests in
 part on a precise statement of its limits.
 
