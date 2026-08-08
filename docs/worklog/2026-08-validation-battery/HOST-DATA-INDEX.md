@@ -49,6 +49,16 @@ survives without it. Nothing else in this section is worth deleting.
 | `case-study-legal/maps-by-model/sup{ctl,grd}-1M` | 7.8 G | guardrail arms at full scale | KEEP (pair) |
 | `case-study-legal/logs/` | 28 K | figure data for the report | KEEP (tiny) |
 
+## Supervised reference (~22 G)
+
+| path | size | what | tag |
+|---|---|---|---|
+| `supervised-reference/models/qwen3-emb-legal-v3` | 4.5 G | the tune the report quotes as the supervised upper bound | KEEP |
+| `supervised-reference/models/qwen3-emb-legal-v1`, `-v2` | 9 G | superseded tunes | REGEN (scripts and data kept) |
+| `supervised-reference/training-data/` | 3.6 G | labelled pairs and synthetic negatives | KEEP — mined once, not trivially reproducible |
+| `supervised-reference/scripts-and-logs/` | 9 M | training record and serving configs | KEEP (tiny) |
+| `supervised-reference/training-venv/` | ~4 G | environment those runs used | REGEN (reinstallable) |
+
 ## Reports (443 M)
 
 | path | size | what | tag |
@@ -63,9 +73,8 @@ download; `~/models/qwen3-embedding-0.6b` is **KEEP — never delete**,
 since it is the case-study encoder with its serving config and pooling
 sidecars.
 
-`~/ft-legal`, `~/ft-legal-data` (25 G) are the supervised legal
-fine-tunes — a separate line of work, cited by the report only as a
-reference point, and deliberately left outside this tree.
+`~/ambit/.venv` is the measurement environment every pipeline script
+invokes. It lives beside the code, not here.
 
 ## If space is ever needed
 
@@ -74,7 +83,11 @@ In order of what to remove first:
 1. `reports/` — 443 M, pure rendering, regenerate in minutes.
 2. `encoder-loop/tuned-map-1M/` — 3.9 G, one embedding pass from a kept
    checkpoint.
-3. `external-grid/maps/` — 82 G, the only large reclaim, at the cost of
+3. `supervised-reference/models/qwen3-emb-legal-v{1,2}` — 9 G of
+   superseded tunes, retrainable from the data and scripts kept beside
+   them.
+4. `supervised-reference/training-venv/` — ~4 G, reinstallable.
+5. `external-grid/maps/` — 82 G, the largest reclaim, at the cost of
    hours of GPU time to rebuild.
 
 Do not delete anything tagged KEEP without reading the README in the

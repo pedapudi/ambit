@@ -9,7 +9,7 @@ EVALS=~/ambit-evals/external-grid
 MAP=$EVALS/maps/$C/$M
 RUNS=$EVALS
 PY=~/git/vllm/.venv/bin/python
-APY=~/ambit-venv/bin/python
+APY=~/ambit/.venv/bin/python
 mkdir -p $RUNS/readouts $RUNS/collision-fields $RUNS/scores
 
 CUDA_VISIBLE_DEVICES=$GPU $PY ~/ambit/experiments/validation_grid/embed_cell.py \
