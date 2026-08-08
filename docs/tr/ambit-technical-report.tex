@@ -91,27 +91,27 @@ $\sstar$, its tolerance for imprecise queries.
 Validation establishes three properties. An instrument must not report a
 defect that is not there: on hundreds of corpora built free of crowding,
 false alarms stay within the five percent the test allows. It must find
-one that is there: when a group of near-duplicates is deliberately
-inserted into a corpus, \textsf{ambit} recovers it in full, where mean
-cosine, isotropy, and hubness miss it. Its predictions were tested
-blind: across four public retrieval collections and seven public
-encoders, every score was computed and locked before the answer keys ---
-the human judgments of which documents answer which queries --- were
-opened. The per-document score picked out in advance the
-documents that retrieval then failed on, in every pairing that tests it.
-The corpus-level score tracks encoder quality only on similarity-matching
+one that is there: a group of near-duplicates deliberately inserted into
+a corpus is recovered in full, where mean cosine, isotropy, and hubness
+miss it. Its predictions were tested blind: across five public
+collections and seven encoders, every score was computed and locked
+before the answer keys were opened. The per-document score picked out in advance the documents that
+retrieval then failed on, in twenty-six of twenty-nine testable pairings;
+the three exceptions are all multi-hop questions, where failure comes
+from needing to combine two documents rather than from crowding. The
+corpus-level score tracks encoder quality only on similarity-matching
 tasks.
 
 In the case study --- one million documents from a public legal corpus
---- the measurements select interventions and verify them.
-Merging the near-duplicate documents the readouts name, at the
-similarity level they certify as true duplication, improved twelve
-queries and harmed none ($p = 0.0005$); the same merge at the looser
-level they warn against degraded retrieval. Measurement-built guardrails
+--- the measurements select interventions and verify them. Merging the
+near-duplicate documents the readouts name, at the similarity level they
+certify as true duplication, improved twelve queries and harmed none
+($p = 0.0005$); the same merge at the looser level they warn against
+degraded retrieval. Measurement-built guardrails
 halve the damage supervised fine-tuning does outside its training
-distribution, at no cost to its gains. A rejection rule fixed in
-advance caught a defective fine-tuning round that its own falling loss
-endorsed, a veto the labels later confirmed. \textsf{ambit} is
+distribution, at no cost to its gains. A rejection rule fixed in advance
+vetoed a defective round that its own falling loss endorsed; the labels
+later agreed. \textsf{ambit} is
 unsupervised --- no labels enter any measurement --- and its core depends
 only on \textsf{numpy}.
 \end{abstract}
@@ -264,14 +264,17 @@ prior work each part builds on (\S\ref{sec:related}) --- are four.
   \cite{wang2020} concrete meaning. This bridge from occupancy
   statistics to retrieval error counts is, to our knowledge, new.
 \item \textbf{Blind evidence that geometry predicts retrieval failure}
-  (\S\ref{sec:external}). Across four public retrieval collections and
+  (\S\ref{sec:external}). Across five public retrieval collections and
   seven public encoders, with every readout computed and locked before
   the collections' relevance judgments were consulted, the per-document
   collision score picked out the documents that the judgments then
-  showed failing at their own queries, in every pairing that tests it
-  (sign test $p \approx 2 \times 10^{-7}$). The corpus-level $\sstar$
-  tracks encoder quality only where the task is similarity matching ---
-  a measured scope law, not a claimed universal.
+  showed failing at their own queries in $26$ of the $29$ testable
+  pairings (sign test $p \approx 8 \times 10^{-6}$). The exceptions
+  locate a boundary rather than blur one: all three are multi-hop
+  questions, where a document fails because the answer requires
+  combining it with another, not because anything crowds it. The
+  corpus-level $\sstar$ tracks encoder quality only where the task is
+  similarity matching --- measured scope, not a claimed universal.
 \item \textbf{Interventions selected and verified by measurement}
   (\S\ref{sec:training}). The readouts choose the repair and the
   verification confirms it, label-free throughout: deduplication at the
@@ -720,7 +723,7 @@ path, and subset labels, which are used only to \emph{condition} one
 readout and are never consumed by a measurement.
 
 \emph{(iii) A public evaluation grid --- external outcomes.} The external study (\S\ref{sec:external}) and the retrieval-facing
-experiments (\S\ref{sec:routing}--\S\ref{sec:guardrail}) use four public
+experiments (\S\ref{sec:routing}--\S\ref{sec:guardrail}) use five public
 retrieval collections with relevance judgments and seven public
 encoders, listed with citations in Tables~\ref{tab:corpora}
 and~\ref{tab:encoders}. Judgments are quarantined: every readout is
@@ -742,6 +745,7 @@ corpus & documents & judged queries & task\\
 TREC-COVID \cite{voorhees2020} & $171{,}332$ & $50$ (dense, graded) & biomedical search\\
 Quora \cite{iyer2017} & $522{,}931$ & $10{,}000$ & duplicate matching\\
 Natural Questions \cite{kwiatkowski2019} & $2{,}681{,}468$ & $3{,}452$ & open-domain QA\\
+HotpotQA \cite{yang2018} & $5{,}233{,}329$ & $7{,}405$ & multi-hop QA\\
 ESCI / Shopping Queries \cite{reddy2022} & $1{,}215{,}854$ & $8{,}956$ (graded) & product search\\
 Nemotron-Legal \cite{nemotronlegal} & $1{,}000{,}000$ & $1{,}000$ + $1{,}496$ & statute/case retrieval\\
 \bottomrule
@@ -2603,11 +2607,11 @@ is what multi-hop retrieval consumes.
 % =========================================================================
 
 The evidence so far comes from synthetic benchmarks and one real corpus.
-This section takes the instrument to four judged public collections and
+This section takes the instrument to five judged public collections and
 seven public encoders (Tables~\ref{tab:corpora}
 and~\ref{tab:encoders}). Each combination of a corpus and an encoder ---
 a \emph{cell} of the grid --- is measured and then scored as its own
-embedded corpus, giving $28$ cells plus the legal case study. Each cell follows four steps in strict order:
+embedded corpus, giving $35$ cells plus the legal case study. Each cell follows four steps in strict order:
 \begin{enumerate}
 \item embed the corpus;
 \item compute the full readout set and record its hash, \emph{before} any
@@ -2640,6 +2644,7 @@ corpus & task type & $\rho(\sstar)$ & control & failure AUC & above chance\\
 Quora & duplicate matching & $+0.75$ & $-0.79$ & $0.66$--$0.74$ & $7$ of $7$\\
 ESCI & product search & $-0.07$ & $+0.32$ & $0.57$--$0.69$ & $7$ of $7$\\
 Natural Questions & open-domain QA & $-0.54$ & $+0.54$ & $0.51$--$0.62$ & $7$ of $7$\\
+HotpotQA & multi-hop QA & $-0.75$ & $+0.71$ & $0.48$--$0.59$ & $4$ of $7$\\
 TREC-COVID & biomedical & $-0.32$ & $+0.39$ & (saturated) & ---\\
 legal (case study) & --- & --- & --- & $0.58$ & $1$ of $1$\\
 \bottomrule
@@ -2648,67 +2653,81 @@ legal (case study) & --- & --- & --- & $0.58$ & $1$ of $1$\\
 
 \begin{figure}[t]
 \centering
-\begin{minipage}{0.245\textwidth}
-\begin{tikzpicture}
-\begin{axis}[width=\textwidth, height=3.6cm, title={\scriptsize Quora\ \ $\rho=+0.75$},
-  xlabel={\scriptsize $\sstar$}, ylabel={\scriptsize nDCG@10},
-  tick label style={font=\tiny}, label style={font=\tiny}, title style={yshift=-4pt},
+\begin{minipage}{0.19\textwidth}
+\resizebox{\linewidth}{!}{\begin{tikzpicture}
+\begin{axis}[width=0.92\textwidth, height=3.6cm, title={\scriptsize Quora\\[-1pt]$\rho=+0.75$},
+  xlabel={\scriptsize $\sstar$},
+  tick label style={font=\tiny}, label style={font=\tiny}, title style={yshift=-4pt, align=center},
   xtick={0.08,0.12}, scaled ticks=false]
 \addplot[only marks, mark=*, mark size=1.6pt, acc] coordinates {(0.1200,0.8900) (0.0870,0.8658) (0.1056,0.8660) (0.0730,0.8604) (0.1235,0.8713) (0.1431,0.8756) (0.1439,0.8744)};
 \end{axis}
-\end{tikzpicture}
+\end{tikzpicture}}
 \end{minipage}\hfill
-\begin{minipage}{0.245\textwidth}
-\begin{tikzpicture}
-\begin{axis}[width=\textwidth, height=3.6cm, title={\scriptsize ESCI\ \ $\rho=-0.07$},
+\begin{minipage}{0.19\textwidth}
+\resizebox{\linewidth}{!}{\begin{tikzpicture}
+\begin{axis}[width=0.92\textwidth, height=3.6cm, title={\scriptsize ESCI\\[-1pt]$\rho=-0.07$},
   xlabel={\scriptsize $\sstar$},
-  tick label style={font=\tiny}, label style={font=\tiny}, title style={yshift=-4pt},
+  tick label style={font=\tiny}, label style={font=\tiny}, title style={yshift=-4pt, align=center},
   xtick={0.08,0.12}, scaled ticks=false]
 \addplot[only marks, mark=*, mark size=1.6pt, acc] coordinates {(0.1011,0.1999) (0.1091,0.2185) (0.1151,0.2226) (0.0713,0.1964) (0.0886,0.1575) (0.1226,0.1458) (0.1146,0.1446)};
 \end{axis}
-\end{tikzpicture}
+\end{tikzpicture}}
 \end{minipage}\hfill
-\begin{minipage}{0.245\textwidth}
-\begin{tikzpicture}
-\begin{axis}[width=\textwidth, height=3.6cm, title={\scriptsize NQ\ \ $\rho=-0.54$},
+\begin{minipage}{0.19\textwidth}
+\resizebox{\linewidth}{!}{\begin{tikzpicture}
+\begin{axis}[width=0.92\textwidth, height=3.6cm, title={\scriptsize NQ\\[-1pt]$\rho=-0.54$},
   xlabel={\scriptsize $\sstar$},
-  tick label style={font=\tiny}, label style={font=\tiny}, title style={yshift=-4pt},
+  tick label style={font=\tiny}, label style={font=\tiny}, title style={yshift=-4pt, align=center},
   xtick={0.08,0.12}, scaled ticks=false]
 \addplot[only marks, mark=*, mark size=1.6pt, acc] coordinates {(0.1083,0.5500) (0.1166,0.6247) (0.1292,0.6260) (0.0790,0.5809) (0.1286,0.5459) (0.1368,0.4400) (0.1352,0.5043)};
 \end{axis}
-\end{tikzpicture}
+\end{tikzpicture}}
 \end{minipage}\hfill
-\begin{minipage}{0.245\textwidth}
-\begin{tikzpicture}
-\begin{axis}[width=\textwidth, height=3.6cm, title={\scriptsize TREC-COVID\ \ $\rho=-0.32$},
+\begin{minipage}{0.19\textwidth}
+\resizebox{\linewidth}{!}{\begin{tikzpicture}
+\begin{axis}[width=0.92\textwidth, height=3.6cm, title={\scriptsize HotpotQA\\[-1pt]$\rho=-0.75$},
   xlabel={\scriptsize $\sstar$},
-  tick label style={font=\tiny}, label style={font=\tiny}, title style={yshift=-4pt},
+  tick label style={font=\tiny}, label style={font=\tiny}, title style={yshift=-4pt, align=center},
+  xtick={0.08,0.12}, scaled ticks=false]
+\addplot[only marks, mark=*, mark size=1.6pt, acc] coordinates {(0.1084,0.7412) (0.1089,0.7218) (0.1219,0.6976) (0.0743,0.6900) (0.1240,0.6565) (0.1290,0.4652) (0.1282,0.3937)};
+\end{axis}
+\end{tikzpicture}}
+\end{minipage}\hfill
+\begin{minipage}{0.19\textwidth}
+\resizebox{\linewidth}{!}{\begin{tikzpicture}
+\begin{axis}[width=0.92\textwidth, height=3.6cm, title={\scriptsize TREC-COVID\\[-1pt]$\rho=-0.32$},
+  xlabel={\scriptsize $\sstar$},
+  tick label style={font=\tiny}, label style={font=\tiny}, title style={yshift=-4pt, align=center},
   xtick={0.08,0.12}, scaled ticks=false]
 \addplot[only marks, mark=*, mark size=1.6pt, acc] coordinates {(0.0991,0.7428) (0.1045,0.8462) (0.1215,0.7426) (0.0729,0.7079) (0.1192,0.8410) (0.1256,0.4697) (0.1185,0.5123)};
 \end{axis}
-\end{tikzpicture}
+\end{tikzpicture}}
 \end{minipage}
 
 \vspace{4pt}
 \begin{tikzpicture}
 \begin{axis}[width=0.97\textwidth, height=3.4cm,
   ylabel={\scriptsize failure-prediction AUC}, ymin=0.38, ymax=0.80,
-  xmin=0, xmax=29,
-  xtick={4,11,18,25},
-  xticklabels={Quora, ESCI, NQ, TREC-COVID (saturated)},
+  xmin=0, xmax=36,
+  xtick={4,11,18,25,32},
+  xticklabels={Quora, ESCI, NQ, HotpotQA, TREC-COVID (saturated)},
   tick label style={font=\tiny}, label style={font=\tiny}]
-\addplot[dashed, gray] coordinates {(0,0.5) (29,0.5)};
-\addplot[only marks, mark=*, mark size=1.7pt, acc] coordinates {(1,0.741) (2,0.674) (3,0.681) (4,0.703) (5,0.658) (6,0.693) (7,0.708) (8,0.594) (9,0.572) (10,0.616) (11,0.600) (12,0.691) (13,0.622) (14,0.618) (15,0.606) (16,0.509) (17,0.547) (18,0.541) (19,0.581) (20,0.621) (21,0.608) (22,0.483) (23,0.433) (24,0.502) (25,0.487) (26,0.423) (27,0.480) (28,0.528)};
+\addplot[dashed, gray] coordinates {(0,0.5) (36,0.5)};
+\addplot[only marks, mark=*, mark size=1.7pt, acc] coordinates {(1,0.741) (2,0.674) (3,0.681) (4,0.703) (5,0.658) (6,0.693) (7,0.708) (8,0.594) (9,0.572) (10,0.616) (11,0.600) (12,0.691) (13,0.622) (14,0.618) (15,0.606) (16,0.509) (17,0.547) (18,0.541) (19,0.581) (20,0.621) (21,0.608)};
+\addplot[only marks, mark=*, mark size=1.7pt, bad] coordinates {(22,0.550) (23,0.563) (24,0.593) (25,0.494) (26,0.519) (27,0.483) (28,0.486)};
+\addplot[only marks, mark=*, mark size=1.7pt, faint] coordinates {(29,0.483) (30,0.433) (31,0.502) (32,0.487) (33,0.423) (34,0.480) (35,0.528)};
 \end{axis}
 \end{tikzpicture}
 \caption{Every grid cell, plotted. Top: within each corpus, the seven
-encoders' $\sstar$ against their nDCG@10 --- rank correlation is strongly
+encoders' $\sstar$ (horizontal) against their nDCG@10 (vertical) --- rank correlation is strongly
 positive only where relevance is geometric matching (Quora), null on
 product search, and negative where semantic competence gaps dominate.
 Bottom: the per-document collision field's failure-prediction AUC for all
-$28$ cells, grouped by corpus, against the chance line --- above $0.5$ in
-every informative cell (one whose failure label varies within the cell); the TREC-COVID group is uninformative because its
-outcome label saturates ($98\%$ of judged documents past rank $10$).}
+$35$ cells, grouped by corpus, against the chance line. It sits above
+$0.5$ in every informative cell outside the multi-hop group (red), where
+three of seven encoders fall to chance; the TREC-COVID group (gray) is
+uninformative because its outcome label saturates ($98\%$ of judged
+documents past rank $10$).}
 \label{fig:external}
 \end{figure}
 
@@ -2717,15 +2736,15 @@ outcome label saturates ($98\%$ of judged documents past rank $10$).}
 \begin{tikzpicture}
 \begin{axis}[width=0.95\textwidth, height=4.2cm,
   ylabel={\scriptsize top-pocket prominence}, ymin=0, ymax=0.6,
-  xmin=0, xmax=29,
-  xtick={4,11,18,25},
-  xticklabels={Quora, ESCI, NQ, TREC-COVID},
+  xmin=0, xmax=36,
+  xtick={4,11,18,25,32},
+  xticklabels={Quora, ESCI, NQ, HotpotQA, TREC-COVID},
   tick label style={font=\tiny}, label style={font=\tiny}]
-\addplot[only marks, mark=*, mark size=1.7pt, acc] coordinates {(1,0.0653) (2,0.0369) (3,0.0317) (4,0.1084) (5,0.3509) (6,0.0206) (7,0.0191) (8,0.1182) (9,0.5530) (10,0.0880) (11,0.0794) (12,0.0689) (13,0.1496) (14,0.2300) (15,0.0082) (16,0.4359) (17,0.2675) (18,0.0174) (19,0.0083) (20,0.0434) (21,0.0554) (22,0.0846) (23,0.3451) (24,0.0706) (25,0.0457) (26,0.1829) (27,0.2655) (28,0.1859)};
+\addplot[only marks, mark=*, mark size=1.7pt, acc] coordinates {(1,0.0653) (2,0.0369) (3,0.0317) (4,0.1084) (5,0.3509) (6,0.0206) (7,0.0191) (8,0.1182) (9,0.5530) (10,0.0880) (11,0.0794) (12,0.0689) (13,0.1496) (14,0.2300) (15,0.0082) (16,0.4359) (17,0.2675) (18,0.0174) (19,0.0083) (20,0.0434) (21,0.0554) (22,0.0737) (23,0.0932) (24,0.1279) (25,0.0551) (26,0.0705) (27,0.1589) (28,0.1904) (29,0.0846) (30,0.3451) (31,0.0706) (32,0.0457) (33,0.1829) (34,0.2655) (35,0.1859)};
 \end{axis}
 \end{tikzpicture}
 \caption{Structure across the grid: the most prominent pocket's merge-tree
-prominence for every corpus--encoder cell (all $28$ exceed the
+prominence for every corpus--encoder cell (all $35$ exceed the
 null-calibrated floor). The spread within each corpus is as large as the
 spread across corpora --- encoders disagree strongly about which corpora
 form tight substructure, which is precisely why pocket findings must be
@@ -2741,7 +2760,8 @@ cosine) points the \emph{wrong} way --- the one setting where geometry is
 the task is also the one where the popular statistic misleads. The AUC
 strip moves the same question inside each corpus, where semantic alignment
 is held fixed by construction (one encoder, one corpus, judged documents
-only): there the geometric signal is positive in every informative cell.
+only): there the geometric signal is positive in every informative cell
+except the multi-hop group, drawn in red.
 Together the two views separate the instrument's two granularities: across
 encoders, geometry is one factor of two and predicts only where the other
 is constant; within an embedding, geometry is the only free variable and
@@ -2752,21 +2772,41 @@ instrument reports structure per embedding rather than labeling corpora as
 clean or dirty.
 
 
-\textbf{The per-item claim is confirmed across corpora.} We call a
-cell's outcome \emph{informative} when the failure label actually varies
---- some judged documents fail at rank $10$ and some do not; a label that
-is nearly constant cannot be predicted by anything. In every informative
-cell, expected-collision counts predict
-which judged-relevant documents fail at their own queries. The informative
-cells comprise all seven encoders on each of the three informative corpora
---- duplicate questions, product search, and open-domain QA --- plus the
-legal case study; the AUC ranges per corpus are the final columns of
-Table~\ref{tab:external}. Every one of these cells is positive (sign test
-$p \approx 2 \times 10^{-7}$), including an AUC of $0.69$ on product
-search for the case-study encoder despite an $84\%$ base failure rate. The biomedical collection is uninformative
-for this outcome by construction, not by counterexample: with $50$ queries
-carrying hundreds of relevant documents each, $98\%$ of judged documents
-exceed rank $10$ and the failure label saturates entirely.
+\textbf{The per-item claim holds on four corpora and fails on the
+fifth.} We call a cell's outcome \emph{informative} when the failure
+label actually varies --- some judged documents fail at rank $10$ and
+some do not; a label that is nearly constant cannot be predicted by
+anything. The informative cells comprise all seven encoders on each of
+four corpora --- duplicate questions, product search, open-domain QA,
+and multi-hop QA --- plus the legal case study, giving $29$ in all. In
+$26$ of them, expected-collision counts predict which judged-relevant
+documents fail at their own queries (sign test
+$p \approx 8 \times 10^{-6}$); the per-corpus AUC ranges are the final
+columns of Table~\ref{tab:external}. Duplicate questions, product
+search, and open-domain QA are positive in every cell, including an AUC
+of $0.69$ on product search for the case-study encoder despite an $84\%$
+base failure rate. The biomedical collection is excluded as
+uninformative by construction rather than by counterexample: with $50$
+queries carrying hundreds of relevant documents each, $98\%$ of judged
+documents exceed rank $10$ and the failure label saturates entirely.
+
+\textbf{Multi-hop retrieval is where the per-item claim stops.} On
+HotpotQA the field predicts failure for four of seven encoders
+($0.55$--$0.59$) and sits at chance for the other three
+($0.483$, $0.486$, $0.494$). These cells are not saturated --- their
+failure rates run from $23\%$ to $58\%$, the most balanced labels
+anywhere in the grid --- so the null result is a real one. The
+explanation is in the task. A multi-hop question is answerable only by
+combining two documents, so a document can fail at its own query while
+sitting in completely uncrowded space: nothing outranks it because it is
+confusable, and the geometry has no way to see that the answer needed a
+second document the query never reached. This is the per-item
+counterpart of the corpus-level scope law below. Both say the same
+thing: the instrument measures whether items remain distinguishable, and
+that predicts retrieval failure exactly to the extent that retrieval
+failure is caused by items being hard to tell apart. Where relevance
+requires composition or reasoning, the measurement is silent, and
+reporting it as silent is more useful than reporting a number.
 
 \textbf{The corpus-level claim earns a narrow scope, not a blanket
 confirmation.} Within-corpus, across encoders, the rank correlation of
@@ -2774,9 +2814,11 @@ $\sstar$ with nDCG@10 is $+0.75$ only on duplicate matching --- the one
 task where relevance \emph{is} geometric proximity --- and there the naive
 mean-cosine control is \emph{inverted} ($-0.79$). On product search the
 correlation is null ($-0.07$; graded shopping relevance mixes attribute
-matching with intent the geometry cannot see), and on open-domain QA and
-biomedical search it reverses ($-0.54$, $-0.32$): the smallest encoder
-attains the best geometry and the worst retrieval. The mechanism is the alignment--uniformity decomposition, visible here
+matching with intent the geometry cannot see), and on open-domain QA,
+multi-hop QA, and biomedical search it reverses ($-0.54$, $-0.75$,
+$-0.32$): the smallest encoder attains the best geometry and the worst
+retrieval. The two knowledge-seeking corpora agree, which is what
+distinguishes a scope law from a single anomalous corpus. The mechanism is the alignment--uniformity decomposition, visible here
 directly. Retrieval quality factors into two ingredients: semantic
 alignment (does the encoder place related texts near each other?) and
 geometric headroom (does the space leave room to tell neighbors apart?).
@@ -2833,15 +2875,18 @@ whose contrast the text interprets.}
 % =========================================================================
 
 \begin{itemize}
-\item \textbf{External validation.} A first cross-corpus slice now exists
-  (\S\ref{sec:external}): the per-item claim holds in every informative
-  cell, and the corpus-level claim earned a measured scope law. What
-  remains open is breadth --- more collections, including a large
-  multi-hop one; encoder-degradation ladders; and independent
-  replication. The scope law is itself a hypothesis to re-test. The
-  alignment--uniformity split predicts that adding an alignment probe
-  would restore ranking power on knowledge-limited tasks, but any such
-  probe requires supervision this instrument excludes. One prediction
+\item \textbf{External validation.} A cross-corpus slice now exists
+  (\S\ref{sec:external}): the per-item claim holds in $26$ of $29$
+  informative cells and fails on multi-hop questions, and the
+  corpus-level claim earned a measured scope law. What remains open is
+  breadth --- more collections, encoder-degradation ladders, and
+  independent replication. Both scope laws are hypotheses to re-test.
+  The alignment--uniformity split predicts that adding an alignment
+  probe would restore ranking power on knowledge-limited tasks, but any
+  such probe requires supervision this instrument excludes. The
+  multi-hop null makes a sharper and cheaper prediction: the per-item
+  field should recover on the subset of multi-hop questions answerable
+  from a single document and stay at chance on the rest. One prediction
   also remains falsifiable and untested at scale
   (Table~\ref{tab:redundancy}): the exact confusion transform ranks
   duplicate pathology above diffuse collapse, where its near-equivalent
@@ -2880,7 +2925,9 @@ system with stated guarantees and stated scope, traced end to end through
 one benchmark whose planted pathology every layer detects, localizes,
 prices, and partially repairs. Beyond that benchmark, the per-document
 score identified the documents that later failed at their own queries in
-every pairing that tests it, and the measurements chose interventions that
+$26$ of $29$ testable pairings --- failing only on multi-hop questions,
+where the cause of failure is composition rather than crowding --- and
+the measurements chose interventions that
 held up once the labels were read: a deduplication that fixed twelve
 queries and broke none, guardrails that halved the damage supervised
 fine-tuning does outside its training distribution, and a veto on a
@@ -3864,6 +3911,10 @@ information retrieval models. \emph{NeurIPS Datasets and Benchmarks}, 2021.
 W. R. Hersh, K. Lo, K. Roberts, I. Soboroff, L. L. Wang. TREC-COVID:
 constructing a pandemic information retrieval test collection. \emph{SIGIR
 Forum} 54(1), 2020.
+
+\bibitem{yang2018} Z.~Yang, P.~Qi, S.~Zhang, Y.~Bengio, W.~W.~Cohen,
+R.~Salakhutdinov, C.~D.~Manning. HotpotQA: a dataset for diverse,
+explainable multi-hop question answering. \emph{EMNLP}, 2018.
 
 \bibitem{kwiatkowski2019} T. Kwiatkowski et al. Natural Questions: a
 benchmark for question answering research. \emph{TACL} 7, 2019.

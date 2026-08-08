@@ -1,14 +1,14 @@
 \begin{center}
 \begin{tikzpicture}[font=\tiny]
-  % ---- the 7 x 4 grid of cells ------------------------------------
+  % ---- the 7 x 5 grid of cells ------------------------------------
   \foreach \c in {0,...,6} {
-    \foreach \r in {0,...,3} {
+    \foreach \r in {0,...,4} {
       \draw[faint] (0.42*\c,0.34*\r) rectangle (0.42*\c+0.34,0.34*\r+0.26);
     }
   }
-  \node[rotate=90, anchor=south] at (-0.3,0.65) {$4$ collections};
+  \node[rotate=90, anchor=south] at (-0.3,0.82) {$5$ collections};
   \node[anchor=north, align=center] at (1.43,-0.1)
-    {$7$ encoders\\$28$ cells in all};
+    {$7$ encoders\\$35$ cells in all};
   \draw[-{Stealth[length=1.8mm]}, faint] (3.0,0.65) -- (3.5,0.65);
   % ---- measure every cell -----------------------------------------
   \draw[acc, thick] (3.5,0.25) rectangle (5.9,1.05);
