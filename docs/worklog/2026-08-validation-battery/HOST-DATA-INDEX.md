@@ -1,13 +1,13 @@
 # Data index — what lives here, and what is safe to delete
 
-Rewritten 2026-08-08 for the `~/ambit-evals` layout (previously a flat
+Rewritten 2026-08-08 for the `~/ambit/evals` layout (previously a flat
 home directory). Sizes measured the same day.
 
 **KEEP** — evidence, ground truth, or expensive to recreate.
 **REGEN** — reproducible from KEEP items plus the code in `~/ambit`.
 **SCRATCH** — delete freely.
 
-Total under `~/ambit-evals`: ~119 G.
+Total under `~/ambit/evals`: ~119 G.
 
 ## External grid (~85 G)
 
@@ -73,7 +73,7 @@ download; `~/models/qwen3-embedding-0.6b` is **KEEP — never delete**,
 since it is the case-study encoder with its serving config and pooling
 sidecars.
 
-`~/ambit/.venv` is the measurement environment every pipeline script
+`~/ambit/code/.venv` is the measurement environment every pipeline script
 invokes. It lives beside the code, not here.
 
 ## If space is ever needed
