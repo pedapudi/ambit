@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Technical report review</title>
+<style>
+  :root{
+    --bg:#f6f6f4; --panel:#fff; --ink:#1b1b1b; --muted:#6b6b6b;
+    --line:#dcdcd6; --accent:#1f77b4; --open:#d62728; --done:#2c8c3c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:var(--bg);color:var(--ink);display:flex;height:100vh;overflow:hidden}
+  #main{flex:1;overflow:auto;padding:18px 18px 60vh;scroll-behavior:smooth}
+  #side{width:340px;border-left:1px solid var(--line);background:var(--panel);
+        display:flex;flex-direction:column}
+  header{padding:12px 14px;border-bottom:1px solid var(--line)}
+  header h1{margin:0;font-size:14px;letter-spacing:.02em}
+  header p{margin:4px 0 0;color:var(--muted);font-size:12px}
+  #list{flex:1;overflow:auto;padding:8px}
+  .page{position:relative;margin:0 auto 20px;max-width:900px;box-shadow:0 1px 4px rgba(0,0,0,.16);background:#fff}
+  .page img{display:block;width:100%}
+  .page .num{position:absolute;top:-16px;left:0;font-size:11px;color:var(--muted)}
+  .pin{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;
+       background:var(--open);color:#fff;font-size:11px;font-weight:600;display:flex;
+       align-items:center;justify-content:center;cursor:pointer;border:2px solid #fff;
+       box-shadow:0 1px 3px rgba(0,0,0,.4)}
+  .pin.done{background:var(--done)}
+  .pin.sel{outline:3px solid rgba(31,119,180,.55)}
+  .card{border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin-bottom:8px;background:#fff}
+  .card.sel{border-color:var(--accent);box-shadow:0 0 0 2px rgba(31,119,180,.15)}
+  .card .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-bottom:4px}
+  .card .body{white-space:pre-wrap;word-break:break-word}
+  .card .row{margin-top:6px;display:flex;gap:6px}
+  button{font:inherit;font-size:12px;padding:3px 8px;border:1px solid var(--line);
+         background:#fafafa;border-radius:4px;cursor:pointer}
+  button:hover{background:#f0f0ee}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  textarea{width:100%;min-height:70px;font:inherit;padding:6px;border:1px solid var(--line);border-radius:4px;resize:vertical}
+  #composer{padding:10px;border-top:1px solid var(--line);background:#fbfbfa}
+  #composer .hint{color:var(--muted);font-size:12px;margin-bottom:6px}
+  .tools{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);align-items:center}
+  .tools .count{margin-left:auto;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div id="main"></div>
+<div id="side">
+  <header>
+    <h1>Technical report review</h1>
+    <p>Click anywhere on a page to leave a comment.</p>
+  </header>
+  <div class="tools">
+    <button id="f-all" class="primary">All</button>
+    <button id="f-open">Open</button>
+    <span class="count" id="count"></span>
+  </div>
+  <div id="list"></div>
+  <div id="composer">
+    <div class="hint" id="hint">No pin selected.</div>
+    <textarea id="text" placeholder="What should change here?"></textarea>
+    <div class="row" style="margin-top:6px;display:flex;gap:6px">
+      <button class="primary" id="save">Save</button>
+      <button id="cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+<script>
+const main=document.getElementById('main'), list=document.getElementById('list');
+let comments=[], pending=null, selected=null, filter='all';
+
+const api=(m,b)=>fetch('/api/comments',{method:m,headers:{'Content-Type':'application/json'},
+  body:b?JSON.stringify(b):undefined}).then(r=>r.json());
+
+async function boot(){
+  const pages=await fetch('/api/pages').then(r=>r.json());
+  comments=await fetch('/api/comments').then(r=>r.json());
+  pages.forEach((f,i)=>{
+    const n=i+1;
+    const d=document.createElement('div');
+    d.className='page'; d.dataset.page=n;
+    d.innerHTML=`<span class="num">page ${n}</span><img src="/pages/${f}" loading="lazy" alt="page ${n}">`;
+    d.addEventListener('click',e=>{
+      if(e.target.classList.contains('pin'))return;
+      const r=d.getBoundingClientRect();
+      pending={page:n,x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};
+      selected=null; render();
+      document.getElementById('hint').textContent=`New comment — page ${n}`;
+      document.getElementById('text').value=''; document.getElementById('text').focus();
+    });
+    main.appendChild(d);
+  });
+  render();
+}
+
+function render(){
+  document.querySelectorAll('.pin').forEach(p=>p.remove());
+  const shown=comments.filter(c=>filter==='all'||c.status==='open');
+  shown.forEach((c,i)=>{
+    const pg=document.querySelector(`.page[data-page="${c.page}"]`);
+    if(!pg)return;
+    const el=document.createElement('div');
+    el.className='pin'+(c.status==='done'?' done':'')+(selected===c.id?' sel':'');
+    el.style.left=(c.x*100)+'%'; el.style.top=(c.y*100)+'%';
+    el.textContent=i+1; el.title=c.text;
+    el.onclick=ev=>{ev.stopPropagation(); selected=c.id; pending=null; render();
+      document.querySelector(`.card[data-id="${c.id}"]`)?.scrollIntoView({block:'center'});};
+    pg.appendChild(el);
+  });
+  if(pending){
+    const pg=document.querySelector(`.page[data-page="${pending.page}"]`);
+    const el=document.createElement('div');
+    el.className='pin sel'; el.style.left=(pending.x*100)+'%'; el.style.top=(pending.y*100)+'%';
+    el.textContent='+'; pg.appendChild(el);
+  }
+  list.innerHTML='';
+  shown.forEach((c,i)=>{
+    const card=document.createElement('div');
+    card.className='card'+(selected===c.id?' sel':''); card.dataset.id=c.id;
+    card.innerHTML=`<div class="meta"><span>#${i+1} · page ${c.page}</span><span>${c.created}</span></div>
+      <div class="body"></div>
+      <div class="row">
+        <button data-a="toggle">${c.status==='open'?'Mark done':'Reopen'}</button>
+        <button data-a="del">Delete</button>
+      </div>`;
+    card.querySelector('.body').textContent=c.text;
+    card.onclick=e=>{
+      const a=e.target.dataset.a;
+      if(a==='toggle'){c.status=c.status==='open'?'done':'open';api('POST',c).then(()=>render());}
+      else if(a==='del'){api('POST',{...c,delete:true}).then(()=>{comments=comments.filter(x=>x.id!==c.id);render();});}
+      else{selected=c.id;pending=null;render();
+        document.querySelector(`.page[data-page="${c.page}"]`).scrollIntoView({block:'center'});}
+    };
+    list.appendChild(card);
+  });
+  document.getElementById('count').textContent=
+    `${comments.filter(c=>c.status==='open').length} open / ${comments.length} total`;
+}
+
+document.getElementById('save').onclick=async()=>{
+  const t=document.getElementById('text').value.trim();
+  if(!t||!pending)return;
+  const row=await api('POST',{...pending,text:t,status:'open'});
+  comments.push(row); comments.sort((a,b)=>a.page-b.page||a.y-b.y);
+  pending=null; document.getElementById('text').value='';
+  document.getElementById('hint').textContent='Saved. Click a page to add another.';
+  render();
+};
+document.getElementById('cancel').onclick=()=>{pending=null;
+  document.getElementById('text').value='';
+  document.getElementById('hint').textContent='No pin selected.'; render();};
+document.getElementById('f-all').onclick=e=>{filter='all';
+  e.target.className='primary';document.getElementById('f-open').className='';render();};
+document.getElementById('f-open').onclick=e=>{filter='open';
+  e.target.className='primary';document.getElementById('f-all').className='';render();};
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))document.getElementById('save').click();});
+boot();
+</script>
+</body>
+</html>
