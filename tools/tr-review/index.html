@@ -31,6 +31,8 @@
   .card.sel{border-color:var(--accent);box-shadow:0 0 0 2px rgba(31,119,180,.15)}
   .card .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-bottom:4px}
   .card .body{white-space:pre-wrap;word-break:break-word}
+  .card .anchor{margin:5px 0 0;padding:5px 7px;background:#f4f4f1;border-left:2px solid var(--accent);
+                color:#3a3a3a;font-size:11.5px;line-height:1.45;border-radius:0 3px 3px 0}
   .card .row{margin-top:6px;display:flex;gap:6px}
   button{font:inherit;font-size:12px;padding:3px 8px;border:1px solid var(--line);
          background:#fafafa;border-radius:4px;cursor:pointer}
@@ -85,7 +87,13 @@ async function boot(){
       const r=d.getBoundingClientRect();
       pending={page:n,x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};
       selected=null; render();
-      document.getElementById('hint').textContent=`New comment — page ${n}`;
+      const hint=document.getElementById('hint');
+      hint.textContent=`New comment — page ${n}`;
+      fetch(`/api/anchor?page=${n}&x=${pending.x}&y=${pending.y}`)
+        .then(r=>r.json()).then(a=>{
+          hint.innerHTML=`New comment — page ${n}<br>`+
+            `<span style="color:#3a3a3a">anchored to: “${
+              (a.anchor||'(no text here)').replace(/</g,'&lt;')}”</span>`;});
       document.getElementById('text').value=''; document.getElementById('text').focus();
     });
     main.appendChild(d);
@@ -119,11 +127,14 @@ function render(){
     card.className='card'+(selected===c.id?' sel':''); card.dataset.id=c.id;
     card.innerHTML=`<div class="meta"><span>#${i+1} · page ${c.page}</span><span>${c.created}</span></div>
       <div class="body"></div>
+      <div class="anchor" hidden></div>
       <div class="row">
         <button data-a="toggle">${c.status==='open'?'Mark done':'Reopen'}</button>
         <button data-a="del">Delete</button>
       </div>`;
     card.querySelector('.body').textContent=c.text;
+    const an=card.querySelector('.anchor');
+    if(c.anchor){an.hidden=false; an.textContent=c.anchor;}
     card.onclick=e=>{
       const a=e.target.dataset.a;
       if(a==='toggle'){c.status=c.status==='open'?'done':'open';api('POST',c).then(()=>render());}

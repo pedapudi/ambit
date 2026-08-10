@@ -20,8 +20,10 @@ re-render only when the PDF is newer.
 - **Mark done / Delete** on each card; the *Open* filter hides
   everything already handled.
 
-Comments save immediately — there is nothing to export, and closing the
-browser loses nothing.
+Each pin resolves to the **line of text under it**, shown in the
+composer before you type and stored with the comment. That is what makes
+a pin actionable: a coordinate alone would have to be re-read off a
+rendered page by eye, and would drift the moment the document reflows.
 
 Options: `--pdf <path>` to review a different build, `--port`, `--dpi`.
 
@@ -32,12 +34,15 @@ Options: `--pdf <path>` to review a different build, `--port`, `--dpi`.
   "page": 1,
   "x": 0.4996, "y": 0.6431,
   "text": "Tighten this sentence — it runs long.",
+  "anchor": "hubness miss it. Its predictions were tested blind: across five public collections and seven",
   "status": "open",
   "created": "2026-08-09 20:21"}]
 ```
 
-`x` and `y` are fractions of the page width and height, so they stay
-correct at any zoom or dpi. Rows are kept sorted by page and then by
+`anchor` is the report's own text at that spot, extracted from the PDF's
+word boxes — the field to search for when acting on a comment. `x` and
+`y` are fractions of the page width and height, so they stay correct at
+any zoom or dpi, and they locate the pin if the anchor ever goes stale. Rows are kept sorted by page and then by
 vertical position, which means the file reads top-to-bottom in document
 order.
 
