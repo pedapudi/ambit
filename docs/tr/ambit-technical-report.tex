@@ -107,7 +107,7 @@ identifies as true duplication, improved twelve queries and harmed none
 ($p = 0.0005$); the same merge at a looser similarity degraded retrieval.
 Penalty terms built from the measurements, added to a supervised
 fine-tune, halve the damage it does outside its training data at no cost
-to its gains, and a rejection rule fixed in advance vetoed a defective
+to its gains. A rejection rule fixed in advance vetoed a defective
 training round while the round's own loss was still falling. The
 measurements govern a fine-tuning run well; used as the training
 objective itself they leave retrieval unchanged. \textsf{ambit} is
@@ -408,8 +408,8 @@ only $0.25\%$ of the pairs any average is taken over. The benchmark corpus used 
 report makes the dilution concrete. It holds $n = 4{,}000$ items at
 $d = 768$, and the last $k = 200$ of them --- five percent --- are
 replaced with near-duplicates of one another, so alike (median pairwise
-cosine $0.929$) that a retrieval system cannot rank them apart (full
-construction in \S\ref{sec:method}). Now follow the arithmetic of the
+cosine $0.929$) that a retrieval system cannot rank them apart.
+\S\ref{sec:method} gives the full construction. Now follow the arithmetic of the
 average, step by step. Five percent of the items yields
 $0.05^2 = 0.25\%$ of the pairs, so $99.75\%$ of the average consists of
 background pairs, which the previous subsection showed sit near
@@ -638,10 +638,9 @@ group pure chance produces at the same corpus size.
 \end{tikzpicture}
 \end{center}
 Gao et al.\ \cite{gao2019} and Ethayarajh \cite{ethayarajh2019}
-established the cone drawn above, and measured its consequence: packing
-every vector into a narrow band raises all pairwise cosines at once, so
-a corpus can look crowded everywhere while nothing is actually harder to
-tell apart. Judging such a corpus against an even spread would report
+established the cone drawn above, and measured its consequence: packing every vector into a narrow band raises all pairwise cosines at
+once. A corpus can then look crowded everywhere while nothing is harder
+to tell apart. Judging such a corpus against an even spread would report
 the cone; judging it against a reference that already contains the cone
 reports only what the cone does not explain --- the third panel. For this reason every readout is calibrated against a reference that contains the cone (an \emph{anisotropy-matched} reference) rather than against the uniform sphere alone. Mu et al.\ \cite{mu2018} showed that subtracting the mean direction and a few dominant components restores much of the usable angular range. That is the linear repair that \textsf{ambit} recommends when its measurements attribute crowding to the cone alone. Cai et al.\
 \cite{cai2021} found genuine cluster structure \emph{inside} the cone,
@@ -722,7 +721,7 @@ therefore uses \emph{Nemotron-Pretraining-Legal-v1} \cite{nemotronlegal},
 a public (CC-BY-4.0) legal corpus published by NVIDIA. From four of its
 thirteen subsets --- the California Code of Regulations, case-law
 summaries, CaseHOLD, and eCFR question--answer pairs --- we take $10^6$
-documents, embed them at $d = 1024$ with the Qwen3-Embedding-0.6B
+documents. We embed them at $d = 1024$ with the Qwen3-Embedding-0.6B
 instruction-tuned encoder \cite{qwen3embedding}, L2-normalize them, and
 store them as sharded Parquet with stable document ids. It supplies what the benchmark cannot: a real anisotropy cone (mean pair
 cosine $+0.236$), and \emph{diffuse} within-subset crowding rather than
@@ -904,8 +903,10 @@ weighting, and batching --- verdicts must come from data the training
 machinery never touched.
   \item \textbf{Control:} the corpus before training, and a
 structure-preservation score against the frozen base.
-  \item \textbf{Measure:} held-out flagged-item collisions and neighbor
-overlap, per schedule.
+  \item \textbf{Measure:} expected collisions among the \emph{flagged}
+items --- the documents whose base-model collision counts mark them as
+most crowded --- measured on the held-out slice, and neighbor overlap,
+per schedule.
 \end{itemize}
 \input{diag_training}
 
@@ -1010,9 +1011,10 @@ them.
 \label{sec:binned}
 % =========================================================================
 
-\textsf{ambit}'s early density views were conventional: hexbin lattices over
-a 2-D projection, voxel grids, radial shells, fixed-$k$ neighbor counts.
-Every one of them was abandoned. Each of these views works by dividing
+Binned density views --- hexbin lattices over a 2-D projection, voxel
+grids, radial shells, fixed-$k$ neighbor counts --- are the standard
+tools for localizing density. \textsf{ambit} uses none of them, and this
+section measures why. Each of these views works by dividing
 the space into cells and counting how many items land in each. The
 trouble is that the cells are a choice --- where their boundaries fall,
 and how large they are --- and that choice changes the counts. Two
@@ -1562,8 +1564,7 @@ persistence with the elder rule (at each merge, the younger component
 dies) \cite{chazal2013,rolle2020}. Each selected pocket reports birth, death, prominence (death minus
 birth: the scale range over which it persists as a separate entity),
 size, and member ids
-(Figure~\ref{fig:tree}). Three implementation findings mattered --- the
-third found by the validation battery itself.
+(Figure~\ref{fig:tree}). Three implementation findings matter.
 \begin{itemize}
 \item \textbf{Elder-rule inversion.} The naive elder rule is wrong for
   this purpose: the tightest pocket is the \emph{eldest} component and
@@ -1601,11 +1602,11 @@ further candidate was suppressed.
 \subsection{What the measurements cost, and what was excluded}
 \label{sec:filters}
 
-All continuous-layer statistics run on the reservoir or the pair sample: the
-curve and its nulls are $O(P \log P)$ in the pair-sample size; the DTM field
-is a blocked Gram top-$k$, $O(n_r^2 d)$ on a capped subsample (seconds on
-CPU); the merge tree is a dense Prim MST on $n_r \le 4{,}096$ rows plus a
-linear condensation pass. Full-corpus second moments stream in one pass.
+All continuous-layer statistics run on the reservoir or the pair
+sample. The curve and its nulls are $O(P \log P)$ in the pair-sample
+size. The DTM field is a blocked Gram top-$k$, $O(n_r^2 d)$ on a capped
+subsample (seconds on CPU). The merge tree is a dense Prim MST on
+$n_r \le 4{,}096$ rows plus a linear condensation pass. Full-corpus second moments stream in one pass.
 
 Candidate metrics were admitted by five filters. They are recorded
 here because they make future proposals cheap to evaluate.
@@ -1915,9 +1916,9 @@ stability theorem into finite-sample error bars by combining it with a
 split-half empirical Wasserstein estimate. At embedding dimension the
 resulting bars are useless, for a structural reason. Two independent halves of the same
 corpus sit about as far apart as the data scale itself ($\approx 1.35$
-on $\mathbb S^{767}$ at $n_r = 2{,}000$), so the certificate comes out at
-$m^{-1/2}\widehat W_2 \approx 13.5$ --- an order of magnitude wider than
-the entire range of the field it is meant to bound. A dimension-free
+on $\mathbb S^{767}$ at $n_r = 2{,}000$). The certificate therefore
+comes out at $m^{-1/2}\widehat W_2 \approx 13.5$, an order of magnitude
+wider than the entire range of the field it is meant to bound. A dimension-free
 certificate would need a different metric carrying its own stability
 theorem, which is an open question rather than an engineering task.
 
@@ -2100,7 +2101,7 @@ reservoir Gram, from $1.8$ to $3.4$\,s over $d = 128$ to $4096$.
 The approximate mode carries one demonstrated hazard. With the planted
 pocket placed in the corpus's \emph{last} rows --- the layout that
 label-sorted shards produce --- the full scan detects it (rank test
-$p = 0.010$, liftoff $0.92$), while approximate scans of the first
+$p = 0.010$, liftoff $0.92$). Approximate scans of the first
 $5{\times}10^4$ to $3{\times}10^5$ rows see a clean corpus
 ($p = 0.18$--$0.45$, no liftoff, mean cosine $\approx 0$). An
 approximate scan's reservoir is only as representative as the row order
@@ -2142,11 +2143,11 @@ $p = 0.005$ with liftoff at $\cos \approx 0.82$: genuine tight-pair
 excess at the near-duplicate scale. The anisotropy-conditioned reference attributes most of that
 discrepancy to the cone itself.
 
-The calibration study corrected one earlier reading. Checking each
-similarity level separately had placed the liftoff at
-$\cos \approx +0.07$, which null calibration later exposed as a false
-alarm at the edge of the bulk. Testing the whole curve at once moves the
-significant excess up to the near-duplicate levels, where it belongs.
+The whole-curve test earns its place here. Reading each similarity
+level separately would put the liftoff at $\cos \approx +0.07$, a false
+alarm at the edge of the bulk of the kind \S\ref{sec:power} quantifies.
+Testing the curve as one object moves the significant excess up to the
+near-duplicate levels, where it belongs.
 
 Operationally the corpus keeps $83\%$ of the ideal noise budget: a
 query may drift to cosine $\approx 0.25$ against its target before a
@@ -2510,10 +2511,10 @@ of them is the objective doing the work by itself. That distinction is
 the section's result, and it follows from the mechanism above rather than
 from a shortfall of capacity or tuning. A crowding measurement can only
 be trained away when the crowding is something training is permitted to
-move; the near-duplicate mass that dominates this corpus is not, and the
-external grid shows the same limit from the other direction, where
-failures caused by composition rather than by crowding are invisible to
-the per-item field (\S\ref{sec:external}). Used to govern --- to select
+move, and the near-duplicate mass that dominates this corpus is not. The
+external grid shows the same limit from the other direction: failures
+caused by composition rather than by crowding are invisible to the
+per-item field (\S\ref{sec:external}). Used to govern --- to select
 the repair, to bound the damage of a supervised objective, to reject a
 round --- the measurements pay for themselves; used as the objective,
 they do not.
@@ -3020,11 +3021,10 @@ converts into an expected error count, and partially repairs. Beyond that benchm
 that later failed at their own queries, in $26$ of $29$ testable
 pairings; the three exceptions are multi-hop questions, where
 composition rather than crowding causes the failure. The measurements
-also chose interventions that held up once the labels were read: a
-deduplication that fixed twelve queries and broke none; penalty terms
-that halved the damage a supervised fine-tune did outside its training
-data; and a veto on a training round that its own falling loss
-endorsed. Each of those governs a decision that someone else's objective would
+also chose interventions that held up once the labels were read. A
+deduplication fixed twelve queries and broke none. Penalty terms halved
+the damage a supervised fine-tune did outside its training data. A veto
+stopped a training round that its own falling loss endorsed. Each of those governs a decision that someone else's objective would
 otherwise make alone. Run as the training objective itself, the same
 measurements left retrieval unchanged. That negative result is stated
 at the same prominence as the successes, because an instrument's
@@ -3075,8 +3075,8 @@ All isotropic-null quantities exploit the closed form for the pair cosine
 of independent uniform directions on $S^{d-1}$,
 $c = 2B - 1$ with $B \sim \mathrm{Beta}\!\left(\tfrac{d-1}{2},
 \tfrac{d-1}{2}\right)$: null pair samples are drawn directly from this
-scalar law, so a $199$-replicate rank envelope requires $199$ scalar-array
-draws rather than $199$ synthetic corpora. The anisotropy-conditioned
+scalar law. A $199$-replicate rank envelope therefore requires $199$
+scalar-array draws rather than $199$ synthetic corpora. The anisotropy-conditioned
 reference uses the rotation invariance of the pair-cosine law under the
 angular central Gaussian --- only the covariance spectrum enters --- so
 reference pairs are generated from a small pool of spectrum-weighted
@@ -3107,10 +3107,10 @@ for this reason.
 \paragraph{Optional acceleration tiers.}
 The core is \textsf{numpy}-only, with the heavy kernels routed through
 multi-threaded BLAS. An optional module provides the same three kernels
---- covariance accumulation, pair cosines, and exact blocked $k$NN --- on
-\textsf{torch} devices (CPU, CUDA, or Apple \textsf{mps}, with automatic
-selection), transferring each chunk to the device as it streams; an
-approximate-neighbor path through FAISS is available where installed.
+--- covariance accumulation, pair cosines, and exact blocked $k$NN --- on \textsf{torch} devices (CPU, CUDA, or Apple \textsf{mps}, with
+automatic selection), transferring each chunk to the device as it
+streams. An approximate-neighbor path through FAISS is available where
+installed.
 These tiers change constants, not asymptotics; every number reported in
 this paper was produced by the \textsf{numpy}-only configuration
 (Appendix~\ref{app:env}).
@@ -3225,9 +3225,10 @@ entry still lists all of its own symbols.
   corpus is examined, $\cos = 0.9$ for instance. ``At every similarity
   level'' means a statistic is read at all of them rather than at one
   chosen cutoff.
-  \item \emph{null model} --- a stated model of the same corpus with no
-  crowding, used as the comparison. Two appear in this report: points
-  spread as evenly as chance allows, and the same with the corpus's cone
+  \item \emph{null model} --- a simulated corpus of the same size and
+  dimension used as the comparison; no real corpus matches it, which is
+  what makes it a yardstick. Two appear in this report: points spread as
+  evenly as chance allows, and the same with the corpus's cone
   reproduced.
   \item \emph{region} (also \emph{cap}) --- a patch of the sphere: every
   direction lying within some angle of a chosen centre.
@@ -3240,6 +3241,9 @@ entry still lists all of its own symbols.
   \item \emph{guard terms} --- extra penalty terms built from the
   measurements and added to someone else's training objective, rather
   than replacing it.
+  \item \emph{flagged cohort} --- the documents whose base-model
+  collision counts mark them as most crowded (the top $1\%$), tracked
+  across training rounds to see whether an intervention helped them.
   \item \emph{cell} --- one corpus embedded by one encoder: the unit of
   the external validation suite.
 \end{itemize}
