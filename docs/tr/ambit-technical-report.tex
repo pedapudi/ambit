@@ -45,8 +45,7 @@
 \newcommand{\dtm}{\mathrm{DTM}}
 \newcommand{\sstar}{\sigma^{*}}
 
-\title{\textbf{Measurement of Occupancy and Crowding\\
-in Embedding Spaces}}
+\title{\textbf{Measurement of Crowding\\ in Embedding Spaces}}
 \author{Sunil Pedapudi\thanks{\TRaffiliation. Code and reports:
 \url{\TRurl}.}}
 \date{July 2026}
@@ -80,9 +79,9 @@ embeddings and calibrating against a mathematically ideal distribution of
 points to detect tightly-packed clusters. It then translates those
 distance measurements into a statement about retrieval. Because a query
 never lands exactly on its target, when two documents sit close together a
-query aimed at one can return the other --- a \emph{collision}. From the
-distances between documents, \textsf{ambit} computes how many collisions
-to expect at any level of query imprecision. The largest imprecision a
+query aimed at one can return the other --- a \emph{collision}. Working only from the distances between documents, with no labels or
+example queries, \textsf{ambit} computes how many collisions to expect
+at any level of query imprecision. The largest imprecision a
 corpus absorbs before collisions begin is its \emph{resolution bandwidth}
 $\sstar$.
 
@@ -91,14 +90,18 @@ properties of embeddings: mean cosine, isotropy, and hubness. On synthetic
 corpora built with no crowding, \textsf{ambit} has low false positive
 rate. When near-duplicate groups are inserted into a corpus,
 \textsf{ambit} recovers them in full; mean cosine, isotropy, and hubness
-miss them. \textsf{ambit} was also applied to embeddings of five public
-collections embedded using seven encoders. \textsf{ambit}'s measurements
-identified the documents that retrieval would fail on, and the predictions
-were verified to be true in a vector search evaluation.
+miss them. \textsf{ambit} was also applied to five public collections embedded by
+seven encoders. Its per-document measurements, computed before any
+relevance labels were seen, predicted which documents retrieval would go
+on to fail, and the predictions held on every collection except
+multi-hop question answering --- where failure comes from needing a
+second document rather than from crowding.
 
-Moreover, using \textsf{ambit} measurements to govern supervised
-fine-tuning of an encoder to reduce crowding demonstrated improved recall
-over a 1M document sample dataset.
+On a million-document legal corpus, the repairs \textsf{ambit} chose
+--- merging the near-duplicate documents it names --- improved retrieval
+without harming any query. Added as penalty terms to a supervised
+fine-tune, the same measurements halved the damage that fine-tune caused
+outside its training data, at no cost to its gains.
 \end{abstract}
 
 \clearpage
@@ -209,10 +212,10 @@ the data, chose the answer. \S\ref{sec:binned} quantifies this on the
 tool's own displays.}
 \label{fig:introwhy}
 \end{figure} This report describes \textsf{ambit}, an
-instrument built to measure crowding and resolution without relying on
-global averages or on a discretization. There are three design principles
-shaping \textsf{ambit}. \textsf{ambit} measures occupancy at every
-similarity level rather than at one chosen cutoff to avoid discretization
+instrument built to measure crowding without relying on global
+averages or on a discretization. There are three design principles
+shaping \textsf{ambit}. \textsf{ambit} measures crowding at every similarity level rather than
+at one chosen cutoff to avoid discretization
 (\S\ref{sec:binned}). It reads each measurement against a model of what
 the corpus would look like with no crowding --- a \emph{null model} --- so
 that the mild concentration that encoders are trained to produce is not
@@ -226,7 +229,7 @@ contributions are defined as what it adds beyond the prior work it builds
 on (\S\ref{sec:related}):
 
 \begin{enumerate}
-\item \textbf{A calibrated instrument for crowding and resolution}
+\item \textbf{A calibrated instrument for measuring crowding}
   (\S\ref{sec:continuous}, \S\ref{sec:instrument}). A point-pattern
   statistical toolkit applied to embedding spaces. It
   returns four readouts:
@@ -244,14 +247,15 @@ on (\S\ref{sec:related}):
   crowding. One such reference reproduces the narrow angular region into
   which learned encoders pack every document, so that this benign effect
   is not counted as a defect.
-\item \textbf{Retrieval semantics for occupancy measurements}
+\item \textbf{Retrieval semantics for crowding measurements}
   (\S\ref{sec:semantics}). An exact conversion from the distance between
   two documents to the chance that an imprecise query aimed at one returns
   the other. Summed over a corpus it gives the resolution bandwidth
   $\sstar$: how imprecise a query may be before the corpus starts
   returning the wrong document. The same conversion gives the temperature
   parameter of the widely used uniformity loss \cite{wang2020} a concrete
-  meaning. This bridge from occupancy statistics to retrieval error counts
+  meaning. This bridge from crowding statistics to retrieval error
+counts
   is, to our knowledge, new.
 \item \textbf{Blind evidence that geometry predicts retrieval failure}
 (\S\ref{sec:external}). We measured five public collections under seven
@@ -304,7 +308,7 @@ Embeddings compared by cosine live on the unit sphere: each item is a
 retrieval neighborhood --- ``everything scoring above $0.8$ against this
 query'' --- is the set of directions within a fixed angle of the query,
 which is a patch of the sphere's surface bounded by a circle (a
-\emph{spherical cap}; Figure~\ref{fig:cap}). Every occupancy question then
+\emph{spherical cap}; Figure~\ref{fig:cap}). Every question about how the corpus fills the space then
 becomes a statement about caps. A corpus is concentrated when some caps
 hold more items than their share of the sphere's area predicts. An item is
 crowded when even a small cap around it already contains other items. And
@@ -1054,7 +1058,7 @@ always knows which one is in front of them.
 \end{itemize}
 
 % =========================================================================
-\section{The Fragility of Binned Occupancy}
+\section{The Fragility of Binned Views}
 \label{sec:binned}
 % =========================================================================
 
@@ -1193,7 +1197,7 @@ commit to no scale of their own and whose guarantees do not weaken as the
 dimension grows.
 
 % =========================================================================
-\section{Continuous Occupancy}
+\section{The Measurement Layer}
 \label{sec:continuous}
 % =========================================================================
 
@@ -1684,7 +1688,7 @@ cell aggregates (naming); and neural-collapse metrics \cite{papyan2020}
 \label{sec:semantics}
 % =========================================================================
 
-Occupancy statistics say how evenly a corpus covers the sphere. A
+The measurements so far say how evenly a corpus covers the sphere. A
 practitioner needs something else: how imprecise a query may be before
 the wrong document wins. An exact formula connects the two, and
 simulation confirms it.
@@ -2459,7 +2463,7 @@ Three findings follow from Table~\ref{tab:loop}.
 The first LoRA round compared the tuned model against stored embeddings of
 full documents while the trainer embedded token-truncated views. The
 gradient therefore rewarded reproducing full-document embeddings from
-truncated text. The model was learning to imitate longer inputs, not to
+truncated text. The model was learning to imitate longer inputs rather than to
 separate crowded documents. Training losses fell throughout, while every
 held-out readout degraded: $\sstar$ down, cohort collisions up $17\%$, the
 pocket enlarged. The licensing rule rejected the round from the held-out
@@ -3523,7 +3527,7 @@ x_i - x_j \rVert$.}
   Stolarsky's theorem says this total --- which looks uncomputable ---
   equals a constant minus the average distance between pairs of points.
   \item \textbf{Why it matters:} It is the exact completion of what binned
-  occupancy displays approximate: \emph{every} lattice at \emph{every}
+  binned displays approximate: \emph{every} lattice at \emph{every}
   scale simultaneously, with no lattice to choose. A corpus that
   under-spreads (crowds anywhere, at any scale) has a smaller average
   pairwise distance.
