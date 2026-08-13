@@ -341,3 +341,46 @@ a2ee734 Validation plan: tier-1 results and verdicts; defaults frozen
 975eee8 Experiments: tier-1 sensitivity runner (E1a-e, E4c, E5)
 c8a3738 Validation plan: internal battery + external methodology
 ```
+
+## 2026-08-13 — Conditioned-reference defect found by external review, fixed, audited
+
+An external review observed that the anisotropy-conditioned reference
+(the ACG, sampled from the centered covariance spectrum) is antipodally
+symmetric, so its expected pair cosine is zero and it cannot reproduce a
+mean-direction cone. Verified by direct experiment: against a synthetic
+cone matched to the legal corpus (mean pair cosine +0.25), the centered
+ACG recovers under 1% of the data's pair mass at cos 0.2 (K = 0.001
+against 0.810). On the real corpus the published reference curve was
+confirmed to be the centered ACG and sat 1-2 orders of magnitude below
+the data throughout — the figure caption's "tracks through
+mid-similarities" was never true of the plotted curves.
+
+Blast radius (verified from the consumer map): the ACG fed only the
+comparison curve in the crowding-curve figure and the attribution prose.
+The rank envelope, liftoff, Stolarsky z, DTM, pockets, and sigma-star
+all use the analytic uniform null and are unaffected; no grid readout
+touches the ACG.
+
+Fix: `conditioned_pair_cos` (occupancy.py) — the corpus's own Gaussian
+fit, normalized: x = (mu + Sigma^1/2 g)/||.||, the projected normal.
+Audit (experiments/null_audit.py):
+- tracking: max K-error 0.006–0.029 on mean cones (centered ACG:
+  0.40–1.00); ties on zero-mean ellipses; two-cone mixture only partly
+  absorbed (0.109) — multi-cluster structure still shows as excess.
+- composite-null calibration: even with (mu, Sigma) refitted inside
+  every bootstrap replicate, the fitted reference's tail test
+  false-alarms at 15% for nominal 5%. The reference is therefore
+  descriptive only; significance stays with the uniform-null envelope.
+- absorption: a planted pocket of up to 20% of the corpus leaves the
+  fitted reference's near-duplicate tail at exactly zero; detection of
+  5%+ pockets is 100%.
+
+On the legal corpus the corrected reference matches the mean pair cosine
+to four decimals (+0.2354 vs +0.2356), tracks K(t) through cos 0.3, and
+the data's excess beyond it begins near cos 0.4 — earlier than the old
+prose implied — growing to orders of magnitude in the near-duplicate
+tail. TR updated: figure curve regenerated, reference renamed
+cone-conditioned, roles separated (description vs significance), and the
+zero-mean ACG's limitation recorded in §6. Four calibration tests added
+(tests/test_conditioned_null.py), including the one that would have
+caught the defect.

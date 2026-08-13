@@ -49,7 +49,8 @@ def fig_res_kcurve(ctx):
         cos, dim, grid=grid[::-1], reps=99, seed=0)
     env_max = env_max[::-1]
     _, env_mean = occ.null_envelope(dim, n_pairs, grid, reps=19, seed=0)
-    acg_cos = occ.acg_pair_cos(ctx.eigs, min(n_pairs, 100_000), seed=0)
+    acg_cos = occ.conditioned_pair_cos(ctx.scan.mean, ctx.scan.cov,
+                                       min(n_pairs, 100_000), seed=0)
     k_acg = occ.exceedance(acg_cos, grid)
 
     s_scalar, s_z = occ.stolarsky_z(cos, dim, reps=24, seed=0)

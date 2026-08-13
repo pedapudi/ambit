@@ -582,9 +582,9 @@ clustering beyond it is reported.
 
 The same repair applies on the sphere. A learned encoder does not spread
 documents over the whole sphere; it packs them into a narrow region of
-it, called a cone. That cone is \textsf{ambit}'s uneven background. The
-reference of \S\ref{sec:kcurve} models it with a distribution from
-directional statistics, the angular central Gaussian, and
+it, called a cone. That cone is \textsf{ambit}'s uneven background. The reference of \S\ref{sec:kcurve} models it with the corpus's own
+Gaussian fit, normalized to the sphere (the projected normal
+distribution of directional statistics \cite{mardia2000}), and
 \textsf{ambit} then reports only the clumping that the cone does not
 explain.
 
@@ -680,13 +680,13 @@ apart. Judging such a corpus against an even spread would report the cone;
 judging it against a reference that already contains the cone reports only
 what the cone does not explain --- the third panel. For this reason every
 readout is calibrated against a reference that contains the cone (an
-\emph{anisotropy-matched} reference) rather than against the uniform
+\emph{cone-conditioned} reference) rather than against the uniform
 sphere alone. Mu et al.\ \cite{mu2018} showed that subtracting the mean
 direction and a few dominant components restores much of the usable
 angular range. That is the linear repair that \textsf{ambit} recommends
 when its measurements attribute crowding to the cone alone. Cai et al.\
 \cite{cai2021} found genuine cluster structure \emph{inside} the cone,
-which is what the anisotropy-matched reference is designed to isolate.
+which is what the cone-conditioned reference is designed to isolate.
 
 \paragraph{What the embedding literature measures instead.}
 Effective rank \cite{roy2007} and IsoScore \cite{rudman2022} compress the
@@ -1272,24 +1272,41 @@ alone over-fires $\approx 4\times$ nominal. The division of labor is
 therefore strict: the envelope locates the scale, and the rank $p$ decides
 significance.
 
-\emph{(ii) The anisotropy-conditioned null.} Real corpora are cone-shaped
-for benign reasons, so judging them against an even spread alone reports a
-defect where there is none. The second reference is the \emph{angular
-central Gaussian} (ACG) of directional statistics \cite{tyler1987}, built
-from the corpus's own covariance spectrum: $x = \Sigma^{1/2} g / \lVert
-\Sigma^{1/2} g\rVert$, which rotation invariance lets us sample from the
-eigenvalues alone. It reproduces the corpus's cone without its clustering,
-so any height of the data curve above it is crowding that the cone cannot
-explain.
+\emph{(ii) The cone-conditioned reference.} Real corpora are cone-shaped
+for benign reasons, so judging them against an even spread alone reports
+a defect where there is none. The second reference is therefore the
+corpus's own Gaussian fit, normalized to the sphere:
+$x = (\mu + \Sigma^{1/2} g)/\lVert \mu + \Sigma^{1/2} g\rVert$, with
+$\mu$ the corpus mean and $\Sigma$ its covariance --- the projected
+normal distribution of directional statistics \cite{mardia2000}. It
+reproduces the cone's direction and the corpus's elliptical spread, but
+none of its clustering, so height of the data curve above it is crowding
+that neither explains. A calibration audit fixed this form: the
+zero-mean spectrum-only variant (the angular central Gaussian
+\cite{tyler1987}) is symmetric under sign flips, so it models elliptical
+spread but reproduces none of a mean-direction cone --- against a
+synthetic cone matching this corpus's concentration it recovers under
+$1\%$ of the pair mass that the fit recovers.
+
+The reference's role is descriptive: it says what the cone accounts for.
+Significance is decided only against the uniform-null envelope above,
+because a reference fitted to the corpus under test carries no calibrated
+tail test --- even with the fit re-estimated inside every bootstrap
+replicate, its false-alarm rate measures three times nominal. The fitted
+reference also does not absorb defects: a planted pocket of up to $20\%$
+of the corpus leaves the reference's near-duplicate tail at zero.
 
 Figure~\ref{fig:kcurve} shows the curve on the real corpus
 (Nemotron-Legal, \S\ref{sec:method}): the global test rejects at the
 minimum attainable $p = 1/200$ with liftoff at $\cos \approx 0.81$.
-Through mid-similarities the data track the anisotropy-conditioned
-reference, so that part of the excess over uniformity is the cone itself,
-benign and expected of a learned encoder. Above $\cos \approx 0.8$ the
-data rise above both references: genuine tight-pair structure at the
-near-duplicate scale, which \S\ref{sec:dtm} attributes to named documents.
+Through $\cos \approx 0.3$ the data track the cone-conditioned
+reference, so that part of the excess over uniformity is the cone
+itself, benign and expected of a learned encoder. From
+$\cos \approx 0.4$ the data rise increasingly above the reference ---
+clumping beyond the corpus's overall shape, at the similarity levels
+where topics live --- and above $\cos \approx 0.8$ they stand orders of
+magnitude above it: tight-pair structure at the near-duplicate scale,
+which \S\ref{sec:dtm} attributes to named documents.
 On the traced benchmark the same test rejects at $p = 1/200$ with liftoff
 $\cos \approx 0.93$ and a shoulder of excess mass exactly matching the
 planted pocket's pair share ($2.4{\times}10^{-3}$) --- the counterpart
@@ -1313,8 +1330,8 @@ its paraphrase band. A single scalar would average that structure away.
   axis lines=left]
 \addplot[faint, thick, dashed] coordinates {(0.0000,-0.2988) (0.0112,-0.4405) (0.0225,-0.6216) (0.0337,-0.8466) (0.0449,-1.1165) (0.0562,-1.4301) (0.0674,-1.7913) (0.0786,-2.2017) (0.0898,-2.6526) (0.1011,-3.1220) (0.1123,-3.6108) (0.1235,-4.0457) (0.1348,-4.6989) (0.1460,-5.3010) (0.1572,-5.3010) (0.1685,-5.6020) (0.1797,-5.6020) (0.1909,-5.6020) (0.2021,-5.6020) (0.2134,-5.6020) (0.2246,-5.6020) (0.2358,-5.6020) (0.2471,-5.6020) (0.2583,-5.6020) (0.2695,-5.6020) (0.2808,-5.6020) (0.2920,-5.6020) (0.3032,-5.6020) (0.3144,-5.6020) (0.3257,-5.6020) (0.3369,-5.6020) (0.3481,-5.6020) (0.3594,-5.6020) (0.3706,-5.6020) (0.3818,-5.6020) (0.3931,-5.6020) (0.4043,-5.6020) (0.4155,-5.6020) (0.4268,-5.6020) (0.4380,-5.6020) (0.4492,-5.6020) (0.4604,-5.6020) (0.4717,-5.6020) (0.4829,-5.6020) (0.4941,-5.6020) (0.5054,-5.6020) (0.5166,-5.6020) (0.5278,-5.6020) (0.5391,-5.6020) (0.5503,-5.6020) (0.5615,-5.6020) (0.5727,-5.6020) (0.5840,-5.6020) (0.5952,-5.6020) (0.6064,-5.6020) (0.6177,-5.6020) (0.6289,-5.6020) (0.6401,-5.6020) (0.6514,-5.6020) (0.6626,-5.6020) (0.6738,-5.6020) (0.6851,-5.6020) (0.6963,-5.6020) (0.7075,-5.6020) (0.7187,-5.6020) (0.7300,-5.6020) (0.7412,-5.6020) (0.7524,-5.6020) (0.7637,-5.6020) (0.7749,-5.6020) (0.7861,-5.6020) (0.7974,-5.6020) (0.8086,-5.6020) (0.8198,-5.6020) (0.8310,-5.6020) (0.8423,-5.6020) (0.8535,-5.6020) (0.8647,-5.6020) (0.8760,-5.6020) (0.8872,-5.6020) (0.8984,-5.6020) (0.9097,-5.6020) (0.9209,-5.6020) (0.9321,-5.6020) (0.9433,-5.6020) (0.9546,-5.6020) (0.9658,-5.6020) (0.9770,-5.6020) (0.9883,-5.6020) (0.9995,-5.6020)};
 \addlegendentry{$\alpha$-critical global envelope (rank test, 199 nulls)}
-\addplot[good, thick] coordinates {(0.0000,-0.3007) (0.0112,-0.3454) (0.0225,-0.3935) (0.0337,-0.4460) (0.0449,-0.5031) (0.0562,-0.5647) (0.0674,-0.6292) (0.0786,-0.6983) (0.0898,-0.7716) (0.1011,-0.8475) (0.1123,-0.9284) (0.1235,-1.0127) (0.1348,-1.0999) (0.1460,-1.1911) (0.1572,-1.2847) (0.1685,-1.3771) (0.1797,-1.4741) (0.1909,-1.5704) (0.2021,-1.6698) (0.2134,-1.7754) (0.2246,-1.8710) (0.2358,-1.9799) (0.2471,-2.0933) (0.2583,-2.2005) (0.2695,-2.3009) (0.2808,-2.4161) (0.2920,-2.5315) (0.3032,-2.6506) (0.3144,-2.7618) (0.3257,-2.8859) (0.3369,-3.0199) (0.3481,-3.1336) (0.3594,-3.2365) (0.3706,-3.4088) (0.3818,-3.5685) (0.3931,-3.7211) (0.4043,-3.9207) (0.4155,-4.1248) (0.4268,-4.2595) (0.4380,-4.4558) (0.4492,-4.8238) (0.4604,-4.8238) (0.4717,-5.6020) (0.4829,-5.6020) (0.4941,-5.6020) (0.5054,-5.6020) (0.5166,-5.6020) (0.5278,-5.6020) (0.5391,-5.6020) (0.5503,-5.6020) (0.5615,-5.6020) (0.5727,-5.6020) (0.5840,-5.6020) (0.5952,-5.6020) (0.6064,-5.6020) (0.6177,-5.6020) (0.6289,-5.6020) (0.6401,-5.6020) (0.6514,-5.6020) (0.6626,-5.6020) (0.6738,-5.6020) (0.6851,-5.6020) (0.6963,-5.6020) (0.7075,-5.6020) (0.7187,-5.6020) (0.7300,-5.6020) (0.7412,-5.6020) (0.7524,-5.6020) (0.7637,-5.6020) (0.7749,-5.6020) (0.7861,-5.6020) (0.7974,-5.6020) (0.8086,-5.6020) (0.8198,-5.6020) (0.8310,-5.6020) (0.8423,-5.6020) (0.8535,-5.6020) (0.8647,-5.6020) (0.8760,-5.6020) (0.8872,-5.6020) (0.8984,-5.6020) (0.9097,-5.6020) (0.9209,-5.6020) (0.9321,-5.6020) (0.9433,-5.6020) (0.9546,-5.6020) (0.9658,-5.6020) (0.9770,-5.6020) (0.9883,-5.6020) (0.9995,-5.6020)};
-\addlegendentry{anisotropy-conditioned (ACG) reference}
+\addplot[good, thick] coordinates {(0.0000,-0.003) (0.0127,-0.004) (0.0253,-0.005) (0.0380,-0.007) (0.0506,-0.009) (0.0633,-0.012) (0.0759,-0.016) (0.0886,-0.020) (0.1013,-0.026) (0.1139,-0.033) (0.1266,-0.042) (0.1392,-0.054) (0.1519,-0.068) (0.1646,-0.087) (0.1772,-0.109) (0.1899,-0.135) (0.2025,-0.167) (0.2152,-0.205) (0.2278,-0.249) (0.2405,-0.300) (0.2532,-0.360) (0.2658,-0.428) (0.2785,-0.506) (0.2911,-0.594) (0.3038,-0.690) (0.3165,-0.798) (0.3291,-0.915) (0.3418,-1.043) (0.3544,-1.181) (0.3671,-1.326) (0.3797,-1.482) (0.3924,-1.648) (0.4051,-1.821) (0.4177,-2.007) (0.4304,-2.198) (0.4430,-2.396) (0.4557,-2.606) (0.4684,-2.819) (0.4810,-3.033) (0.4937,-3.280) (0.5063,-3.495) (0.5190,-3.673) (0.5316,-3.959) (0.5443,-4.280) (0.5570,-4.523) (0.5696,-4.699) (0.5823,-5.125) (0.5949,-5.301) (0.6076,-5.602) (0.6203,-5.602) (0.6329,-5.602) (0.6456,-5.602) (0.6582,-5.602) (0.6709,-5.602) (0.6835,-5.602) (0.6962,-5.602) (0.7089,-5.602) (0.7215,-5.602) (0.7342,-5.602) (0.7468,-5.602) (0.7595,-5.602) (0.7722,-5.602) (0.7848,-5.602) (0.7975,-5.602) (0.8101,-5.602) (0.8228,-5.602) (0.8354,-5.602) (0.8481,-5.602) (0.8608,-5.602) (0.8734,-5.602) (0.8861,-5.602) (0.8987,-5.602) (0.9114,-5.602) (0.9241,-5.602) (0.9367,-5.602) (0.9494,-5.602) (0.9620,-5.602) (0.9747,-5.602) (0.9873,-5.602) (1.0000,-5.602)};
+\addlegendentry{cone-conditioned reference (Gaussian fit)}
 \addplot[acc, very thick] coordinates {(0.0000,-0.0002) (0.0112,-0.0004) (0.0225,-0.0008) (0.0337,-0.0014) (0.0449,-0.0025) (0.0562,-0.0042) (0.0674,-0.0069) (0.0786,-0.0107) (0.0898,-0.0160) (0.1011,-0.0230) (0.1123,-0.0322) (0.1235,-0.0441) (0.1348,-0.0585) (0.1460,-0.0753) (0.1572,-0.0953) (0.1685,-0.1185) (0.1797,-0.1447) (0.1909,-0.1736) (0.2021,-0.2051) (0.2134,-0.2405) (0.2246,-0.2787) (0.2358,-0.3195) (0.2471,-0.3642) (0.2583,-0.4121) (0.2695,-0.4634) (0.2808,-0.5196) (0.2920,-0.5795) (0.3032,-0.6439) (0.3144,-0.7124) (0.3257,-0.7863) (0.3369,-0.8637) (0.3481,-0.9466) (0.3594,-1.0371) (0.3706,-1.1287) (0.3818,-1.2235) (0.3931,-1.3243) (0.4043,-1.4307) (0.4155,-1.5373) (0.4268,-1.6546) (0.4380,-1.7704) (0.4492,-1.8902) (0.4604,-2.0222) (0.4717,-2.1611) (0.4829,-2.2924) (0.4941,-2.4219) (0.5054,-2.5559) (0.5166,-2.6914) (0.5278,-2.8508) (0.5391,-2.9665) (0.5503,-3.1079) (0.5615,-3.2518) (0.5727,-3.4034) (0.5840,-3.5376) (0.5952,-3.6778) (0.6064,-3.7569) (0.6177,-3.8538) (0.6289,-3.9208) (0.6401,-3.9788) (0.6514,-4.0969) (0.6626,-4.2218) (0.6738,-4.3468) (0.6851,-4.4559) (0.6963,-4.5229) (0.7075,-4.6989) (0.7187,-4.6989) (0.7300,-4.8239) (0.7412,-4.8239) (0.7524,-4.8239) (0.7637,-5.0000) (0.7749,-5.3010) (0.7861,-5.3010) (0.7974,-5.3010) (0.8086,-5.3010) (0.8198,-5.6020) (0.8310,-5.6020) (0.8423,-5.6020) (0.8535,-5.6020) (0.8647,-5.6020) (0.8760,-5.6020) (0.8872,-5.6020) (0.8984,-5.6020) (0.9097,-5.6020) (0.9209,-5.6020) (0.9321,-5.6020) (0.9433,-5.6020) (0.9546,-5.6020) (0.9658,-5.6020) (0.9770,-5.6020) (0.9883,-5.6020) (0.9995,-5.6020)};
 \addlegendentry{Nemotron-Legal ($10^6$ docs, $d=1024$)}
 \draw[bad, dashed, thick] (axis cs:0.809,-5.8) -- (axis cs:0.809,-0.1)
@@ -1348,12 +1365,13 @@ its paraphrase band. A single scalar would average that structure away.
 \addlegendentry{HotpotQA}
 \end{axis}
 \end{tikzpicture}
-\caption{The crowding curve on Nemotron-Legal
-\cite{nemotronlegal}. Top: the data track the anisotropy-matched
-reference through mid-similarities, then rise above both references
-past $\cos \approx 0.8$, where the global test rejects at
-$p = 1/200$. Bottom: the same curve for six corpora under one encoder,
-each with its own shape.}
+\caption{The crowding curve on Nemotron-Legal \cite{nemotronlegal}.
+Top: the data track the cone-conditioned reference through
+$\cos \approx 0.3$, rise increasingly above it from
+$\cos \approx 0.4$, and stand orders of magnitude above it at the
+near-duplicate scale; the global test against the uniform envelope
+rejects at $p = 1/200$ with liftoff at $\cos \approx 0.8$. Bottom: the
+same curve for six corpora under one encoder, each with its own shape.}
 \label{fig:kcurve}
 \end{figure}
 
@@ -2217,9 +2235,10 @@ pair cosine $+0.236$, IsoScore $0.090$), yet it still uses most of its
 dimensions: effective rank $728$ of $1024$. Its occupancy discrepancy sits
 at $z = -4{,}211$, and the whole-curve rank test rejects uniformity at the
 minimum attainable $p = 0.005$ with liftoff at $\cos \approx 0.82$:
-genuine tight-pair excess at the near-duplicate scale. The
-anisotropy-conditioned reference attributes most of that discrepancy to
-the cone itself.
+genuine tight-pair excess at the near-duplicate scale. The cone-conditioned reference reproduces the corpus's mean pair
+cosine almost exactly ($+0.235$ against $+0.236$), so the bulk of that
+discrepancy is the cone; the excess beyond the fitted reference begins
+near $\cos \approx 0.4$ and grows into the near-duplicate tail.
 
 The whole-curve test earns its place here. Reading each similarity
 level separately would put the liftoff at $\cos \approx +0.07$, a false
@@ -3167,11 +3186,10 @@ of independent uniform directions on $S^{d-1}$, $c = 2B - 1$ with $B \sim
 \mathrm{Beta}\!\left(\tfrac{d-1}{2}, \tfrac{d-1}{2}\right)$: null pair
 samples are drawn directly from this scalar law. A $199$-replicate rank
 envelope therefore requires $199$ scalar-array draws rather than $199$
-synthetic corpora. The anisotropy-conditioned reference uses the rotation
-invariance of the pair-cosine law under the angular central Gaussian ---
-only the covariance spectrum enters --- so reference pairs are generated
-from a small pool of spectrum-weighted Gaussian directions with no
-eigenvector computation. The Gaussian confusion law is evaluated with a
+synthetic corpora. The cone-conditioned reference samples the corpus's fitted Gaussian
+(mean plus covariance), which requires one $d \times d$
+eigendecomposition, computed once; reference pairs are then drawn from a
+small pool of normalized samples. The Gaussian confusion law is evaluated with a
 vectorized rational approximation to $\operatorname{erf}$ (absolute error
 below $1.5\times10^{-7}$), which keeps the core free of dependencies
 beyond \textsf{numpy}.
@@ -3474,13 +3492,15 @@ typical cosine $\approx 1/\sqrt d$.}
   \end{itemize}
 \end{itemize}
 
-\paragraph{The anisotropy-matched reference (ACG): $x = \sqrt{\lambda}
-\odot g \,/\, \lVert \sqrt{\lambda} \odot g \rVert$.}
+\paragraph{The cone-conditioned reference: $x = (\mu + \Sigma^{1/2}
+g)\,/\,\lVert \mu + \Sigma^{1/2} g \rVert$.}
 \begin{itemize}
   \item \textbf{What it says:} A second reference corpus that copies the
-  real corpus's overall \emph{shape} --- its elongation along some
-  directions and flattening along others --- but contains no clustering
-  whatsoever.
+  real corpus's mean direction and its overall \emph{shape} --- its
+  elongation along some directions and flattening along others --- but
+  contains no clustering whatsoever. (A zero-mean variant, the angular
+  central Gaussian, copies only the shape; it cannot carry the mean
+  direction, which is most of a real cone.)
   \item \textbf{Why it matters:} Learned embeddings almost always occupy a
   narrow cone (the ``cone effect''), which inflates all cosines benignly.
   Comparing the data against this reference, instead of against the
@@ -4000,6 +4020,9 @@ on the sphere. \emph{Spatial Statistics} 10, 2014.
 \bibitem{baddeley2000} A.~J.~Baddeley, J.~M{\o}ller, R.~Waagepetersen.
 Non- and semi-parametric estimation of interaction in inhomogeneous point
 patterns. \emph{Statistica Neerlandica} 54(3), 2000.
+
+\bibitem{mardia2000} K.~V.~Mardia, P.~E.~Jupp. \emph{Directional
+Statistics}. Wiley, 2000.
 
 \bibitem{tyler1987} D.~E.~Tyler. Statistical analysis for the angular
 central Gaussian distribution on the sphere. \emph{Biometrika} 74(3),

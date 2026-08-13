@@ -63,10 +63,12 @@ def null_pair_cos(dim: int, n_pairs: int, seed: int = 0) -> np.ndarray:
 
 def acg_pair_cos(eigs, n_pairs: int, seed: int = 0, m: int = 4096) -> np.ndarray:
     """Pair cosines under the **angular central Gaussian** with the given covariance
-    spectrum — normalize(√λ ⊙ g). This is the anisotropy-conditioned reference: it
-    reproduces the corpus's second-moment cone but none of its clustering, so
-    (data − ACG) isolates crowding *beyond* the cone. Only the spectrum matters (the
-    pair-cosine law is rotation invariant), so no eigenvectors are needed."""
+    spectrum — normalize(√λ ⊙ g). Models zero-mean *elliptical* anisotropy only: the
+    ACG is antipodally symmetric, so its expected pair cosine is zero and it CANNOT
+    reproduce a mean-direction cone (the usual "embedding cone", whose pair cosines
+    are one-sidedly positive). For a cone-matched reference use
+    `conditioned_pair_cos`, which is mean-aware. Kept for zero-mean anisotropy
+    modeling and for comparison against the conditioned reference."""
     lam = np.clip(np.asarray(eigs, np.float64), 0.0, None)
     lam = lam[lam > 0]
     if lam.size == 0:
@@ -74,6 +76,34 @@ def acg_pair_cos(eigs, n_pairs: int, seed: int = 0, m: int = 4096) -> np.ndarray
     rng = np.random.default_rng(seed)
     m = int(min(m, max(64, n_pairs)))
     X = rng.standard_normal((m, lam.size)) * np.sqrt(lam)[None, :]
+    X /= np.maximum(np.linalg.norm(X, axis=1, keepdims=True), 1e-12)
+    i = rng.integers(0, m, n_pairs)
+    j = rng.integers(0, m, n_pairs)
+    keep = i != j
+    return np.einsum("ij,ij->i", X[i[keep]], X[j[keep]])
+
+
+def conditioned_pair_cos(mean, cov, n_pairs: int, seed: int = 0,
+                         m: int = 4096) -> np.ndarray:
+    """Pair cosines under the corpus's own Gaussian fit — normalize(μ + Σ^{1/2} g),
+    with μ the corpus mean vector and Σ its centered covariance (both computed by
+    the streaming scan). This is the mean-aware anisotropy-conditioned reference:
+    it reproduces the mean-direction cone *and* the elliptical spread of the
+    corpus, but none of its clustering, so (data − reference) isolates crowding
+    beyond both. Verified against synthetic mean cones to track K(t) within a few
+    percent where the centered ACG reproduces essentially nothing of the cone.
+
+    Composite-null caveat: μ and Σ are fitted to the corpus under test. Any
+    calibrated tail test against this reference must refit (μ, Σ) inside each
+    null replicate (parametric bootstrap); see experiments/null_audit.py."""
+    mean = np.asarray(mean, np.float64)
+    cov = np.asarray(cov, np.float64)
+    rng = np.random.default_rng(seed)
+    w, V = np.linalg.eigh(cov)
+    w = np.clip(w, 0.0, None)
+    m = int(min(m, max(64, n_pairs)))
+    G = rng.standard_normal((m, w.size))
+    X = mean[None, :] + (G * np.sqrt(w)[None, :]) @ V.T
     X /= np.maximum(np.linalg.norm(X, axis=1, keepdims=True), 1e-12)
     i = rng.integers(0, m, n_pairs)
     j = rng.integers(0, m, n_pairs)
