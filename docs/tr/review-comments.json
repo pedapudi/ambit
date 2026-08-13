@@ -220,6 +220,17 @@
   "resolved": "2026-08-09 21:37"
  },
  {
+  "id": "c1786589451581",
+  "page": 2,
+  "x": 0.3508888922797309,
+  "y": 0.6115737730896762,
+  "text": "\"at every similarity\" is used but it needs to be defined. what does that actually mean?",
+  "anchor": "ambit measures crowding at every similarity level rather than at one chosen cutoff to avoid",
+  "status": "done",
+  "created": "2026-08-12 19:50",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
   "id": "c1786333564941",
   "page": 2,
   "x": 0.42740736219618053,
@@ -286,6 +297,17 @@
   "resolved": "2026-08-09 21:37"
  },
  {
+  "id": "c1786589504379",
+  "page": 3,
+  "x": 0.33311111450195313,
+  "y": 0.5122348833058403,
+  "text": "i don't understand what this means",
+  "anchor": "reference reproduces the narrow angular region into which learned encoders pack every",
+  "status": "done",
+  "created": "2026-08-12 19:51",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
   "id": "c1786333802332",
   "page": 3,
   "x": 0.16962958441840278,
@@ -295,6 +317,28 @@
   "status": "done",
   "created": "2026-08-09 20:50",
   "resolved": "2026-08-09 21:37"
+ },
+ {
+  "id": "c1786589547415",
+  "page": 3,
+  "x": 0.47311111450195314,
+  "y": 0.623851601623817,
+  "text": "what?",
+  "anchor": "same conversion gives the temperature parameter of the widely used uniformity loss [7]",
+  "status": "done",
+  "created": "2026-08-12 19:52",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786589589730",
+  "page": 3,
+  "x": 0.19644444783528645,
+  "y": 0.6856700917691579,
+  "text": "\"blind evidence\" is strange. why not just say experimental results that geometry predicts retrieval failure",
+  "anchor": "3. Blind evidence that geometry predicts retrieval failure (\u00a711). We measured five",
+  "status": "done",
+  "created": "2026-08-12 19:53",
+  "resolved": "2026-08-12 21:07"
  },
  {
   "id": "c1786333822672",
@@ -317,6 +361,83 @@
   "status": "done",
   "created": "2026-08-09 20:51",
   "resolved": "2026-08-09 21:37"
+ },
+ {
+  "id": "c1786589630634",
+  "page": 3,
+  "x": 0.8331111145019531,
+  "y": 0.8384991630527868,
+  "text": "\"the readouts choose a repair and then check it\" -- what?",
+  "anchor": "4. Measurement as a governor for fine-tuning (\u00a710). The readouts choose a repair",
+  "status": "done",
+  "created": "2026-08-12 19:53",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786589675860",
+  "page": 4,
+  "x": 0.5153333367241754,
+  "y": 0.13728855829069292,
+  "text": "rewrite this sentence. the key idea is good but it's written very strangely",
+  "anchor": "halves the damage that fine-tune does outside its training data at no cost to its gains,",
+  "status": "done",
+  "created": "2026-08-12 19:54",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786589722481",
+  "page": 4,
+  "x": 0.3108888922797309,
+  "y": 0.16819780336336337,
+  "text": "this sounds anecdotal. it doesn't seem worthwhile to include in a summary of contributions.",
+  "anchor": "rule fixed in advance vetoed a training round whose own loss curve looked healthy. The",
+  "status": "done",
+  "created": "2026-08-12 19:55",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786589746314",
+  "page": 4,
+  "x": 0.5975555589463976,
+  "y": 0.18794537660423616,
+  "text": "remove this",
+  "anchor": "boundary is reported as plainly as the successes: used as the training objective itself",
+  "status": "done",
+  "created": "2026-08-12 19:55",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786589832776",
+  "page": 4,
+  "x": 0.6631111145019531,
+  "y": 0.3055722324590883,
+  "text": "can this be replaced simply by saying \"with well-understood properties\"? leave out the comment on negative results.",
+  "anchor": "statistics into a measurement system with stated guarantees, stated nulls, and stated scope,",
+  "status": "done",
+  "created": "2026-08-12 19:57",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786589901551",
+  "page": 4,
+  "x": 0.5486666700575087,
+  "y": 0.579462480858062,
+  "text": "around \"it\" --> what does \"it\" refer to?",
+  "anchor": "An item is crowded when even a small cap around it already contains other items. And two",
+  "status": "done",
+  "created": "2026-08-12 19:58",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786589981831",
+  "page": 5,
+  "x": 0.18755555894639758,
+  "y": 0.6123464989760746,
+  "text": "this point is so hard to understand or care about. rewrite it to be more to-the-point and understandable",
+  "anchor": "\u2022 The well-spread null has no small-distance tail at all. In each of 19 simulated",
+  "status": "done",
+  "created": "2026-08-12 19:59",
+  "resolved": "2026-08-12 21:07"
  },
  {
   "id": "c1786334190833",
@@ -363,6 +484,17 @@
   "resolved": "2026-08-09 21:37"
  },
  {
+  "id": "c1786590102778",
+  "page": 6,
+  "x": 0.4931111145019531,
+  "y": 0.6117454753966027,
+  "text": "transition with something like \"prior at, such as covariance-spectrum summaries,\"",
+  "anchor": "and uninformative about which items failed. Covariance-spectrum summaries (effective rank,",
+  "status": "done",
+  "created": "2026-08-12 20:01",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
   "id": "c1786334343083",
   "page": 6,
   "x": 0.21962958441840277,
@@ -372,6 +504,17 @@
   "status": "done",
   "created": "2026-08-09 20:59",
   "resolved": "2026-08-09 21:37"
+ },
+ {
+  "id": "c1786590134590",
+  "page": 6,
+  "x": 0.18422222561306423,
+  "y": 0.7516956683645273,
+  "text": "isn't this the same point as the prior one?",
+  "anchor": "\u2022 Read them at every similarity level, since pockets live at the tight levels the \u2026",
+  "status": "done",
+  "created": "2026-08-12 20:02",
+  "resolved": "2026-08-12 21:07"
  },
  {
   "id": "c1786334401207",
@@ -539,6 +682,160 @@
   "resolved": "2026-08-09 21:37"
  },
  {
+  "id": "c1786590194411",
+  "page": 10,
+  "x": 0.3208888922797309,
+  "y": 0.36636041050502643,
+  "text": "this seems vestigial. we try not to label \"measured\" in the writing",
+  "anchor": "Every claim marked measured in this report follows the protocol stated here.",
+  "status": "done",
+  "created": "2026-08-12 20:03",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786590244046",
+  "page": 10,
+  "x": 0.6242222256130643,
+  "y": 0.42131017952310723,
+  "text": "\"is representative of real-world data.\" instead of \"geometry is real\"?",
+  "anchor": "struction, and against public corpora, where the geometry is real. The public side splits into",
+  "status": "done",
+  "created": "2026-08-12 20:04",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786590289510",
+  "page": 10,
+  "x": 0.7853333367241754,
+  "y": 0.43676480205944246,
+  "text": "\"a grid of collections scored against relevance judgements\" doesn't make sense to anyone who was not privy to the conversation of running the experiment.",
+  "anchor": "two roles \u2014 one corpus studied in depth, and a grid of collections scored against relevance",
+  "status": "done",
+  "created": "2026-08-12 20:04",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786590341112",
+  "page": 10,
+  "x": 0.6464444478352864,
+  "y": 0.4857044400911707,
+  "text": "\"can only be scored against a known defect\"?",
+  "anchor": "localization, and recovery claims can only be scored against a defect whose membership and",
+  "status": "done",
+  "created": "2026-08-12 20:05",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786590420418",
+  "page": 10,
+  "x": 0.17533333672417534,
+  "y": 0.7132308405327074,
+  "text": "\"the wider family varies what the traced instance fixes\" -- what does this mean",
+  "anchor": "the traced instance fixes: pocket count (1\u201320), size (20\u2013800), and tightness (s = 0.005\u20130.06,",
+  "status": "done",
+  "created": "2026-08-12 20:07",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786590496617",
+  "page": 11,
+  "x": 0.15533333672417535,
+  "y": 0.5022752324308949,
+  "text": "simplify: \"it supplies a real anisotropy cone and diffuse within-subset crowding\"",
+  "anchor": "what the benchmark cannot: a real anisotropy cone (mean pair cosine +0.236), and diffuse",
+  "status": "done",
+  "created": "2026-08-12 20:08",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786590517498",
+  "page": 11,
+  "x": 0.21866667005750867,
+  "y": 0.5349016577853803,
+  "text": "what is \"the streaming path\"? seems irrelevant here and the user can't follow along anyway",
+  "anchor": "exercise the streaming path, and subset labels, which are used only to condition one readout",
+  "status": "done",
+  "created": "2026-08-12 20:08",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786590541033",
+  "page": 11,
+  "x": 0.7508888922797309,
+  "y": 0.5383360183490103,
+  "text": "just remove this.",
+  "anchor": "exercise the streaming path, and subset labels, which are used only to condition one readout",
+  "status": "done",
+  "created": "2026-08-12 20:09",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786590578592",
+  "page": 11,
+  "x": 0.37644444783528647,
+  "y": 0.5701038535625884,
+  "text": "\"public evaluation grid\" and \"external outcomes\" are terms invented in the conversation. impossible to follow for a reader.",
+  "anchor": "(iii) A public evaluation grid \u2014 external outcomes. The external study (\u00a711) and the",
+  "status": "done",
+  "created": "2026-08-12 20:09",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786590609839",
+  "page": 11,
+  "x": 0.8008888922797309,
+  "y": 0.6559628676533397,
+  "text": "\"the grid\" is jargon",
+  "anchor": "benchmark makes claims falsifiable, the corpus makes them representative, and the grid scores",
+  "status": "done",
+  "created": "2026-08-12 20:10",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786590645238",
+  "page": 11,
+  "x": 0.5786666700575087,
+  "y": 0.7795998479440215,
+  "text": "lots of jargon that a reader was not introduced to here.",
+  "anchor": "\u2022 whole-curve inference uses the global rank-envelope test at 199 null curves (99 inside",
+  "status": "done",
+  "created": "2026-08-12 20:10",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786590695427",
+  "page": 11,
+  "x": 0.8086666700575087,
+  "y": 0.8740447634438478,
+  "text": "should this kind of detail go into an appendix?",
+  "anchor": "\u2022 the per-item crowding field (the distance to a measure, DTM) uses mass fraction m =",
+  "status": "done",
+  "created": "2026-08-12 20:11",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786590771148",
+  "page": 12,
+  "x": 0.14533333672417534,
+  "y": 0.2990469486982958,
+  "text": "describe why all these experiments matter and what it aims to show/prove (or disprove)",
+  "anchor": "Lattice fragility (Table 3).",
+  "status": "done",
+  "created": "2026-08-12 20:12",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786590796257",
+  "page": 13,
+  "x": 0.40755555894639756,
+  "y": 0.25723359835526327,
+  "text": "what is a \"functional\"?",
+  "anchor": "\u2022 Hypothesis: the two functionals may order corpora identically, making one redundant.",
+  "status": "done",
+  "created": "2026-08-12 20:13",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
   "id": "c1786335225911",
   "page": 13,
   "x": 0.25407402886284725,
@@ -561,6 +858,28 @@
   "resolved": "2026-08-09 21:37"
  },
  {
+  "id": "c1786590857098",
+  "page": 14,
+  "x": 0.32533333672417536,
+  "y": 0.23860220146830233,
+  "text": "what readout are you referring to? be specific",
+  "anchor": "\u2022 Control: the readout at the default, with seed-to-seed spread as the scale of compari-",
+  "status": "done",
+  "created": "2026-08-12 20:14",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786590902248",
+  "page": 14,
+  "x": 0.4842222256130642,
+  "y": 0.5021893681763858,
+  "text": "\"someone else's objective\" is nonsense. just remove this mention of the guardrail experiment here.",
+  "anchor": "they are instead a supplement to someone else\u2019s objective.",
+  "status": "done",
+  "created": "2026-08-12 20:15",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
   "id": "c1786335422080",
   "page": 15,
   "x": 0.24074069552951388,
@@ -581,5 +900,313 @@
   "status": "done",
   "created": "2026-08-09 21:17",
   "resolved": "2026-08-09 21:37"
+ },
+ {
+  "id": "c1786590940647",
+  "page": 16,
+  "x": 0.4431111145019531,
+  "y": 0.4056838415787997,
+  "text": "what does this even mean?",
+  "anchor": "the arms differ here and nowhere else",
+  "status": "done",
+  "created": "2026-08-12 20:15",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591040712",
+  "page": 16,
+  "x": 0.272000003390842,
+  "y": 0.4726538725695857,
+  "text": "the suite is just the structure of the experiment. what is actually being measured? the narrative keeps trying to frame that running tests using multiple encoders and multiple corpora is some different experiment. isn't it just using multiple encoders and corpora for prior experiments?",
+  "anchor": "The external validation suite (\u00a711). One protocol run over every corpus\u2013encoder pair,",
+  "status": "done",
+  "created": "2026-08-12 20:17",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591103398",
+  "page": 17,
+  "x": 0.1408888922797309,
+  "y": 0.1174551338963569,
+  "text": "this is impossible for a reader to understand. should you just remove it?",
+  "anchor": "Reporting conventions. Aggregates are reported with their null value at matched sample",
+  "status": "done",
+  "created": "2026-08-12 20:18",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591149239",
+  "page": 17,
+  "x": 0.6097777811686198,
+  "y": 0.6626598602715815,
+  "text": "\"the tool's own display\" -- what does this mean? is this just filler?",
+  "anchor": "Figure 5 and Table 3 measure both choices on the tool\u2019s own display [26]: where the cell",
+  "status": "done",
+  "created": "2026-08-12 20:19",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591212689",
+  "page": 17,
+  "x": 0.4275555589463976,
+  "y": 0.8137717250713038,
+  "text": "while this may be true, is it relevant to the discussion? can this be removed?",
+  "anchor": "grated squared error) shrinks as O(n \u22122/3 ) against O(n \u22124/5 ) [28, 29]. The partition therefore",
+  "status": "done",
+  "created": "2026-08-12 20:20",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591237348",
+  "page": 17,
+  "x": 0.5786666700575087,
+  "y": 0.8695800842302921,
+  "text": "is it necessary to discuss?",
+  "anchor": "recovers the kernel rate. ambit retains one hexbin display, averaged over placements this way",
+  "status": "done",
+  "created": "2026-08-12 20:20",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591325055",
+  "page": 19,
+  "x": 0.252000003390842,
+  "y": 0.15059670547475937,
+  "text": "are lipschitz bound and wasserstein distance cited here? can you just link the citation without name-dropping?",
+  "anchor": "input\u2019s Wasserstein distance) \u2014 and it holds up in practice, with self-correlation 0.997",
+  "status": "done",
+  "created": "2026-08-12 20:22",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591364894",
+  "page": 19,
+  "x": 0.232000003390842,
+  "y": 0.26135483692708994,
+  "text": "what does this have to do with the rest of the point? this seems tacked on",
+  "anchor": "and the actionable output of a diagnosis is a list of ids.",
+  "status": "done",
+  "created": "2026-08-12 20:22",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591454368",
+  "page": 19,
+  "x": 0.3631111145019531,
+  "y": 0.5446895801513076,
+  "text": "this text description is hard to follow. can you add a visual or pseudocode/algorithm?",
+  "anchor": "and draws a bounded uniform reservoir (a fixed-size random subsample kept during the single",
+  "status": "done",
+  "created": "2026-08-12 20:24",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591472341",
+  "page": 19,
+  "x": 0.21311111450195314,
+  "y": 0.6150939717057237,
+  "text": "\"the real corpus\" -- wasn't all this measured with multiple corpora?",
+  "anchor": "show the real corpus (Nemotron-Legal, \u00a74), so the primary examples come from learned-",
+  "status": "done",
+  "created": "2026-08-12 20:24",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591593329",
+  "page": 21,
+  "x": 0.1486666700575087,
+  "y": 0.6310637535670217,
+  "text": "1. should this just be one plot with multiple curves? 2. can you rewrite the text here to have less filler?",
+  "anchor": "Figure 6: The crowding curve on the real corpus (Nemotron-Legal [61], computed from the",
+  "status": "done",
+  "created": "2026-08-12 20:26",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591695151",
+  "page": 21,
+  "x": 0.15311111450195314,
+  "y": 0.7744483070985764,
+  "text": "what is a z-score?",
+  "anchor": "score against the uniform null at matched pair-sample size, so that sampling noise is accounted",
+  "status": "done",
+  "created": "2026-08-12 20:28",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591653841",
+  "page": 22,
+  "x": 0.6308888922797309,
+  "y": 0.37889582852743303,
+  "text": "\"intuition schematic\" is used throughout this report. can you say illustrative example or something simpler?",
+  "anchor": "Figure 7: The distance-to-measure field. Left: the intuition schematic \u2014 each item is scored",
+  "status": "done",
+  "created": "2026-08-12 20:27",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591839076",
+  "page": 24,
+  "x": 0.15422222561306423,
+  "y": 0.5983514639580272,
+  "text": "what does it mean for \"the pair distance\" to be \"raised to each endpoint's distance to its own kth neighbor\" mean?",
+  "anchor": "at least each endpoint\u2019s distance to its own kth neighbor, so that a lone point \u2026",
+  "status": "done",
+  "created": "2026-08-12 20:30",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591878796",
+  "page": 24,
+  "x": 0.7253333367241753,
+  "y": 0.653301232976108,
+  "text": "H_0 persistence and \"the elder rule\" can't be understood like this.",
+  "anchor": "persisting over the widest scale range is retained. This is equivalently H 0 persistence with",
+  "status": "done",
+  "created": "2026-08-12 20:31",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786591945710",
+  "page": 25,
+  "x": 0.37422222561306423,
+  "y": 0.46638616192075166,
+  "text": "\"seconds on CPU\" isn't relevant here",
+  "anchor": "a capped subsample (seconds on CPU). The merge tree is a dense Prim MST on n r \u2264 4,096",
+  "status": "done",
+  "created": "2026-08-12 20:32",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786592079645",
+  "page": 27,
+  "x": 0.45422222561306425,
+  "y": 0.3475572883843088,
+  "text": "what does this mean?",
+  "anchor": "and makes the bound loose, never wrong.",
+  "status": "done",
+  "created": "2026-08-12 20:34",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786592131456",
+  "page": 27,
+  "x": 0.7086666700575087,
+  "y": 0.5948312653419797,
+  "text": "is this last sentence just filler?",
+  "anchor": "\u2026 \u2217 = 0.090 to 0.129. This is the comparison the instrument is built to support: one encoder,",
+  "status": "done",
+  "created": "2026-08-12 20:35",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786592166902",
+  "page": 27,
+  "x": 0.1897777811686198,
+  "y": 0.7098823442235864,
+  "text": "this needs more explanation for why it is relevant and how it applies (in plain english)",
+  "anchor": "The temperature parameter of the widely used uniformity loss is thus not arbitrary: t = \u2026",
+  "status": "done",
+  "created": "2026-08-12 20:36",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786592195837",
+  "page": 28,
+  "x": 0.7897777811686197,
+  "y": 0.8063020065666634,
+  "text": "why does C even matter?",
+  "anchor": "\u2022 Aggregation. The aggregate is an upper bound: C over-counts confusions, never under-",
+  "status": "done",
+  "created": "2026-08-12 20:36",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786592291610",
+  "page": 31,
+  "x": 0.23422222561306424,
+  "y": 0.29192064790855426,
+  "text": "name this section \"ambit\"",
+  "anchor": "9 The Instrument",
+  "status": "done",
+  "created": "2026-08-12 20:38",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786592381957",
+  "page": 35,
+  "x": 0.7964444478352865,
+  "y": 0.6775993496850456,
+  "text": "just name the encoder instead of saying 0.6-billion-parameter instruction-tuned encoder",
+  "anchor": "judicating every round. We ran it on the case-study corpus (\u00a79) and its 0.6-billion-parameter",
+  "status": "done",
+  "created": "2026-08-12 20:39",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786592565093",
+  "page": 40,
+  "x": 0.342000003390842,
+  "y": 0.5415128123512049,
+  "text": "this is likely the halo finding because it's the clearest demonstration of improvement. is that right? if so, should this be in the abstract?",
+  "anchor": "tation safer at no cost to its gains, and the label-free held-out gate selects the better model",
+  "status": "done",
+  "created": "2026-08-12 20:42",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786592607812",
+  "page": 40,
+  "x": 0.20644444783528645,
+  "y": 0.7553017574371755,
+  "text": "this is not \"external\" validation. it's all a part of the experimentation for ambit using multiple corpora and encoders to run the tests.",
+  "anchor": "11 External Validation Across Corpora and Encoders",
+  "status": "done",
+  "created": "2026-08-12 20:43",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786592727842",
+  "page": 43,
+  "x": 0.19644444783528645,
+  "y": 0.13703098517873444,
+  "text": "i think there's a very simple way of explaining this. embeddings focus on organizing documents by similarity. not by relationship. multi-hop queries test retrieval by relationship, so improving crowding for similarity-based retrieval doesn't necessarily improve relationship-based retrieval.",
+  "anchor": "Multi-hop retrieval is where the per-item claim stops. On HotpotQA the field",
+  "status": "done",
+  "created": "2026-08-12 20:45",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786592757904",
+  "page": 43,
+  "x": 0.2086666700575087,
+  "y": 0.6702154954349143,
+  "text": "is this whole section needed?",
+  "anchor": "The two similarity levels, checked against annotated duplicates. The duplicate-",
+  "status": "done",
+  "created": "2026-08-12 20:45",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786592776383",
+  "page": 44,
+  "x": 0.2197777811686198,
+  "y": 0.43006779634015474,
+  "text": "can this section just be removed?",
+  "anchor": "\u2022 External validation. A cross-corpus slice now exists (\u00a711): the per-item claim holds",
+  "status": "done",
+  "created": "2026-08-12 20:46",
+  "resolved": "2026-08-12 21:07"
+ },
+ {
+  "id": "c1786592866309",
+  "page": 45,
+  "x": 0.2086666700575087,
+  "y": 0.2852236421892665,
+  "text": "is this a useful section or can it be removed?",
+  "anchor": "\u2022 Streaming structure. The crowding curve can be computed from a running summary",
+  "status": "done",
+  "created": "2026-08-12 20:47",
+  "resolved": "2026-08-12 21:07"
  }
 ]

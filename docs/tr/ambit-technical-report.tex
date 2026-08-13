@@ -101,7 +101,9 @@ On a million-document legal corpus, the repairs \textsf{ambit} chose
 --- merging the near-duplicate documents it names --- improved retrieval
 without harming any query. Added as penalty terms to a supervised
 fine-tune, the same measurements halved the damage that fine-tune caused
-outside its training data, at no cost to its gains.
+outside its training data at no cost to its gains, and a label-free rule
+built on them selected the better of two fine-tuned models before any
+label was read.
 \end{abstract}
 
 \clearpage
@@ -214,8 +216,9 @@ tool's own displays.}
 \end{figure} This report describes \textsf{ambit}, an
 instrument built to measure crowding without relying on global
 averages or on a discretization. There are three design principles
-shaping \textsf{ambit}. \textsf{ambit} measures crowding at every similarity level rather than
-at one chosen cutoff to avoid discretization
+shaping \textsf{ambit}. \textsf{ambit} measures crowding at every similarity level --- every
+value that cosine similarity can take --- rather than at one chosen
+cutoff, to avoid discretization
 (\S\ref{sec:binned}). It reads each measurement against a model of what
 the corpus would look like with no crowding --- a \emph{null model} --- so
 that the mild concentration that encoders are trained to produce is not
@@ -252,12 +255,13 @@ on (\S\ref{sec:related}):
   two documents to the chance that an imprecise query aimed at one returns
   the other. Summed over a corpus it gives the resolution bandwidth
   $\sstar$: how imprecise a query may be before the corpus starts
-  returning the wrong document. The same conversion gives the temperature
-  parameter of the widely used uniformity loss \cite{wang2020} a concrete
-  meaning. This bridge from crowding statistics to retrieval error
+  returning the wrong document. The same conversion also explains a setting practitioners currently
+  choose by convention: the temperature of the widely used uniformity
+  training loss \cite{wang2020} corresponds to a specific level of
+  query imprecision. This bridge from crowding statistics to retrieval error
 counts
   is, to our knowledge, new.
-\item \textbf{Blind evidence that geometry predicts retrieval failure}
+\item \textbf{Experimental evidence that geometry predicts retrieval failure}
 (\S\ref{sec:external}). We measured five public collections under seven
 public encoders and locked every readout before opening the answer keys.
 The per-document score then identified the documents that retrieval would
@@ -268,18 +272,17 @@ crowding. The corpus-level $\sstar$ ranks encoders only where the task is
 similarity matching. Both boundaries come from measurements rather than
 assumptions.
 \item \textbf{Measurement as a governor for fine-tuning}
-  (\S\ref{sec:training}). The readouts choose a repair and then check
-  it, without using labels for either. Merging the near-duplicate
-  documents they name, at the similarity they identify as true
-  duplication, improved twelve queries and harmed none ($p = 0.0005$);
-  the same merge at a looser similarity made retrieval worse. Adding
-  penalty terms built from the measurements to a supervised fine-tune
-  halves the damage that fine-tune does outside its training data at no
-  cost to its gains, and those terms provably act only on pairs close
-  enough to be confused. A rejection rule fixed in advance vetoed a
-  training round whose own loss curve looked healthy. The boundary is
-  reported as plainly as the successes: used as the training objective
-  itself rather than as a governor, the same measurements leave
+  (\S\ref{sec:training}). \textsf{ambit}'s measurements can select a
+  data repair, and can then confirm that the repair worked, without
+  labels at either step. On the case-study corpus, merging the
+  near-duplicate documents the measurements had named, at the similarity
+  they identified as true duplication, improved twelve queries and
+  harmed none ($p = 0.0005$); the same merge at a looser similarity made
+  retrieval worse. Added to a supervised fine-tune as penalty terms, the
+  measurements halved the damage that fine-tune caused outside its
+  training data at no cost to its gains, and the terms provably act only
+  on pairs close enough to be confused. Used as the training objective
+  itself rather than as a supplement, the same measurements leave
   retrieval unchanged (\S\ref{sec:driving}).
 \end{enumerate}
 
@@ -289,8 +292,7 @@ here is, with small exceptions, classical, drawn from spatial statistics,
 directional statistics, geometric inference, and discrepancy theory
 (\S\ref{sec:related}). The contribution is the \emph{instrument}: the
 selection, calibration, and combination of these known statistics into a
-measurement system with stated guarantees, stated nulls, and stated scope,
-together with the negative results that ruled out the alternatives.
+measurement system with well-understood properties.
 
 % =========================================================================
 \section{Geometry of Crowding}
@@ -310,8 +312,8 @@ query'' --- is the set of directions within a fixed angle of the query,
 which is a patch of the sphere's surface bounded by a circle (a
 \emph{spherical cap}; Figure~\ref{fig:cap}). Every question about how the corpus fills the space then
 becomes a statement about caps. A corpus is concentrated when some caps
-hold more items than their share of the sphere's area predicts. An item is
-crowded when even a small cap around it already contains other items. And
+hold more items than their share of the sphere's area predicts. An item is crowded when even a small cap centered on that item
+already contains other items. And
 two items are confusable when they share one small cap: any query that
 lands near one cannot avoid the other, so they are \emph{future
 collisions}.
@@ -349,7 +351,8 @@ collisions}.
   \node[acc, anchor=west, font=\small] at (2.35,0.55) {a query's neighborhood};
   \draw[acc, shorten >=1pt] (2.35,0.55) -- (33:2.2);
 \end{tikzpicture}
-\caption{Intuition schematic. Items are directions on the unit sphere,
+\caption{An illustrative example. Items are directions on the unit
+sphere,
 and a retrieval neighborhood is a cap. The two red items share one small
 cap, so no query landing there can tell them apart: the geometric
 definition of a retrieval collision.}
@@ -439,9 +442,9 @@ showed sit near $\cos = 0$. Each pocket pair contributes a cosine of
 roughly $0.93$ at that $0.25\%$ pair share, so the entire catastrophe adds
 $0.0025 \times 0.93 \approx 0.002$ to the mean. Two hundred documents
 became interchangeable, and the corpus-wide average moved from about
-$0.000$ to $0.002$: invisible without a calibrated test, and uninformative
-about \emph{which} items failed. Covariance-spectrum summaries (effective
-rank, isotropy scores) fail for the same arithmetic reason: they are sums
+$0.000$ to $0.002$: invisible without a calibrated test, and uninformative about \emph{which} items failed. Prior art such as
+covariance-spectrum summaries (effective rank, isotropy scores) fails
+for the same arithmetic reason: they are sums
 over the corpus, and sums are dominated by the diffuse majority. Global
 averages address whether the whole cloud is degenerate, while crowding
 concerns which part of the cloud has collapsed, how tightly --- at $\cos =
@@ -727,19 +730,20 @@ compare items with one another.
 \label{sec:method}
 % =========================================================================
 
-Every claim marked \emph{measured} in this report follows the protocol
-stated here.
+Every measured claim in this report follows the protocol stated
+here.
 
 \paragraph{Datasets.}
 Claims are tested against synthetic data, where the answer is known by
-construction, and against public corpora, where the geometry is real.
-The public side splits into two roles --- one corpus studied in depth,
-and a grid of collections scored against relevance judgments --- so
+construction, and against public corpora, which are representative of real-world
+data.
+The public side splits into two roles --- one corpus studied in depth, and five retrieval collections whose
+human relevance judgments score \textsf{ambit}'s predictions judgments --- so
 three bodies of data appear below.
 
 \emph{(i) The synthetic benchmark family --- known ground truth by
-construction.} Detection, localization, and recovery claims can only be
-scored against a defect whose membership and scales are known exactly. The
+construction.} Detection, localization, and recovery claims can only be scored against a known
+defect: one whose membership and scales are known exactly. The
 way to obtain one is to build the corpus and insert the defect
 deliberately, choosing which items belong to it and how tightly they sit
 --- a \emph{planted} pathology. Ground truth then comes from the
@@ -755,12 +759,12 @@ pocket a group of near-duplicates: the median cosine inside it is $0.929$,
 so a retrieval system cannot rank its members apart. Yet every global
 average stays essentially unmoved (\S\ref{sec:averages}). A defect this
 severe and this invisible is a stringent test for a local diagnostic. The
-uniform control is the same draw without the replacement. The wider family
-varies what the traced instance fixes: pocket count ($1$--$20$), size
+uniform control is the same draw without the replacement. The traced benchmark is one fixed instance. A wider family of variants
+changes one property at a time: pocket count ($1$--$20$), size
 ($20$--$800$), and tightness ($s = 0.005$--$0.06$, spanning near-duplicate
 to loose association). It adds mean-shift cones, low-rank collapses, and
-pure nulls. Together these form the grid behind the sensitivity,
-calibration, and power studies. All generators are stated in full above or
+pure nulls. Together these form the test set behind the sensitivity, calibration,
+and power studies. All generators are stated in full above or
 beside their experiments; nothing is tuned to the instrument.
 
 \emph{(ii) A public real corpus --- realistic geometry at scale.}
@@ -772,23 +776,20 @@ subsets --- the California Code of Regulations, case-law summaries,
 CaseHOLD, and eCFR question--answer pairs --- we take $10^6$ documents. We
 embed them at $d = 1024$ with the Qwen3-Embedding-0.6B instruction-tuned
 encoder \cite{qwen3embedding}, L2-normalize them, and store them as
-sharded Parquet with stable document ids. It supplies what the benchmark
-cannot: a real anisotropy cone (mean pair cosine $+0.236$), and
-\emph{diffuse} within-subset crowding rather than planted pockets. It also
-brings enough documents to exercise the streaming path, and subset labels,
-which are used only to \emph{condition} one readout and never enter a
-measurement.
+sharded Parquet with stable document ids. It supplies what the benchmark cannot: a real anisotropy cone and
+\emph{diffuse} within-subset crowding rather than an inserted pocket.
 
-\emph{(iii) A public evaluation grid --- external outcomes.} The external
-study (\S\ref{sec:external}) and the retrieval-facing experiments
+\emph{(iii) Five public retrieval collections with relevance
+judgments.} The multi-corpus results (\S\ref{sec:external}) and the
+retrieval-facing experiments
 (\S\ref{sec:routing}--\S\ref{sec:guardrail}) use five public retrieval
 collections with relevance judgments and seven public encoders, listed
 with citations in Tables~\ref{tab:corpora} and~\ref{tab:encoders}.
 Judgments are quarantined: every readout is computed and hash-frozen
 before any judgment file is opened, and judgments are consumed exclusively
-by scoring code. The three do different jobs: the benchmark makes claims
-falsifiable, the corpus makes them representative, and the grid scores
-them against outside judgments.
+by scoring code. The three do different jobs: the benchmark makes claims falsifiable,
+the corpus makes them representative, and the public collections score
+them against human judgments.
 
 \begin{table}[t]
 \centering
@@ -832,31 +833,23 @@ Qwen3-Embedding-0.6B \cite{qwen3embedding} & $0.6$B & $1024$ & instruction-tuned
 \end{table}
 
 \paragraph{Standard settings.}
-These defaults govern statistics defined in
-\S\ref{sec:continuous}--\S\ref{sec:semantics}, and each statistic is
-introduced fully where it is defined. Unless an experiment sweeps them:
-\begin{itemize}
-\item pair statistics use $2 \times 10^5$ sampled distinct pairs;
-\item whole-curve inference uses the global rank-envelope test at $199$
-  null curves ($99$ inside report figures);
-\item the anisotropy-conditioned reference is sampled from the corpus's
-  own covariance eigenvalues at matched pair count;
-\item the per-item crowding field (the distance to a measure, DTM) uses
-  mass fraction $m = 0.02$;
-\item the merge tree uses minimum pocket size $8$;
-\item the discrepancy $z$ uses $64$ null replicates.
-\end{itemize}
-Each default is itself validated by a sweep reported in the section that
-uses it.
+Every statistic runs with a fixed default configuration unless an
+experiment sweeps it. The defaults are stated beside each statistic
+where it is defined (\S\ref{sec:continuous}--\S\ref{sec:semantics}),
+and each is validated by a sweep reported in the section that uses it;
+Appendix~\ref{app:eng} collects them in one table.
 
 \paragraph{Per-experiment protocols.}
-Each experiment below states the hypothesis under test, the design and
-the reason it takes that shape, the control it is read against, and the
+Each experiment below opens with one sentence saying what it exists to
+establish, then states the hypothesis under test, the design and the
+reason it takes that shape, the control it is read against, and the
 measure that decides. A schematic of the design accompanies each; the
 schematics carry no data. Full parameter values appear beside each
 result.
 
 \paragraph{Lattice fragility (Table~\ref{tab:maup}).}
+Establishes why \textsf{ambit} refuses binned displays: the numbers
+they report belong to the bin placement.
 \begin{itemize}
   \item \textbf{Hypothesis:} the headline
 statistics of binned displays are properties of the lattice rather than of
@@ -875,6 +868,9 @@ control.
 \input{diag_lattice}
 
 \paragraph{Confusion-law verification (Table~\ref{tab:flip}).}
+Establishes that the formula converting distances to collision
+probabilities is exact, so everything built on it inherits no
+approximation error.
 \begin{itemize}
   \item \textbf{Hypothesis:} the
 closed-form probability that noise flips a ranking is exact in any
@@ -887,16 +883,19 @@ is no modeling assumption an error could hide behind.
 the hypothesis the residual is pure Monte-Carlo noise of predictable
 size.
   \item \textbf{Measure:} the maximum absolute deviation between empirical flip rate
-and formula over the grid.
+and formula across all $24$ conditions.
 \end{itemize}
 \input{diag_flip}
 
-\paragraph{Redundancy of the confusion and uniformity functionals (Table~\ref{tab:redundancy}).}
+\paragraph{Redundancy of the confusion and uniformity statistics
+(Table~\ref{tab:redundancy}).}
+Establishes that \textsf{ambit}'s collision statistic is not just a
+restatement of the existing uniformity loss.
 \begin{itemize}
-  \item \textbf{Hypothesis:} the two functionals may order
+    \item \textbf{Hypothesis:} the two statistics may order
 corpora identically, making one redundant.
   \item \textbf{Design:} eight synthetic corpus
-generators spanning the pathology families, both functionals computed on
+generators spanning the pathology families, both statistics computed on
 each --- redundancy is a claim about \emph{orderings across corpora}, so
 the design produces orderings rather than values.
   \item \textbf{Control:} perfect rank
@@ -907,6 +906,8 @@ disagreement, which is the more informative of the two.
 \input{diag_redundancy}
 
 \paragraph{Calibration and detection power (\S\ref{sec:power}).}
+Establishes the two properties any detector needs: it stays quiet on
+healthy data, and it finds defects that standard statistics miss.
 \begin{itemize}
   \item \textbf{Hypothesis:} the instrument's alarms fire at their nominal rates on healthy corpora
 and detect planted pathologies that standard summaries miss.
@@ -925,14 +926,18 @@ pathology cell at matched specificity.
 \input{diag_power}
 
 \paragraph{Sensitivity sweeps.}
+Establishes that no conclusion in this report depends on a lucky choice
+of parameter.
 \begin{itemize}
   \item \textbf{Hypothesis:} every default parameter sits on a
 plateau, so reasonable variation does not change conclusions.
-  \item \textbf{Design:} sweep each knob (reservoir size, pair-sample size, mass fraction, minimum
-pocket size, null-replicate count) one at a time over an order of
-magnitude or more.
-  \item \textbf{Control:} the readout at the default, with seed-to-seed
-spread as the scale of comparison.
+  \item \textbf{Design:} sweep each parameter (reservoir size,
+pair-sample size, mass fraction, minimum pocket size, null-replicate
+count) one at a time over an order of magnitude or more.
+  \item \textbf{Control:} the statistic that the swept parameter feeds
+--- $\sstar$ for the sample sizes, the per-document field for the mass
+fraction, the discrepancy $z$ for the replicate count --- computed at
+the default value, with seed-to-seed spread as the scale of comparison.
   \item \textbf{Measure:} readout drift across the sweep,
 compared to that spread.
 \end{itemize}
@@ -940,10 +945,11 @@ compared to that spread.
 
 \paragraph{The measurements as the training objective
 (Table~\ref{tab:training}).}
-This is the first of two ways the measurements can enter training. Here
-they are the \emph{objective itself}: the thing being minimized, with no
-other loss present. The guardrail experiment below is the second, where
-they are instead a \emph{supplement} to someone else's objective.
+This is the first of two ways the measurements can enter training.
+Here they are the \emph{objective itself}: the thing being minimized,
+with no other loss present. In the guardrail experiment below they are
+instead added to a supervised training objective.
+Establishes what the measurements can and cannot do as a loss.
 \begin{itemize}
   \item \textbf{Hypothesis:} penalties built from the measurements
 reduce retrieval collisions without destroying the embedding's
@@ -962,6 +968,8 @@ per schedule.
 \input{diag_training}
 
 \paragraph{The encoder loop (\S\ref{sec:loop}).}
+Establishes whether held-out measurements alone can accept or reject
+fine-tuning rounds that labels would otherwise judge.
 \begin{itemize}
   \item \textbf{Hypothesis:} held-out geometric readouts alone, with no labels, can judge
 fine-tuning rounds: accept the safe ones, reject the harmful ones.
@@ -977,6 +985,8 @@ collisions, and neighbor overlap against the rule.
 \input{diag_loop}
 
 \paragraph{Routing (\S\ref{sec:routing}).}
+Establishes that the measurements pick the right repair at the right
+similarity, and that the same repair elsewhere does harm.
 \begin{itemize}
   \item \textbf{Hypothesis:} a repair succeeds only
 at the site and scale the measurements prescribe --- not because
@@ -1013,10 +1023,11 @@ protection; and the gate's pre-label prediction.
 \end{itemize}
 \input{diag_guardrail}
 
-\paragraph{The external validation suite (\S\ref{sec:external}).}
-One protocol run over every corpus--encoder pair, so the entries below
-describe thirty-five instances of the same experiment rather than a
-single one.
+\paragraph{The multi-corpus, multi-encoder runs (\S\ref{sec:external}).}
+Establishes whether the results above survive outside the corpus and
+encoder they were developed on. These are the same measurements run
+over every pairing of five collections with seven encoders ---
+thirty-five runs of one protocol rather than a new experiment.
 \begin{itemize}
   \item \textbf{Hypotheses:} first, that
 each document's expected-collision count predicts which judged-relevant
@@ -1034,16 +1045,14 @@ correlation with nDCG@10 for the second.
 \input{diag_grid}
 
 \paragraph{Reporting conventions.}
-Aggregates are reported with their null value at matched sample size
-wherever a null exists; effect sizes are stated in the null's units
-($z$-scores) or as ratios. Negative results are reported with the same
-prominence as positive ones. Headline benchmark numbers are replicated
-over $20$ seeds and reported as mean $\pm$ sd. Calibration and power
-studies use the replicate counts stated with them: $400$ nulls, $50$ per
-pathology cell, $199$-null rank envelopes, and $64$-replicate discrepancy
-nulls. Single-seed values appear only for deterministic or
-concentration-driven demonstrations, where the absence of a spread
-identifies them. Figures fall into three kinds, labelled here so a reader
+Three conventions hold throughout. Wherever a simulated no-crowding
+corpus exists, its value is printed next to the measured one, so every
+number arrives with its point of comparison. Negative results get the
+same prominence as positive ones. And headline numbers are replicated
+--- benchmark results over $20$ random seeds, reported as mean $\pm$
+standard deviation; calibration and power studies at the replicate
+counts stated with each. A number shown without a spread is
+deterministic. Figures fall into three kinds, labelled here so a reader
 always knows which one is in front of them.
 \begin{itemize}
   \item \textbf{Real-corpus figures:} the crowding curve, the DTM field,
@@ -1053,8 +1062,8 @@ always knows which one is in front of them.
   with the report's values verbatim).
   \item \textbf{Self-computed demonstrations:} the lattice demonstration's
   highlighted peak cells are computed from the figure's own points.
-  \item \textbf{Intuition schematics:} the remaining figures carry no
-  data and are captioned as schematics.
+    \item \textbf{Illustrative examples:} the remaining figures carry no
+    data and are captioned as illustrative.
 \end{itemize}
 
 % =========================================================================
@@ -1130,7 +1139,8 @@ data jittered by $0.1\%$ of span & 339 & ---\\
 \end{table}
 
 Figure~\ref{fig:maup} and Table~\ref{tab:maup} measure both choices on the
-tool's own display \cite{openshaw1984}: where the cell boundaries fall,
+hexbin display that \textsf{ambit} itself renders
+\cite{openshaw1984}: where the cell boundaries fall,
 and how large the cells are. Moving the lattice half a cell moves the
 headline peak count from $310$ to $403$, and moves which cell holds the
 peak (the \emph{zonation} effect). Changing the cell size varies the peak
@@ -1140,16 +1150,13 @@ the classical extreme of the same phenomenon, re-drawing the zones over
 fixed data can move a correlation almost anywhere in $[-1,+1]$
 \cite{openshaw1979}.
 
-Binning also wastes data. A histogram's accuracy improves more slowly with
-sample size than a kernel estimator's: its average squared error across
-the whole density (the \emph{mean integrated squared error}) shrinks as
-$O(n^{-2/3})$ against $O(n^{-4/5})$ \cite{scott1979,freedman1981}. The
-partition therefore costs precision as well as reliability. The averaged
-shifted histogram \cite{scott1985} repairs part of the loss: it averages
-over many lattice placements, which removes the placement dependence and
-recovers the kernel rate. \textsf{ambit} retains one hexbin
-\emph{display}, averaged over placements this way and captioned as a view
-rather than a measurement.
+Binning also wastes data: a histogram converges more slowly with
+sample size than a smooth estimator does
+\cite{scott1979,freedman1981}, so the partition costs precision as
+well as reliability. \textsf{ambit} retains one hexbin \emph{display},
+averaged over many lattice placements to remove the placement
+dependence \cite{scott1985}, and captioned as a view rather than a
+measurement.
 
 \subsection{Every bin commits to one scale}
 
@@ -1173,17 +1180,15 @@ crowding measure must exclude.
 Four further costs are structural.
 \begin{itemize}
 \item \emph{Instability.} A bin count is a step function of the data:
-  nothing bounds how far a small perturbation can move it. The field of
-  \S\ref{sec:dtm} carries the opposite guarantee --- move the corpus a
-  little and every score provably moves only a little (a Lipschitz bound
-  in the input's Wasserstein distance) --- and it holds up in practice,
-  with self-correlation $0.997$ under jitter at $d{=}768$.
+  nothing bounds how far a small perturbation can move it. The field of \S\ref{sec:dtm} carries the opposite guarantee: move
+  the corpus a little and every score provably moves only a little
+  \cite{chazal2011}. It holds up in practice, with self-correlation
+  $0.997$ under jitter at $d{=}768$.
 \item \emph{No null.} A peak count carries no statement of what a
   well-spread corpus would show; a perfectly uniform cloud still has a
   hottest cell.
 \item \emph{No names} (the ecological fallacy \cite{robinson1950}). A
-  cell count cannot say which items are crowded, and the actionable
-  output of a diagnosis is a list of ids.
+  cell count cannot say which items are crowded.
 \item \emph{Projection.} Binning a 2-D layout measures the projection,
   not the object: far-apart groups collide in a cell, orthogonal
   crowding vanishes, and nonlinear layouts actively destroy density
@@ -1206,15 +1211,20 @@ requirements of \S\ref{sec:averages}: the crowding curve, the occupancy
 discrepancy, the per-document crowding radius, and the catalogue of tight
 groups. Let $x_1,\dots,x_n \in \sphere$ (unit-normalized; cosine $c_{ij} =
 \langle x_i,x_j\rangle$; chord $r_{ij} = \lVert x_i - x_j\rVert = \sqrt{2
-- 2 c_{ij}}$). \textsf{ambit} computes exact full-corpus second moments by
-streaming and draws a bounded uniform \emph{reservoir} (a fixed-size
-random subsample kept during the single pass) plus a large random-pair
-cosine sample for everything else. The pair-sample default of
-$2{\times}10^5$ is sized so that the scale readouts of this section are
-stable to a few thousandths; the measured concentration rates appear with
-the discrepancy statistic below. The figures below show the real corpus
-(Nemotron-Legal, \S\ref{sec:method}), so the primary examples come from
-learned-embedding geometry rather than synthetic constructions. The traced
+- 2 c_{ij}}$). \textsf{ambit} reads the corpus in one pass and keeps three things:
+\begin{enumerate}
+\item exact second moments, updated per batch (these need no sampling);
+\item a \emph{reservoir} --- a fixed-size uniform random subsample,
+  maintained by replacing a random held row with decreasing probability
+  as rows stream by --- for the per-document statistics;
+\item a random-pair cosine sample for the pair statistics, with a
+  default of $2{\times}10^5$ pairs, sized so the scale readouts of this
+  section are stable to a few thousandths.
+\end{enumerate}
+The running figures in this section show one corpus (Nemotron-Legal,
+\S\ref{sec:method}) so the examples stay comparable;
+\S\ref{sec:external} repeats the measurements on four more public
+collections. The traced
 benchmark of \S\ref{sec:averages}, whose planted pathology is known
 exactly, gives every layer a companion test in which the right answer is
 known.
@@ -1338,15 +1348,12 @@ its paraphrase band. A single scalar would average that structure away.
 \addlegendentry{HotpotQA}
 \end{axis}
 \end{tikzpicture}
-\caption{The crowding curve on the real corpus (Nemotron-Legal
-\cite{nemotronlegal}, computed from the report's own $2{\times}10^5$-pair
-sample): the data track the anisotropy-matched reference through
-mid-similarities and rise above both references past $\cos \approx 0.8$,
-where the global test rejects at $p = 1/200$. No bin width or lattice
-placement exists anywhere in the figure, and the liftoff claim is
-family-wise valid across all scales. Bottom: the same curve for six
-corpora under the same encoder ($d = 1024$, shared envelope), each with
-its own anatomy; the text gives the reading.}
+\caption{The crowding curve on Nemotron-Legal
+\cite{nemotronlegal}. Top: the data track the anisotropy-matched
+reference through mid-similarities, then rise above both references
+past $\cos \approx 0.8$, where the global test rejects at
+$p = 1/200$. Bottom: the same curve for six corpora under one encoder,
+each with its own shape.}
 \label{fig:kcurve}
 \end{figure}
 
@@ -1368,8 +1375,9 @@ $\frac{1}{n^2}\sum_{i,j}\lVert x_i - x_j\rVert$.
 
 The mean pairwise chord therefore performs the audit no single lattice
 can: it covers every patch of the sphere at every size, and there is no
-lattice left to choose. \textsf{ambit} reports it as a $z$-score against
-the uniform null at matched pair-sample size, so that sampling noise is
+lattice left to choose. \textsf{ambit} reports it as a $z$-score --- the number of standard
+deviations by which the corpus differs from simulated no-crowding
+corpora of the same pair-sample size --- so that sampling noise is
 accounted for.
 Measured on the benchmark over $20$ seeds, the uniform control scores
 $z = -0.14 \pm 1.00$: a mean at zero and unit spread, which is what
@@ -1444,7 +1452,8 @@ Two properties govern how $z$ is read.
 \end{axis}
 \end{tikzpicture}
 \end{minipage}
-\caption{The distance-to-measure field. \emph{Left:} the intuition schematic
+\caption{The distance-to-measure field. \emph{Left:} an illustrative
+example
 --- each item is scored by the radius of the ball it needs to gather a fixed
 share ($m = 2\%$) of the corpus. \emph{Right:} the field's exact CDF on the
 real corpus (measured): the \emph{entire} field sits left of the uniform
@@ -1611,14 +1620,17 @@ reportable. No flat threshold enters anywhere in the construction.}
 Between the global curve and the per-item field sits \emph{structure}:
 whether the corpus forms one broad pile or many tight pockets, and which
 documents constitute each. \textsf{ambit} answers with a merge hierarchy,
-built by single linkage on a modified distance: the pair distance, raised
-to at least each endpoint's distance to its own $k$th neighbor, so that a
-lone point cannot bridge two groups (the \emph{mutual-reachability}
-metric) \cite{campello2015}. The tree is condensed at a minimum pocket
+built by single linkage on a modified distance (the
+\emph{mutual-reachability} distance \cite{campello2015}): each pair's
+distance is replaced by the largest of three numbers --- the pair
+distance itself, the first point's distance to its own $k$th neighbor,
+and the second point's --- so that one stray point cannot bridge two
+groups. The tree is condensed at a minimum pocket
 size, and pockets are selected by excess of mass in $\lambda =
 1/\mathrm{distance}$: on each branch, the cluster persisting over the
-widest scale range is retained. This is equivalently $H_0$ persistence
-with the elder rule (at each merge, the younger component dies)
+widest scale range is retained. In the vocabulary of persistence theory this is $H_0$ persistence
+with the \emph{elder rule} --- when two groups merge, the more recently
+formed one is the one considered ended
 \cite{chazal2013,rolle2020}. Each selected pocket reports birth, death,
 prominence (death minus birth: the scale range over which it persists as a
 separate entity), size, and member ids (Figure~\ref{fig:tree}). Three
@@ -1662,8 +1674,8 @@ further candidate was suppressed.
 
 All continuous-layer statistics run on the reservoir or the pair sample.
 The curve and its nulls are $O(P \log P)$ in the pair-sample size. The DTM
-field is a blocked Gram top-$k$, $O(n_r^2 d)$ on a capped subsample
-(seconds on CPU). The merge tree is a dense Prim MST on $n_r \le 4{,}096$
+field is a blocked Gram top-$k$, $O(n_r^2 d)$ on a capped subsample.
+The merge tree is a dense Prim MST on $n_r \le 4{,}096$
 rows plus a linear condensation pass. Full-corpus second moments stream in
 one pass.
 
@@ -1672,7 +1684,7 @@ here because they make future proposals cheap to evaluate.
 \begin{itemize}
 \item \emph{Spectrum:} does it reduce, under a linear kernel, to the
   covariance spectrum already reported?
-\item \emph{Continuity:} is it a continuous functional of the data, or
+\item \emph{Continuity:} is it a continuous function of the data, or
   a step function of bin, rank, or partition membership?
 \item \emph{Null:} does it come with a calibrated reference?
 \item \emph{Naming:} can it score individual items, or only regions?
@@ -1754,7 +1766,7 @@ simulation at $d = 768$. Each cell uses $3{\times}10^5$ trials, enough
 to resolve deviations at the few-$10^{-4}$ level of the Monte-Carlo
 error. Empirical flip rate vs.\
 $\Phi(-r/2\sigma)$ with $r = 2\sin(\theta/2)$. Maximum absolute deviation
-over the grid: $9{\times}10^{-4}$, i.e.\ Monte-Carlo error --- the law is
+across all $24$ conditions: $9{\times}10^{-4}$, i.e.\ Monte-Carlo error --- the law is
 exact rather than asymptotic.}
 \label{tab:flip}
 \small
@@ -1796,7 +1808,8 @@ documents. Adding up the individual probabilities can only overstate the
 chance that at least one competitor wins, no matter how those events
 correlate (the union bound). $C$ therefore errs on the high side.
 Hubness --- a few items recurring as near neighbors of many others ---
-correlates the events and makes the bound loose, never wrong.
+correlates the events, which can push the bound further above the truth
+but never below it.
 
 \begin{definition}[Resolution bandwidth]
 $\sstar$ is the largest $\sigma$ with $C(\sigma) \le 1$ --- the corpus's
@@ -1883,13 +1896,11 @@ d)^{-1/2}$. At $d = 1024$, $\sstar = 0.123$ therefore means a query may
 drift until its cosine with its target falls to $\approx 0.25$ and still
 be expected to win.
 
-The lower panel overlays six corpora under one encoder. Their
-tolerance crossings span $\sstar = 0.090$ to $0.129$. This is the
-comparison the instrument is built to support: one encoder, six corpora,
-and one number each for how much query noise that corpus tolerates.
+The lower panel overlays six corpora under one encoder. Their tolerance crossings span $\sstar = 0.090$ to $0.129$: one
+number per corpus for how much query noise it tolerates.
 
 \begin{proposition}[Uniformity as a Chernoff bound]\label{prop:chernoff}
-With $U_t = \log \E\, e^{-t\lVert x - y\rVert^2}$ the uniformity functional
+With $U_t = \log \E\, e^{-t\lVert x - y\rVert^2}$ the uniformity statistic
 of \cite{wang2020}: $\;C(\sigma) \le (n{-}1)\, e^{U_t}$ at
 $t = 1/(8\sigma^2)$.
 \end{proposition}
@@ -1898,8 +1909,11 @@ $t = 1/(8\sigma^2)$.
 $\Phi(-z) \le e^{-z^2/2}$ with $z = r/2\sigma$.
 \end{proof}
 
-The temperature parameter of the widely used uniformity loss is thus not
-arbitrary: $t = 2$ is a collision bound at query noise $\sigma = 0.25$.
+This gives a practical meaning to a setting practitioners currently
+choose by convention. Anyone training with the uniformity loss must pick
+its temperature $t$; the bound shows that each choice of $t$ corresponds
+to a level of query imprecision, so training at $t = 2$ is minimizing an
+upper bound on expected collisions at $\sigma = 0.25$.
 \textsf{ambit} reports uniformity with this reading attached.
 
 \subsection{Scope}
@@ -1920,8 +1934,11 @@ The guarantee has three boundaries.
   corpus's own top principal directions: $0.82$). Comparative use is
   therefore robust; noise built to align with the corpus is the stated
   failure mode.
-\item \emph{Aggregation.} The aggregate is an upper bound: $C$
-  over-counts confusions, never under-counts them.
+\item \emph{Aggregation.} $C$ is the quantity every later decision
+  is priced in --- $\sstar$ is defined from it --- so the direction of
+  its bias matters. The aggregate is an upper bound: $C$ over-counts
+  confusions, never under-counts them, so acting on it errs toward
+  caution.
 \end{itemize}
 $\sstar$ is therefore a conservative guarantee about one corpus at a
 time, and it is strongest used comparatively --- the same corpus
@@ -1932,7 +1949,7 @@ embedded two ways, or the same embedding tracked over time.
 
 \begin{table}[t]
 \centering
-\caption{Measured near-redundancy of the confusion functional with
+\caption{Measured near-redundancy of the confusion statistic with
 uniformity across eight synthetic corpus types ($n = 2{,}000$, $d = 256$;
 $C$ at $\sigma = 0.25$, $U$ at the matched $t = 2$). Rank correlation
 $0.978$; $27$ of $28$ pairwise orderings agree. The one disagreement
@@ -1965,7 +1982,7 @@ level, the confusion transform adds almost nothing beyond uniformity. Its
 value lies elsewhere: it carries retrieval units, it is calibrated, and it
 produces per-item counts. The single disagreement in the table is the
 informative part. The confusion transform ranks a duplicate-pocket corpus
-as worse than a diffuse low-rank collapse, and the uniformity functional
+as worse than a diffuse low-rank collapse, and the uniformity statistic
 ranks them the other way. Duplicate pairs confuse a query about half the
 time at every noise scale, while a spread subspace stays partly navigable,
 so the confusion ordering is the operationally correct one.
@@ -2072,7 +2089,7 @@ documents involved, the similarity level at which the trouble sits, and
 a count of the retrieval errors it implies.
 
 % =========================================================================
-\section{The Instrument}
+\section{\textsf{ambit}}
 \label{sec:instrument}
 % =========================================================================
 
@@ -2334,7 +2351,7 @@ Batch composition is driven by the measurements in three ways.
   \mathcal L_{\mathrm{conf}} + \lambda_p \mathcal L_{\mathrm{pres}}$
   at the measured $\sigma$.
 \item \emph{Verify} on a held-out reservoir never seen by mining, and
-  never grade with the functional that was optimized.
+  never grade with the statistic that was optimized.
 \end{enumerate}
 
 \begin{table}[t]
@@ -2376,7 +2393,7 @@ the full loop --- measure, build the objective from the measurements,
 train, re-embed, re-measure --- operates on a contemporary public encoder
 and a million-document corpus, with the measurements adjudicating every
 round. We ran it on the case-study corpus (\S\ref{sec:instrument}) and its
-$0.6$-billion-parameter instruction-tuned encoder. A fixed, stratified
+encoder, Qwen3-Embedding-0.6B. A fixed, stratified
 $200{,}000$-document measurement subset (proportional across the four
 subsets) was drawn once; $20\%$ was held out and never touched by mining,
 sampling weights, or training. The objective is fully unsupervised. It
@@ -2747,7 +2764,7 @@ $0.537$) against the guarded arm's $35\%$, and multi-hop retrieval
 depends on exactly those neighbor identities.
 
 % =========================================================================
-\section{External Validation Across Corpora and Encoders}
+\section{Results Across Corpora and Encoders}
 \label{sec:external}
 % =========================================================================
 
@@ -2888,7 +2905,8 @@ outcome label saturates ($98\%$ of judged documents past rank $10$).}
 \addplot[only marks, mark=*, mark size=1.7pt, acc] coordinates {(1,0.0653) (2,0.0369) (3,0.0317) (4,0.1084) (5,0.3509) (6,0.0206) (7,0.0191) (8,0.1182) (9,0.5530) (10,0.0880) (11,0.0794) (12,0.0689) (13,0.1496) (14,0.2300) (15,0.0082) (16,0.4359) (17,0.2675) (18,0.0174) (19,0.0083) (20,0.0434) (21,0.0554) (22,0.0737) (23,0.0932) (24,0.1279) (25,0.0551) (26,0.0705) (27,0.1589) (28,0.1904) (29,0.0846) (30,0.3451) (31,0.0706) (32,0.0457) (33,0.1829) (34,0.2655) (35,0.1859)};
 \end{axis}
 \end{tikzpicture}
-\caption{Structure across the grid: the most prominent pocket's merge-tree
+\caption{Structure across every corpus--encoder pairing: the most
+prominent pocket's merge-tree
 prominence for every corpus--encoder cell (all $35$ exceed the
 null-calibrated floor). The spread within each corpus is as large as the
 spread across corpora: encoders disagree about which corpora form tight
@@ -2939,13 +2957,13 @@ rank $10$ and the failure label saturates entirely.
 HotpotQA the field predicts failure for four of seven encoders
 ($0.55$--$0.59$) and sits at chance for the other three ($0.483$, $0.486$,
 $0.494$). These cells are not saturated --- their failure rates run from
-$23\%$ to $58\%$, the most balanced labels anywhere in the grid --- so the
-null result is a real one. The explanation is in the task. A multi-hop
-question can be answered only by combining two documents. A document can
-therefore fail at its own query while sitting in uncrowded space: the
-failure is not that something confusable outranked it, but that the answer
-needed a second document that the query never reached. Geometry cannot see
-that. This is the per-item counterpart of the corpus-level scope law
+$23\%$ to $58\%$, the most balanced labels anywhere in the evaluation --- so the
+null result is a real one. The explanation is simple. Embeddings
+organize documents by \emph{similarity}. Multi-hop questions retrieve by
+\emph{relationship}: the answer lies in how two documents connect, and
+in neither one's neighborhood. A document can therefore fail at its own
+query while sitting in uncrowded space, and reducing similarity-crowding
+cannot fix a relationship-based failure. This is the per-item counterpart of the corpus-level scope law
 below. Both say the same thing: the instrument measures whether items
 remain distinguishable, and that predicts a retrieval failure only when
 the failure is caused by items being hard to tell apart. Where relevance
@@ -2976,17 +2994,15 @@ one corpus against itself under encoder variants, repair, or drift, which
 is how the guardrail gate used it. For comparison across encoders, the
 validated readout is the per-item collision field above.
 
-\textbf{The two similarity levels, checked against annotated duplicates.}
-The duplicate-question collection annotates true duplicates, so pair
-cosine alone can be tested as a duplicate detector. Its precision rises
-steadily with the threshold: $0.29$ at $\cos = 0.80$, $0.93$ at $0.95$,
-and $0.98$ at $0.98$ for the case-study encoder. Its recall at the
-duplicate level is low, because most annotated duplicates are paraphrases
-that sit in the confusable window. Figure~\ref{fig:dedupf1} plots the
-ladder. At item level it confirms the two-level reading that the routing
-experiment (\S\ref{sec:routing}) turned into opposite repair
-prescriptions: confusability begins at one similarity level, and true
-duplication at a higher one.
+\textbf{The two similarity levels, checked against annotated
+duplicates.} The routing experiment (\S\ref{sec:routing}) rests on
+there being two distinct similarity levels --- where confusability
+begins, and where true duplication begins. The duplicate-question
+collection annotates true duplicates, so this can be checked directly:
+predicting ``duplicate'' from pair cosine alone becomes precise only at
+the higher level ($0.29$ precision at $\cos = 0.80$ against $0.93$ at
+$0.95$), exactly as the two-level reading requires
+(Figure~\ref{fig:dedupf1}).
 
 \begin{figure}[t]
 \centering
@@ -3020,19 +3036,13 @@ whose contrast the text interprets.}
 % =========================================================================
 
 \begin{itemize}
-\item \textbf{External validation.} A cross-corpus slice now exists
-  (\S\ref{sec:external}): the per-item claim holds in $26$ of $29$
-  informative cells and fails on multi-hop questions, and the
-  corpus-level claim earned a measured scope law. What remains open is
-  breadth: more collections; encoders degraded on purpose, step by step,
-  to test whether $\sstar$ tracks the degradation; and independent
-  replication. Both scope laws are hypotheses to re-test.
-  The alignment--uniformity split predicts that adding an alignment
-  probe would restore ranking power on knowledge-limited tasks, but any
-  such probe requires supervision that this instrument excludes. The
-  multi-hop null makes a sharper and cheaper prediction: the per-item
-  field should recover on the subset of multi-hop questions answerable
-  from a single document and stay at chance on the rest.
+\item \textbf{Breadth of evidence.} Five collections and seven
+  encoders were enough to expose the boundaries reported in
+  \S\ref{sec:external}; more collections, deliberately degraded
+  encoders, and independent replication would harden them. The multi-hop
+  result also makes a cheap, testable prediction: the per-document score
+  should recover on multi-hop questions whose answer lies in a single
+  document, and stay at chance on the rest.
 \item \textbf{The objective, retested where it should work.} Training at
   the measured $\sstar$ has been tried on one corpus. That corpus's
   crowding is textual duplication, which a semantics-preserving objective
@@ -3061,11 +3071,6 @@ whose contrast the text interprets.}
   class of transforms could remove. Computing that fraction, rather
   than predicting it, would separate crowding caused by the embedding
   model from crowding inherent in the data.
-\item \textbf{Streaming structure.} The crowding curve can be computed
-  from a running summary of a stream; the merge tree cannot, which is why
-  the structural layer works on a bounded sample rather than on the whole
-  corpus. An approximate hierarchy that could be merged across chunks,
-  with error bounds on prominence, would remove that limit.
 \end{itemize}
 
 % =========================================================================
@@ -3082,7 +3087,7 @@ name the individual documents responsible.
 The mathematics is classical --- Ripley's curve, Stolarsky's identity, the
 distance to a measure, the condensed cluster tree, a Gaussian tail bound.
 The contribution is their selection, calibration, and composition into a
-system with stated guarantees and stated scope, traced end to end through
+system with well-understood properties, traced end to end through
 one benchmark whose planted pathology every layer detects, localizes,
 converts into an expected error count, and partially repairs. Beyond that
 benchmark, the per-document score identified the documents that later
@@ -3110,8 +3115,25 @@ limits.
 The implementation is organized so that its asymptotic costs match the
 claims of \S\ref{sec:instrument}: one streaming pass over the corpus,
 followed by statistics whose cost is independent of corpus size. This
-appendix records the implementation decisions behind the measured constants
-of Table~\ref{tab:scaling}.
+appendix records the implementation decisions behind the measured
+constants of Table~\ref{tab:scaling}, and collects the default
+configuration referenced in \S\ref{sec:method}:
+
+\begin{center}
+\small
+\begin{tabular}{ll}
+\toprule
+setting & default \\
+\midrule
+pair sample & $2 \times 10^5$ sampled distinct pairs \\
+whole-curve test & rank envelope over $199$ null curves ($99$ in figures) \\
+anisotropy reference & sampled from the corpus's own covariance eigenvalues \\
+per-document field & distance-to-measure mass fraction $m = 0.02$ \\
+tight groups & minimum group size $8$ \\
+discrepancy $z$ & $64$ null replicates \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \paragraph{Streaming scan.}
 Ingestion is a single sequential pass over raw \texttt{.npy} files
@@ -3157,7 +3179,7 @@ beyond \textsf{numpy}.
 \paragraph{One shared pair sample.}
 A single random-pair cosine sample (default $2\times10^5$ pairs) is drawn
 once per corpus and reused by every pairwise statistic --- $K(t)$, the
-envelope test, the discrepancy $z$, the confusion functional $C(\sigma)$,
+envelope test, the discrepancy $z$, the collision count $C(\sigma)$,
 and $\sstar$. The continuous layer therefore costs one pass over a
 fixed-size array per statistic, and all reported statistics refer to the
 same measured sample.
@@ -3318,7 +3340,7 @@ report: points spread as
   collision counts mark them as most crowded (the top $1\%$), tracked
   across training rounds to see whether an intervention helped them.
   \item \emph{cell} --- one corpus embedded by one encoder: the unit of
-  the external validation suite.
+    the multi-corpus evaluation (\S\ref{sec:external}).
 \end{itemize}
 
 \paragraph{Unit vectors and cosine similarity: $c_{ij} = \langle x_i, x_j
@@ -3753,11 +3775,11 @@ I_d)$.}
   units: its temperature knob $t$ is not folklore but a choice of
   query-noise scale ($t = 2$ corresponds to $\sigma = 0.25$). It also
   explains when uniformity misleads --- it is a bound, and the report
-  measures where the bound's ordering and the exact functional's ordering
+  measures where the bound's ordering and the exact statistic's ordering
   disagree.
   \item \textbf{Term by term:}
   \begin{itemize}
-    \item $U_t$ --- the uniformity functional's value at temperature $t$
+        \item $U_t$ --- the uniformity statistic's value at temperature $t$
     (one number per $t$; more negative $=$ more spread).
     \item $x, y$ --- a random pair of documents; $\E$ --- the average over
     that random pair.
