@@ -384,3 +384,19 @@ cone-conditioned, roles separated (description vs significance), and the
 zero-mean ACG's limitation recorded in §6. Four calibration tests added
 (tests/test_conditioned_null.py), including the one that would have
 caught the defect.
+
+## 2026-08-13 — Clustered uncertainty for the per-document claim
+
+The published sign test treated 29 corpus-encoder cells as independent;
+they share collections and encoders. Recomputed from the frozen
+artifacts (scripts/clustered_uncertainty.py):
+- corpus as the unit: all five collections positive on average
+  (per-corpus mean AUC 0.53-0.69), one-sided sign test p = 0.031;
+- two-way cluster bootstrap over collections x encoders: mean AUC 0.603,
+  95% interval [0.544, 0.665], chance excluded;
+- encoder-ranking Spearmans (n = 7 per collection): none individually
+  significant (exact two-sided p for +-0.75 is 0.066); the supportable
+  finding is the sign pattern across task families.
+TR updated: the independent-cells p is now labeled optimistic and
+presented beside the clustered numbers; both external results are framed
+as strong preliminary evidence pending independent replication.

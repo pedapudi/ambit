@@ -265,8 +265,12 @@ counts
 (\S\ref{sec:external}). We measured five public collections under seven
 public encoders and locked every readout before opening the answer keys.
 The per-document score then identified the documents that retrieval would
-later fail on, in $26$ of the $29$ pairings that test it (sign test $p
-\approx 8 \times 10^{-6}$). All three exceptions are multi-hop questions,
+later fail on, in $26$ of the $29$ pairings that test it. Because the
+pairings share collections and encoders, the conservative unit is the
+collection: all five come out positive on average (one-sided
+$p = 0.03$), and a bootstrap over collections and encoders places the
+mean prediction quality at AUC $0.60$ with chance excluded
+($95\%$ interval $0.54$--$0.67$). All three exceptions are multi-hop questions,
 where failure comes from needing a second document rather than from
 crowding. The corpus-level $\sstar$ ranks encoders only where the task is
 similarity matching. Both boundaries come from measurements rather than
@@ -2961,10 +2965,18 @@ judged documents fail at rank $10$ and some do not. A label that is nearly
 constant cannot be predicted by anything. The informative cells comprise
 all seven encoders on each of four corpora --- duplicate questions,
 product search, open-domain QA, and multi-hop QA --- plus the legal case
-study, giving $29$ in all. In $26$ of them, expected-collision counts
-predict which judged-relevant documents fail at their own queries (sign
-test $p \approx 8 \times 10^{-6}$); the per-corpus AUC ranges are the
-final columns of Table~\ref{tab:external}. Duplicate questions, product
+study, giving $29$ in all. In $26$ of them, expected-collision counts predict which
+judged-relevant documents fail at their own queries; the per-corpus AUC
+ranges are the final columns of Table~\ref{tab:external}. Treating the
+$29$ cells as independent gives a sign-test $p \approx 8 \times
+10^{-6}$, but cells that share a collection share documents and queries,
+and cells that share an encoder share its geometry, so that figure is
+optimistic. At the conservative unit --- the collection --- all five
+come out positive on average, a one-sided $p = 0.03$; a bootstrap that
+resamples whole collections and whole encoders places the mean AUC at
+$0.60$ with a $95\%$ interval of $0.54$--$0.67$, excluding chance. The
+result is strong preliminary evidence pending independent replication,
+rather than settled validation. Duplicate questions, product
 search, and open-domain QA are positive in every cell, including an AUC of
 $0.69$ on product search for the case-study encoder despite an $84\%$ base
 failure rate. The biomedical collection is excluded as uninformative by
@@ -2995,11 +3007,16 @@ nDCG@10 reaches $+0.75$ only on duplicate matching, the one task where
 relevance \emph{is} geometric proximity. On that same task the mean-cosine
 control is \emph{inverted} ($-0.79$). On product search the correlation is
 near zero ($-0.07$): shopping relevance mixes attribute matching with
-intent that the geometry cannot see. On open-domain QA, multi-hop QA, and
-biomedical search it reverses ($-0.54$, $-0.75$, $-0.32$): the smallest
-encoder has the best geometry and the worst retrieval. The two
-knowledge-seeking corpora agree, which is what distinguishes a scope law
-from a single anomalous corpus. The mechanism is the alignment--uniformity
+intent that the geometry cannot see. On open-domain QA, multi-hop QA, and biomedical search it reverses
+($-0.54$, $-0.75$, $-0.32$): the smallest encoder has the best geometry
+and the worst retrieval. Seven encoders per collection is a small
+sample, and no single correlation is significant on its own (the exact
+two-sided $p$ for $\pm 0.75$ at $n = 7$ is $0.066$). What the data
+support is the \emph{sign pattern}: positive only where the task is
+similarity matching, negative on both knowledge-seeking collections ---
+and it is the agreement of those two that distinguishes a pattern from
+a single anomalous corpus. Like the per-document result, this is
+preliminary evidence to be hardened by replication. The mechanism is the alignment--uniformity
 decomposition. Retrieval quality has two ingredients: semantic alignment
 (whether the encoder places related texts near each other) and geometric
 headroom (whether the space leaves room to tell neighbors apart).
